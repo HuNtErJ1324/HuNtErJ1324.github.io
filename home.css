@@ -1,73 +1,89 @@
 * {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 div {
-	text-align: center;
+    text-align: center;
 }
 
 .youtube-video {
-	width: 90%;
-	aspect-ratio: 16 / 9;
-	max-width: 500px;
+    width: 90%;
+    aspect-ratio: 16 / 9;
+    max-width: 500px;
+    border: 1px solid #ffffff;
+	padding: 10px;
+    margin: 20px auto;
 }
 
 body {
-	font-family: Arial, sans-serif;
-	line-height: 1.6;
-	background-color: #f4f4f4;
-	color: #333;
+    font-family: 'Georgia', serif;
+    font-size: 20px; 
+    line-height: 1.6;
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+a {
+    color: #e0e0e0;
+    text-decoration: none;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+a:visited {
+    color: #e0e0e0;
+}
+
+a:hover {
+    color: #ffffff;
+    border-bottom: 1px solid #ffffff;
 }
 
 header {
-	background-color: #333;
-	color: #fff;
-	padding: 1.5em;
-	text-align: center;
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+    padding: 1.5em;
+    text-align: center;
 }
 
 header h1 {
-	margin-bottom: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 nav a {
-	color: #fff;
-	margin: 0 10px;
-	text-decoration: none;
+    margin: 0 10px;
 }
 
 section {
-	padding: 1.5em;
-	max-width: 800px;
-	margin: auto;
-	background: #fff;
-	margin-top: 1em;
-	border-radius: 8px;
+    padding: 1.5em;
+    max-width: 800px;
+    margin: auto;
+    background: #1f1f1f;
+    margin-top: 1em;
+    border-radius: 8px;
 }
 
 h2 {
-	color: #333;
-	margin-bottom: 0.5em;
+    color: #e0e0e0;
+    margin-bottom: 0.5em;
 }
 
 ul {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
 
 li {
-	margin-bottom: 1em;
+    margin-bottom: 1em;
 }
 
-
 footer {
-	text-align: center;
-	padding: 1em;
-	background-color: #333;
-	color: #fff;
-	width: 100%;
-	bottom: 0;
+    text-align: center;
+    padding: 1em;
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+    width: 100%;
+    bottom: 0;
 }
