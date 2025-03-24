@@ -100,10 +100,11 @@ footer {
 	bottom: 0;
 }
 
-img {
-	width: 700px;
-	height: 700px;
+.profile-image {
+	width: min(45vw, 750px);
+	height: min(45vw, 750px);
 	border-radius: 50%;
 	object-fit: cover;
-	border: 3px solid #000;
+	max-width: 100%;
+	border: 3px solid whitesmoke
 }
