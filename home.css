@@ -105,8 +105,8 @@ footer {
 }
 
 .profile-image {
-	width: 45vh;
-	height: 45vh;
+	width: 75vh;
+	height: 75vh;
 	border-radius: 50%;
 	object-fit: cover;
 	max-width: 100%;
