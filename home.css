@@ -110,5 +110,12 @@ footer {
 	border-radius: 50%;
 	object-fit: cover;
 	max-width: 100%;
-	border: 3px solid whitesmoke
+	border: 3px solid whitesmoke;
+}
+
+@media (max-width: 600px) {
+	.profile-image {
+		width: 49vw;
+		height: 49vw;
+	}
 }
