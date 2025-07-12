@@ -20,11 +20,10 @@ This website is designed to:
 - Showcase my journey and contributions in the fields of computer science, machine learning, and beyond.
 
 ## Technologies Used
-- **Frontend**: HTML, CSS, JavaScript (React)
-- **Backend**: Node.js
+- **Frontend**: HTML, CSS
 - **Styling**: CSS 
-- **Hosting**: Home web server
+- **Hosting**: GitHub Pages
 
 ---
 
-Thank you for visiting my personal website repository! I hope you find the content insightful and engaging.
+Thank you for visiting my personal website repository!
