@@ -141,6 +141,11 @@ footer {
 	border: 2px solid #e0e0e0;
 }
 
+::selection {
+	background-color: #fff;
+	color: #000;
+}
+
 @media (max-width: 600px) {
 	.profile-image {
 		width: 49vw;
