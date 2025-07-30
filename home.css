@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap');
 
 * {
 	margin: 0;
@@ -11,7 +11,7 @@ html {
 }
 
 body {
-	font-family: 'VT323', monospace;
+	font-family: 'VT323', 'Nanum Gothic Coding', monospace;
 	font-size: 20px;
 	line-height: 1.6;
 	background-color: #000;
@@ -68,7 +68,7 @@ a:hover {
 header {
 	background-color: #000;
 	color: #e0e0e0;
-	padding: 0.5em;
+	padding: 70px 0.5em 0.5em;
 	text-align: center;
 	border-bottom: 2px solid #e0e0e0;
 	min-height: 100vh;
@@ -79,6 +79,10 @@ header {
 
 header h1 {
 	margin-bottom: 0.5em;
+}
+
+.korean-name {
+    font-size: 0.5em;
 }
 
 nav {
@@ -149,4 +153,19 @@ footer {
 ::-moz-selection {
 	background-color: #fff;
 	color: #000;
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+    }
+
+    .profile-text {
+        text-align: center;
+    }
+
+    .profile-image {
+        width: 80vw;
+        height: 80vw;
+    }
 }
