@@ -16,13 +16,13 @@ body {
 	line-height: 1.6;
 	background-color: #000;
 	color: #e0e0e0;
-    border: 2px solid #e0e0e0;
-    padding: 1rem;
+	border: 2px solid #e0e0e0;
+	padding: 1rem;
 }
 
 main {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+	padding-top: 1rem;
+	padding-bottom: 1rem;
 }
 
 div {
@@ -34,7 +34,8 @@ div {
 	align-items: center;
 	justify-content: center;
 	gap: 20px;
-	min-height: 50vh; /* Adjusted from 100vh */
+	min-height: 50vh;
+	/* Adjusted from 100vh */
 }
 
 .profile-text {
@@ -61,7 +62,7 @@ a:visited {
 
 a:hover {
 	background-color: #e0e0e0;
-    color: #000;
+	color: #000;
 }
 
 header {
@@ -69,11 +70,11 @@ header {
 	color: #e0e0e0;
 	padding: 0.5em;
 	text-align: center;
-    border-bottom: 2px solid #e0e0e0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+	border-bottom: 2px solid #e0e0e0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 header h1 {
@@ -81,15 +82,15 @@ header h1 {
 }
 
 nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: #000;
-    padding: 0.5em;
-    text-align: center;
-    z-index: 1;
-    border-bottom: 2px solid #e0e0e0;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	background-color: #000;
+	padding: 0.5em;
+	text-align: center;
+	z-index: 1;
+	border-bottom: 2px solid #e0e0e0;
 }
 
 nav a {
@@ -103,13 +104,13 @@ section {
 	background: #000;
 	margin-top: 1em;
 	border: 2px solid #e0e0e0;
-    border-radius: 0;
+	border-radius: 0;
 }
 
 h2 {
 	color: #e0e0e0;
 	margin-bottom: 0.5em;
-    text-transform: uppercase;
+	text-transform: uppercase;
 }
 
 ul {
@@ -127,8 +128,8 @@ footer {
 	padding: 0.5em;
 	background-color: #000;
 	color: #e0e0e0;
-    border-top: 2px solid #e0e0e0;
-    margin-top: 1rem;
+	border-top: 2px solid #e0e0e0;
+	margin-top: 1rem;
 }
 
 .profile-image {
