@@ -101,6 +101,11 @@ nav a {
 	margin: 0 10px;
 }
 
+p {
+	max-width: 800px;
+	margin: auto;
+}
+
 section {
 	padding: 1.5em;
 	max-width: 800px;
