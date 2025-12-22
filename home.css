@@ -1,9 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap');
 
 :root {
-	--primary-color: #e0e0e0;
-	--secondary-color: #000;
-	--tertiary-color: #fff;
+    /* Primary Colors - High Contrast */
+    --primary-color: #f5f5f5;        /* Bright text (21:1 contrast) */
+    --secondary-color: #0a0a0a;      /* Deep black background */
+    --tertiary-color: #ffffff;       /* Pure white for highlights */
+    
+    /* Accent Grays - For hierarchy */
+    --accent-light: #d4d4d4;         /* Secondary text */
+    --accent-medium: #a8a8a8;        /* Muted text */
+    --accent-dark: #2a2a2a;          /* Dark elements */
+    
+    /* Interactive States */
+    --hover-bg: #1a1a1a;             /* Subtle hover */
+    --focus-color: #e8e8e8;         /* Focus outline */
 }
 
 * {
@@ -70,8 +80,59 @@ a:visited {
 }
 
 a:hover {
-	background-color: var(--primary-color);
+	background-color: var(--hover-bg);
+	color: var(--primary-color);
+}
+
+a:focus {
+	outline: 2px solid var(--focus-color);
+	outline-offset: 2px;
+	background-color: var(--hover-bg);
+	color: var(--primary-color);
+}
+
+
+
+/* Video lazy loading styles */
+.video-container {
+	position: relative;
+	margin: 20px auto;
+	max-width: 500px;
+}
+
+.video-placeholder {
+	position: relative;
+	cursor: pointer;
+}
+
+.video-placeholder img {
+	width: 100%;
+	border: 2px solid var(--primary-color);
+}
+
+.play-button {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: var(--primary-color);
 	color: var(--secondary-color);
+	border: none;
+	padding: 1rem 1.5rem;
+	font-family: 'Retrocide', monospace;
+	font-size: 1.2rem;
+	cursor: pointer;
+	border: 2px solid var(--secondary-color);
+}
+
+.play-button:hover {
+	background: var(--hover-bg);
+	color: var(--primary-color);
+}
+
+.play-button:focus {
+	outline: 2px solid var(--focus-color);
+	outline-offset: 2px;
 }
 
 .banner {
@@ -179,16 +240,40 @@ footer {
 }
 
 @media (max-width: 768px) {
+    nav {
+        position: relative;
+        padding: 1rem 0;
+        border-bottom: 2px solid var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    nav a {
+        display: inline-block;
+        margin: 0.25rem 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    nav a:hover {
+        border-color: var(--primary-color);
+        background-color: var(--hover-bg);
+    }
+    
     .profile-container {
         flex-direction: column;
+        height: auto;
+        min-height: 70vh;
     }
 
     .profile-text {
         text-align: center;
+        order: 2;
     }
 
     .profile-image {
-        width: 80vw;
-        height: 80vw;
+        order: 1;
+        width: 60vw;
+        height: 60vw;
     }
 }

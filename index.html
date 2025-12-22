@@ -4,13 +4,34 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Justin Yang Chae</title>
+	<title>Justin Yang Chae - Personal Portfolio</title>
+	<meta name="description" content="Justin Yang Chae - Computer Science & Mathematics student at University of Washington, focused on AI/ML research and violin performance">
+	<meta name="keywords" content="Justin Chae, computer science, mathematics, machine learning, violin, University of Washington, AI research">
+	<meta name="author" content="Justin Yang Chae">
+	
+	<!-- Open Graph / Social Media -->
+	<meta property="og:title" content="Justin Yang Chae - Personal Portfolio">
+	<meta property="og:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
+	<meta property="og:image" content="https://justin-chae.org/assets/profile_photo.jpg">
+	<meta property="og:url" content="https://justin-chae.org">
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="Justin Yang Chae">
+	
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Justin Yang Chae - Personal Portfolio">
+	<meta name="twitter:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
+	<meta name="twitter:image" content="https://justin-chae.org/assets/profile_photo.jpg">
+	
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://justin-chae.org">
+	
 	<link rel="stylesheet" href="home.css">
 	<link rel="icon" href="/assets/HunterJ.jpg">
 </head>
 
 <body>
-	<nav>
+	<nav role="navigation" aria-label="Main navigation">
 		<a href="#about">About</a>
 		<a href="#education">Education</a>
 		<a href="#papers">Papers</a>
@@ -18,7 +39,7 @@
 		<a href="#awards">Awards</a>
 		<a href="#contact">Contact</a>
 		<a href="music.html">Violin</a>
-		<a href="https://blog.justin-chae.org">Blog</a>
+		<a href="https://blog.justin-chae.org" rel="noopener noreferrer">Blog</a>
 	</nav>
 	<div class="banner">
 		<header>
@@ -27,12 +48,20 @@
 					<h1>Justin Yang Chae <span class="korean-name">(채정인)</span></h1>
 					<p>Undergraduate @ University of Washington</p>
 				</div>
-				<img src="assets/profile_photo.jpg" class="profile-image" alt="A profile photo of Justin Yang Chae">
+				<picture>
+		<source srcset="assets/profile_photo.webp" type="image/webp">
+		<img src="assets/profile_photo.jpg" 
+			 class="profile-image" 
+			 alt="Profile photo of Justin Yang Chae"
+			 loading="lazy"
+			 width="400"
+			 height="400">
+	</picture>
 			</div>
 		</header>
 	</div>
 
-	<main>
+	<main id="main-content" role="main">
 		<section id="about">
 			<h2>About Me</h2>
 			<p class="about-me-text">
@@ -49,7 +78,7 @@
 		<section id="education">
 			<h2>Education</h2>
 			<p>B.S. in Computer Science and B.A. in Mathematics, University of Washington</p>
-			<p>Expected to graduate in 2027</p>
+			<p>Expected to graduate in <time datetime="2027">2027</time></p>
 		</section>
 
 		<section id="papers">
