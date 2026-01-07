@@ -49,17 +49,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoPlaceholders = document.querySelectorAll('.video-placeholder');
 
     videoPlaceholders.forEach(placeholder => {
-        placeholder.addEventListener('click', function() {
-            const videoId = this.dataset.videoId;
+        placeholder.addEventListener('click', (e) => {
+            const target = e.currentTarget;
+            const videoId = target.dataset.videoId;
+            
+            if (!videoId) return;
+
             const iframe = document.createElement('iframe');
             
-            iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`);
+            const origin = window.location.origin;
+            iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&origin=${origin}`);
             iframe.setAttribute('frameborder', '0');
             iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
             iframe.setAttribute('allowfullscreen', '');
             iframe.classList.add('youtube-video');
             
-            const parent = this.parentElement;
+            const parent = target.parentElement;
             parent.innerHTML = '';
             parent.appendChild(iframe);
         });
