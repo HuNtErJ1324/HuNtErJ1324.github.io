@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&origin=${origin}`);
             iframe.setAttribute('frameborder', '0');
             iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+            iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
             iframe.setAttribute('allowfullscreen', '');
             iframe.classList.add('youtube-video');
             
