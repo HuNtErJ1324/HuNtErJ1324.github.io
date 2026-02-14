@@ -9,9 +9,6 @@
 	<meta name="keywords" content="Justin Chae, computer science, mathematics, machine learning, violin, University of Washington, AI research">
 	<meta name="author" content="Justin Yang Chae">
 	
-	<!-- Content Security Policy -->
-	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://img.youtube.com data:; frame-src https://www.youtube.com; connect-src 'self';">
-	
 	<!-- Open Graph / Social Media -->
 	<meta property="og:title" content="Justin Yang Chae - Personal Portfolio">
 	<meta property="og:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
@@ -29,6 +26,9 @@
 	<!-- Canonical URL -->
 	<link rel="canonical" href="https://justin-chae.org">
 	
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap">
 	<link rel="stylesheet" href="home.css">
 	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
@@ -42,10 +42,10 @@
 		<a href="#education">Education</a>
 		<a href="#papers">Papers</a>
 		<a href="#projects">Projects</a>
-		<a href="#awards">Awards</a>
+		<a href="#achievements">Achievements</a>
 		<a href="#contact">Contact</a>
 		<a href="music.html">Violin</a>
-		<a href="https://blog.justin-chae.org" rel="noopener noreferrer">Blog</a>
+		<a href="blog.html">Blog</a>
 	</nav>
 	<div class="banner">
 		<header>
@@ -54,20 +54,19 @@
 					<h1>Justin Yang Chae <span class="korean-name">(채정인)</span></h1>
 					<p>Undergraduate @ University of Washington</p>
 				</div>
-				<picture>
-		<source srcset="assets/profile_photo.webp" type="image/webp">
-		<img src="assets/profile_photo.jpg" 
-			 class="profile-image" 
-			 alt="Profile photo of Justin Yang Chae"
-			 loading="lazy"
-			 width="400"
-			 height="400">
-	</picture>
+					<picture>
+					<source srcset="assets/profile_photo.webp" type="image/webp">
+					<img src="assets/profile_photo.jpg"
+						 class="profile-image"
+						 alt="Profile photo of Justin Yang Chae"
+						 width="400"
+						 height="400">
+				</picture>
 			</div>
 		</header>
 	</div>
 
-	<main role="main">
+	<main>
 		<section id="about">
 			<h2>About Me</h2>
 			<p class="about-me-text">
@@ -91,7 +90,7 @@
 			<h2>Papers</h2>
 			<ul>
 				<li>
-					<strong><a href="https://arxiv.org/abs/2510.27072" rel="noopener noreferrer">Towards Understanding Self-play for LLM Reasoning</a></strong><br>
+					<strong><a href="https://arxiv.org/abs/2510.27072" target="_blank" rel="noopener noreferrer">Towards Understanding Self-play for LLM Reasoning</a></strong><br>
 					<em>The 5th Workshop on Mathematical Reasoning and AI at NeurIPS 2025</em><br>
 					<b>Abstract:</b> Recent advances in large language model (LLM) reasoning, 
 					led by reinforcement learning with verifiable rewards (RLVR), have inspired 
@@ -107,7 +106,7 @@
 				</li>
 				<li>
 					<strong>
-						<a href="https://drive.google.com/file/d/1DoXf4ny_0T5FbZ-MMRmj8Mhbgwurc8sb/view" rel="noopener noreferrer">
+						<a href="https://drive.google.com/file/d/1DoXf4ny_0T5FbZ-MMRmj8Mhbgwurc8sb/view" target="_blank" rel="noopener noreferrer">
 							Sphinx: Visual Perception and Reasoning Gym
 						</a>
 					</strong><br>
@@ -125,7 +124,7 @@
 					potential for advancing multimodal reasoning.
 				</li>
 				<li>
-					<strong><a href="https://doi.org/10.47611/jsrhs.v11i3.3597" rel="noopener noreferrer">Machine Learning for Policy
+					<strong><a href="https://doi.org/10.47611/jsrhs.v11i3.3597" target="_blank" rel="noopener noreferrer">Machine Learning for Policy
 							Guidance</a></strong><br>
 					<em>Journal for Student Research, August 2022</em><br>
 					<b>Abstract:</b> This paper leverages machine learning algorithms and techniques to create models
@@ -155,7 +154,7 @@
 					claims of performance gains in product recommendation while maintaining general purpose
 					reasoning capabilities were confirmed by our experiments. This project helped me learn
 					how to utilize a high-performance compute cluster and introduced me to LLM post-training.
-					<a href="/assets/CSE_493S_599S_Final_Project.pdf" rel="noopener noreferrer">[Report]</a>
+					<a href="/assets/CSE_493S_599S_Final_Project.pdf" target="_blank" rel="noopener noreferrer">[Report]</a>
 				</li>
 				<li>
 					<strong>Using convolutional neural networks for 3D species distribution modeling of
@@ -169,7 +168,7 @@
 					a classical machine learning model to predict species distributions. Now we aim to model
 					phytoplankton community
 					composition in the Southern Ocean using deep learning.
-					<a href="/assets/DeepLearning_Poster.pdf" rel="noopener noreferrer">[Poster]</a>
+					<a href="/assets/DeepLearning_Poster.pdf" target="_blank" rel="noopener noreferrer">[Poster]</a>
 				</li>
 				<li>
 					<strong>
@@ -178,12 +177,12 @@
 					</strong><br>
 					This was a final project for my data visualization course where we utilized data
 					visualization techniques, interactivity, and storytelling to help users better
-					understand the Monty Hall Problem. <a href="https://final-project-0c38d6.pages.cs.washington.edu/" rel="noopener noreferrer">[Website]</a>
+					understand the Monty Hall Problem. <a href="https://final-project-0c38d6.pages.cs.washington.edu/" target="_blank" rel="noopener noreferrer">[Website]</a>
 				</li>
 			</ul>
 		</section>
 
-		<section id="awards">
+		<section id="achievements">
 			<h2>Achievements</h2>
 			<ul>
 				<li><strong>Leo Maddox Foundation Endowed Scholarship (2024)</strong><br>
@@ -209,7 +208,7 @@
 		<section id="contact">
 			<h2>Contact</h2>
 			<p>Email: <a href="mailto:jcjustin.chae@gmail.com">jcjustin.chae@gmail.com</a></p>
-			<p>LinkedIn: <a href="https://www.linkedin.com/in/justin-c-92403120b" rel="noopener noreferrer">www.linkedin.com/in/justin-c-92403120b</a>
+			<p>LinkedIn: <a href="https://www.linkedin.com/in/justin-c-92403120b" target="_blank" rel="noopener noreferrer">www.linkedin.com/in/justin-c-92403120b</a>
 			</p>
 		</section>
 

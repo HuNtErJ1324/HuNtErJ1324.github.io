@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         // 1. Scroll Reveal Animation
         const revealElements = document.querySelectorAll('section');
-        
+
         if (revealElements.length > 0 && 'IntersectionObserver' in window) {
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -26,33 +26,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Active Navigation Highlighting
-        const navLinks = document.querySelectorAll('nav a');
+        const navLinks = document.querySelectorAll('nav a[href^="#"]');
         const sections = document.querySelectorAll('section[id]');
 
-        if (sections.length > 0 && navLinks.length > 0 && 'IntersectionObserver' in window) {
-            const navObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        // Remove active class from all links
-                        navLinks.forEach(link => link.classList.remove('active'));
-                        
-                        // Add active class to corresponding link
-                        const id = entry.target.getAttribute('id');
-                        if (id) {
-                            const activeLink = document.querySelector(`nav a[href="#${id}"]`);
-                            if (activeLink) {
-                                activeLink.classList.add('active');
-                            }
-                        }
+        if (sections.length > 0 && navLinks.length > 0) {
+            let navTicking = false;
+            let clickedId = null;
+            let clickTimer = null;
+
+            function setActive(id) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                if (id) {
+                    const link = document.querySelector(`nav a[href="#${id}"]`);
+                    if (link) link.classList.add('active');
+                }
+            }
+
+            function getScrollActiveId() {
+                // Pick the last section whose top has scrolled past the offset
+                const offset = 80;
+                let current = null;
+                for (const section of sections) {
+                    if (section.getBoundingClientRect().top <= offset) {
+                        current = section.getAttribute('id');
                     }
+                }
+                return current;
+            }
+
+            function updateActiveNav() {
+                if (clickedId) return;
+                setActive(getScrollActiveId());
+            }
+
+            // When a nav link is clicked, lock highlighting to that section
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const href = link.getAttribute('href');
+                    if (!href || !href.startsWith('#')) return;
+                    clickedId = href.slice(1);
+                    setActive(clickedId);
+
+                    // Release lock after scroll settles
+                    clearTimeout(clickTimer);
+                    clickTimer = setTimeout(() => {
+                        clickedId = null;
+                        updateActiveNav();
+                    }, 800);
                 });
-            }, {
-                threshold: 0.5 // Trigger when 50% of section is visible
             });
 
-            sections.forEach(section => {
-                navObserver.observe(section);
-            });
+            window.addEventListener('scroll', () => {
+                if (!navTicking) {
+                    requestAnimationFrame(() => {
+                        updateActiveNav();
+                        navTicking = false;
+                    });
+                    navTicking = true;
+                }
+            }, { passive: true });
+
+            updateActiveNav();
         }
 
         // 3. Lite YouTube Embeds (Lazy Loading)
@@ -66,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const target = e.currentTarget;
                     const videoId = target.dataset.videoId;
-                    
+
                     // Validate videoId before using it
                     if (!videoId || !validVideoIdRegex.test(videoId)) {
                         console.warn('Invalid YouTube video ID:', videoId);
@@ -74,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const iframe = document.createElement('iframe');
-                    
+
                     const origin = window.location.origin;
                     iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&origin=${origin}`);
                     iframe.setAttribute('frameborder', '0');
@@ -82,11 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
                     iframe.setAttribute('allowfullscreen', '');
                     iframe.classList.add('youtube-video');
-                    
+
                     const parent = target.parentElement;
                     if (parent) {
-                        parent.innerHTML = '';
-                        parent.appendChild(iframe);
+                        parent.replaceChildren(iframe);
                     }
                 } catch (error) {
                     console.error('Error loading YouTube video:', error);
@@ -96,30 +129,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Back to Top Button
         const backToTopButton = document.getElementById('back-to-top');
-        
+
         if (backToTopButton) {
-            // Use passive listener for better scroll performance
+            let scrollTicking = false;
+
             window.addEventListener('scroll', () => {
-                try {
-                    if (window.scrollY > 300) {
-                        backToTopButton.classList.add('visible');
-                    } else {
-                        backToTopButton.classList.remove('visible');
-                    }
-                } catch (error) {
-                    console.error('Error handling scroll:', error);
+                if (!scrollTicking) {
+                    requestAnimationFrame(() => {
+                        if (window.scrollY > 300) {
+                            backToTopButton.classList.add('visible');
+                        } else {
+                            backToTopButton.classList.remove('visible');
+                        }
+                        scrollTicking = false;
+                    });
+                    scrollTicking = true;
                 }
             }, { passive: true });
 
             backToTopButton.addEventListener('click', () => {
-                try {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                } catch (error) {
-                    console.error('Error scrolling to top:', error);
-                }
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             });
         }
     } catch (error) {
