@@ -44,8 +44,8 @@ This document serves as the primary source of truth for coding agents (AI) opera
     *   Text: `--text` (#e0def4), `--subtle` (#908caa), `--muted` (#6e6a86); lines: `--border` (#403d52), `--border-bright` (#524f67)
     *   Accents: `--rose` (#ebbcba cursor/active/h2/focus), `--gold` (#f6c177 dates/labels/chips), `--iris` (#c4a7e7 links), `--foam` (#9ccfd8 mode block/keywords), `--pine` (#31748f quiet structure), `--love` (#eb6f92 errors/404)
     *   Stick to this mapping when adding components; do not reintroduce glows or textured backgrounds.
-*   **Type pairing:** `--font-display` (VT323, Google Fonts) for headings/nav/statusline; `--font-body` (CommitMono Nerd Font, self-hosted subset woff2 in `/assets/fonts/` — see its README) for copy. VT323 has one weight — never apply `bold` to display type. CommitMono ships 400/700 only — use `font-weight: 700` for bold, never 600.
-*   **Korean text:** `index.html` loads Nanum Gothic Coding subset to ONLY the three glyphs 채정인 (`&text=` param). If you add any other Korean text, widen or remove the subset.
+*   **Type pairing:** `--font-display` (VT323) for headings/nav/statusline; `--font-body` (CommitMono Nerd Font) for copy. ALL fonts are self-hosted subset woff2 in `/assets/fonts/` (see its README) — **never load fonts from Google Fonts**: the site sits behind Cloudflare, whose "Cloudflare Fonts" feature rewrites Google Fonts links into inline `<style>` blocks that the strict CSP blocks (this broke headings in production once). VT323 has one weight — never apply `bold` to display type. CommitMono ships 400/700 only — use `font-weight: 700` for bold, never 600.
+*   **Korean text:** `assets/fonts/NanumGothicCoding-name.woff2` contains ONLY the three glyphs 채정인. If you add any other Korean text, re-subset it with wider `--unicodes` (see `assets/fonts/README.md`).
 *   **Units:** `rem` for font sizes/padding; kebab-case class names; multi-line rules.
 *   **Motion:** every animation/transition must have a `prefers-reduced-motion: reduce` override.
 

@@ -4,8 +4,26 @@
    no CRT effects. Type: VT323 (display) + IBM Plex Mono (body).
    ========================================================================== */
 
-/* CommitMono Nerd Font (OFL 1.1) — self-hosted, subset to latin + box drawing
-   + geometric shapes + powerline (see assets/fonts/README.md) */
+/* All fonts are self-hosted subsets (OFL 1.1, see assets/fonts/README.md).
+   Do NOT load fonts from Google Fonts: Cloudflare Fonts rewrites those links
+   into inline <style> blocks that the strict CSP rightfully blocks. */
+@font-face {
+	font-family: 'VT323';
+	src: url('/assets/fonts/VT323-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* Only the three glyphs of 채정인 — re-subset if more Korean text is added */
+@font-face {
+	font-family: 'Nanum Gothic Coding';
+	src: url('/assets/fonts/NanumGothicCoding-name.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
 @font-face {
 	font-family: 'CommitMono Nerd Font';
 	src: url('/assets/fonts/CommitMonoNF-Regular.woff2') format('woff2');
