@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+	<title>{% if page.title %}{{ page.title | escape }} | {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+	<meta name="description" content="{{ page.description | default: site.description | escape }}">
+	<meta name="author" content="{{ site.author.name }}">
+	<meta name="theme-color" content="#191724">
+
+	<!-- Open Graph / Social Media -->
+	<meta property="og:title" content="{% if page.title %}{{ page.title | escape }}{% else %}{{ site.title }}{% endif %}">
+	<meta property="og:description" content="{{ page.description | default: site.description | escape }}">
+	<meta property="og:image" content="{{ '/assets/profile_photo.jpg' | absolute_url }}">
+	<meta property="og:url" content="{{ page.url | absolute_url }}">
+	<meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
+	<meta property="og:site_name" content="{{ site.title }}">
+	{% if page.layout == 'post' %}<meta property="article:published_time" content="{{ page.date | date_to_xmlschema }}">{% endif %}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="{% if page.title %}{{ page.title | escape }}{% else %}{{ site.title }}{% endif %}">
+	<meta name="twitter:description" content="{{ page.description | default: site.description | escape }}">
+	<meta name="twitter:image" content="{{ '/assets/profile_photo.jpg' | absolute_url }}">
+
+	<link rel="canonical" href="{{ page.url | absolute_url }}">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+	<link rel="stylesheet" href="/home.css">
+	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+	<link rel="shortcut icon" href="/assets/favicon.ico">
+</head>
+
+<body>
+	<a href="#main" class="skip-link">Skip to content</a>
+	{% assign in_blog = false %}{% if page.url == '/blog/' or page.layout == 'post' %}{% assign in_blog = true %}{% endif %}
+	<nav class="site-nav" role="navigation" aria-label="Main navigation">
+		<a href="/">Home</a>
+		<a href="/music.html">Violin</a>
+		<a href="/blog/"{% if in_blog %} class="active"{% endif %}{% if page.url == '/blog/' %} aria-current="page"{% endif %}>Blog</a>
+	</nav>
+	<main id="main">
+		{{ content }}
+	</main>
+	<footer class="statusline">
+		<span class="statusline-mode" aria-hidden="true">NORMAL</span>
+		<span class="statusline-path">justin@justin-chae.org:{{ page.statusline_path | default: '~/portfolio' }}</span>
+		<span class="statusline-spacer" aria-hidden="true"></span>
+		<span class="statusline-copy">&copy; 2026 Justin Yang Chae</span>
+		<span class="statusline-hint" aria-hidden="true">? help</span>
+		<span class="statusline-cmd" id="showcmd" aria-hidden="true"></span>
+		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
+	</footer>
+	<button id="back-to-top" aria-label="Back to top">[ ↑ top ]</button>
+	<script src="/script.js"></script>
+	{% if page.layout == 'post' %}
+	<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
+	<script src="/assets/mathjax-config.js"></script>
+	<script src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
+	{% endif %}
+</body>
+
+</html>

@@ -4,11 +4,14 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 	<title>Justin Yang Chae - Personal Portfolio</title>
 	<meta name="description" content="Justin Yang Chae - Computer Science & Mathematics student at University of Washington, focused on AI/ML research and violin performance">
 	<meta name="keywords" content="Justin Chae, computer science, mathematics, machine learning, violin, University of Washington, AI research">
 	<meta name="author" content="Justin Yang Chae">
-	
+	<meta name="theme-color" content="#191724">
+
 	<!-- Open Graph / Social Media -->
 	<meta property="og:title" content="Justin Yang Chae - Personal Portfolio">
 	<meta property="og:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
@@ -16,28 +19,53 @@
 	<meta property="og:url" content="https://justin-chae.org">
 	<meta property="og:type" content="website">
 	<meta property="og:site_name" content="Justin Yang Chae">
-	
+
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:title" content="Justin Yang Chae - Personal Portfolio">
 	<meta name="twitter:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
 	<meta name="twitter:image" content="https://justin-chae.org/assets/profile_photo.jpg">
-	
+
 	<!-- Canonical URL -->
 	<link rel="canonical" href="https://justin-chae.org">
-	
+
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+	<!-- Korean glyph subset: only the three characters of the name (see AGENTS.md before adding Korean text) -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&text=%EC%B1%84%EC%A0%95%EC%9D%B8&display=swap">
 	<link rel="stylesheet" href="home.css">
 	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 	<link rel="shortcut icon" href="/assets/favicon.ico">
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "Person",
+		"name": "Justin Yang Chae",
+		"alternateName": "채정인",
+		"url": "https://justin-chae.org",
+		"image": "https://justin-chae.org/assets/profile_photo.jpg",
+		"email": "mailto:jcjustin.chae@gmail.com",
+		"affiliation": {
+			"@type": "CollegeOrUniversity",
+			"name": "University of Washington"
+		},
+		"knowsAbout": ["Machine Learning", "Artificial Intelligence", "Computer Science", "Mathematics", "Violin"],
+		"sameAs": [
+			"https://www.linkedin.com/in/justin-c-92403120b",
+			"https://scholar.google.com/citations?user=icnjuIMAAAAJ",
+			"https://github.com/HuNtErJ1324"
+		]
+	}
+	</script>
 </head>
 
 <body>
-	<nav role="navigation" aria-label="Main navigation">
+	<a href="#main" class="skip-link">Skip to content</a>
+	<nav class="site-nav" role="navigation" aria-label="Main navigation">
 		<a href="#about">About</a>
 		<a href="#education">Education</a>
 		<a href="#papers">Papers</a>
@@ -45,29 +73,38 @@
 		<a href="#achievements">Achievements</a>
 		<a href="#contact">Contact</a>
 		<a href="music.html">Violin</a>
-		<a href="blog.html">Blog</a>
+		<a href="/blog/">Blog</a>
 	</nav>
 	<div class="banner">
 		<header>
+			<p class="boot-line" aria-hidden="true">justin@uw:~$ ./welcome</p>
 			<div class="profile-container">
 				<div class="profile-text">
-					<h1>Justin Yang Chae <span class="korean-name">(채정인)</span></h1>
-					<p>Undergraduate @ University of Washington</p>
+					<h1>Justin Yang Chae <span class="korean-name" lang="ko">(채정인)</span></h1>
+					<p class="tagline"># undergraduate @ university of washington</p>
+					<p class="banner-meta" aria-hidden="true">
+						<span class="meta-key">focus:</span> ai/ml research
+						<span class="meta-sep">·</span>
+						<span class="meta-key">also:</span> violin, anime, games
+					</p>
 				</div>
-					<picture>
+				<picture>
 					<source srcset="assets/profile_photo.webp" type="image/webp">
 					<img src="assets/profile_photo.jpg"
 						 class="profile-image"
 						 alt="Profile photo of Justin Yang Chae"
 						 width="400"
-						 height="400">
+						 height="400"
+						 fetchpriority="high"
+						 decoding="async">
 				</picture>
 			</div>
+			<p class="scroll-hint" aria-hidden="true">▼ scroll</p>
 		</header>
 	</div>
 
-	<main>
-		<section id="about">
+	<main id="main">
+		<section id="about" data-label="~/about.txt">
 			<h2>About Me</h2>
 			<p class="about-me-text">
 				Hi, I'm Justin and I'm currently studying computer science and mathematics with a focus on artificial
@@ -80,29 +117,29 @@
 			</p>
 		</section>
 
-		<section id="education">
+		<section id="education" data-label="~/education.txt">
 			<h2>Education</h2>
 			<p>B.S. in Computer Science and B.A. in Mathematics, University of Washington</p>
 			<p>Expected to graduate in <time datetime="2027">2027</time></p>
 		</section>
 
-		<section id="papers">
+		<section id="papers" data-label="~/papers/">
 			<h2>Papers</h2>
 			<ul>
 				<li>
 					<strong><a href="https://arxiv.org/abs/2510.27072" target="_blank" rel="noopener noreferrer">Towards Understanding Self-play for LLM Reasoning</a></strong><br>
 					<em>The 5th Workshop on Mathematical Reasoning and AI at NeurIPS 2025</em><br>
-					<b>Abstract:</b> Recent advances in large language model (LLM) reasoning, 
-					led by reinforcement learning with verifiable rewards (RLVR), have inspired 
-					self-play post-training, where models improve by generating and solving their 
-					own problems. While self-play has shown strong in-domain and out-of-domain gains, 
-					the mechanisms behind these improvements remain poorly understood. In this work, 
-					we analyze the training dynamics of self-play through the lens of the Absolute Zero Reasoner, 
-					comparing it against RLVR and supervised fine-tuning (SFT). Our study examines parameter update sparsity, 
-					entropy dynamics of token distributions, and alternative proposer reward functions. We further connect 
-					these dynamics to reasoning performance using pass@k evaluations. Together, our findings clarify how 
-					self-play differs from other post-training strategies, highlight its inherent limitations, and point 
-					toward future directions for improving LLM math reasoning through self-play. 
+					<b>Abstract:</b> Recent advances in large language model (LLM) reasoning,
+					led by reinforcement learning with verifiable rewards (RLVR), have inspired
+					self-play post-training, where models improve by generating and solving their
+					own problems. While self-play has shown strong in-domain and out-of-domain gains,
+					the mechanisms behind these improvements remain poorly understood. In this work,
+					we analyze the training dynamics of self-play through the lens of the Absolute Zero Reasoner,
+					comparing it against RLVR and supervised fine-tuning (SFT). Our study examines parameter update sparsity,
+					entropy dynamics of token distributions, and alternative proposer reward functions. We further connect
+					these dynamics to reasoning performance using pass@k evaluations. Together, our findings clarify how
+					self-play differs from other post-training strategies, highlight its inherent limitations, and point
+					toward future directions for improving LLM math reasoning through self-play.
 				</li>
 				<li>
 					<strong>
@@ -143,7 +180,7 @@
 			</ul>
 		</section>
 
-		<section id="projects">
+		<section id="projects" data-label="~/projects/">
 			<h2>Projects</h2>
 			<ul>
 				<li>
@@ -183,7 +220,7 @@
 			</ul>
 		</section>
 
-		<section id="achievements">
+		<section id="achievements" data-label="~/achievements.log">
 			<h2>Achievements</h2>
 			<ul>
 				<li><strong>Leo Maddox Foundation Endowed Scholarship (2024)</strong><br>
@@ -206,19 +243,24 @@
 			</ul>
 		</section>
 
-		<section id="contact">
+		<section id="contact" data-label="~/contact.cfg">
 			<h2>Contact</h2>
-			<p>Email: <a href="mailto:jcjustin.chae@gmail.com">jcjustin.chae@gmail.com</a></p>
-			<p>LinkedIn: <a href="https://www.linkedin.com/in/justin-c-92403120b" target="_blank" rel="noopener noreferrer">www.linkedin.com/in/justin-c-92403120b</a></p>
-			<p>Google Scholar: <a href="https://scholar.google.com/citations?user=icnjuIMAAAAJ&hl" target="_blank" rel="noopener noreferrer">scholar.google.com/citations?user=icnjuIMAAAAJ</a></p>
+			<p><span class="contact-key">email</span> = <a href="mailto:jcjustin.chae@gmail.com">jcjustin.chae@gmail.com</a></p>
+			<p><span class="contact-key">linkedin</span> = <a href="https://www.linkedin.com/in/justin-c-92403120b" target="_blank" rel="noopener noreferrer">linkedin.com/in/justin-c-92403120b</a></p>
+			<p><span class="contact-key">scholar</span> = <a href="https://scholar.google.com/citations?user=icnjuIMAAAAJ&amp;hl" target="_blank" rel="noopener noreferrer">scholar.google.com/citations?user=icnjuIMAAAAJ</a></p>
 		</section>
-
 	</main>
 
-	<footer>
-		<p>&copy; 2026 Justin Yang Chae</p>
+	<footer class="statusline">
+		<span class="statusline-mode" aria-hidden="true">NORMAL</span>
+		<span class="statusline-path">justin@justin-chae.org:~/portfolio</span>
+		<span class="statusline-spacer" aria-hidden="true"></span>
+		<span class="statusline-copy">&copy; 2026 Justin Yang Chae</span>
+		<span class="statusline-hint" aria-hidden="true">? help</span>
+		<span class="statusline-cmd" id="showcmd" aria-hidden="true"></span>
+		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
 	</footer>
-	<button id="back-to-top" aria-label="Back to top">↑ Top</button>
+	<button id="back-to-top" aria-label="Back to top">[ ↑ top ]</button>
 	<script src="script.js"></script>
 </body>
 
