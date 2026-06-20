@@ -270,6 +270,53 @@ nav.site-nav a.active:hover {
 	max-width: 34rem;
 }
 
+/* Contact icon-buttons in the intro */
+.contact-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75em;
+	margin-top: 1.5em;
+}
+
+.contact-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.35em 0.75em;
+	border: 2px solid var(--text);
+	color: var(--text);
+	background-color: var(--bg);
+	text-decoration: none;
+	box-shadow: 2px 2px 0 var(--border);
+	transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.contact-icon {
+	width: 1em;
+	height: 1em;
+	flex-shrink: 0;
+}
+
+.contact-link:hover {
+	background-color: var(--text);
+	color: var(--bg);
+	text-decoration: none;
+	transform: translateY(-2px);
+	box-shadow: 4px 4px 0 var(--border);
+}
+
+.contact-link:active {
+	transform: translateY(0);
+	box-shadow: 1px 1px 0 var(--border);
+}
+
+.contact-link:focus {
+	outline: 2px solid var(--rose);
+	outline-offset: 2px;
+	background-color: var(--bg);
+	color: var(--text);
+}
+
 .profile-text h1 {
 	font-family: var(--font-display);
 	font-size: clamp(2.6rem, 6.5vw, 4.4rem);
@@ -483,14 +530,6 @@ b {
 strong {
 	color: var(--text);
 	font-weight: 700;
-}
-
-#contact p {
-	margin-bottom: 1em;
-}
-
-.contact-key {
-	color: var(--gold);
 }
 
 /* --------------------------------------------------------------------------
@@ -1120,6 +1159,10 @@ kbd {
 	.profile-text {
 		text-align: center;
 		order: 2;
+	}
+
+	.contact-links {
+		justify-content: center;
 	}
 
 	.profile-image {
