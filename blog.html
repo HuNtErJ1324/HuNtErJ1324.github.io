@@ -1,50 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Blog | Justin Yang Chae</title>
-	<meta name="description" content="Blog by Justin Yang Chae - Coming soon">
-
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap">
-	<link rel="stylesheet" href="home.css">
-	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
-	<link rel="shortcut icon" href="/assets/favicon.ico">
-</head>
-
-<body>
-	<header class="banner">
-		<nav role="navigation" aria-label="Navigation">
-			<a href="index.html">Home</a>
-		</nav>
-		<h1>Blog</h1>
-	</header>
-	<main>
-		<section class="under-construction">
-			<h2>Under Construction</h2>
-			<pre aria-hidden="true">
-    .-""""""-.
-  .'          '.
- /   O      O   \
-:                :
-|                |
-:    .------.    :
- \  '        '  /
-  '.          .'
-    '-......-'
-			</pre>
-			<p>This page is currently being built. Check back soon.</p>
-			<p><a href="index.html">Back to home</a></p>
-		</section>
-	</main>
-	<footer>
-		<p>&copy; 2026 Justin Yang Chae</p>
-	</footer>
-</body>
-
-</html>
+---
+layout: default
+title: Blog
+description: Notes on machine learning, math, music, and whatever else I'm thinking about.
+permalink: /blog/
+redirect_from:
+  - /blog.html
+statusline_path: "~/blog"
+---
+<header class="banner page-banner">
+	<p class="boot-line" aria-hidden="true">justin@uw:~$ ls ~/blog</p>
+	<h1>Blog</h1>
+	<p>
+		Notes on machine learning, math, music, and whatever else I'm thinking about.
+	</p>
+</header>
+<section data-label="~/blog/">
+	<h2>Posts</h2>
+	{% if site.posts.size > 0 %}
+	<p class="listing-meta">total {{ site.posts.size }}</p>
+	<ul class="post-list">
+		{% for post in site.posts %}
+		<li>
+			<time class="post-date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
+			<a class="post-title" href="{{ post.url }}">{{ post.title | escape }}</a>
+			{% if post.description %}
+			<p class="post-excerpt">{{ post.description | escape }}</p>
+			{% endif %}
+		</li>
+		{% endfor %}
+	</ul>
+	{% else %}
+	<p class="listing-meta">total 0 — nothing here yet. check back soon.</p>
+	{% endif %}
+</section>
