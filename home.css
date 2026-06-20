@@ -505,6 +505,47 @@ h2::before {
 	color: var(--muted);
 }
 
+#contact .contact-links {
+	display: flex;
+	gap: 1.5rem;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-top: 0;
+}
+
+#contact .contact-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 1px solid var(--border);
+	background-color: var(--bg-inset);
+	color: var(--text);
+	text-decoration: none;
+	transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+#contact .contact-icon:hover {
+	background-color: var(--text);
+	color: var(--bg);
+	border-radius: 4px;
+	transform: scale(1.1);
+}
+
+#contact .contact-icon:focus {
+	outline: 2px solid var(--rose);
+	outline-offset: 2px;
+	background-color: var(--bg-inset);
+	color: var(--text);
+	border-radius: 4px;
+}
+
+#contact .contact-icon svg {
+	width: 24px;
+	height: 24px;
+}
+
 h2 a {
 	color: inherit;
 }
