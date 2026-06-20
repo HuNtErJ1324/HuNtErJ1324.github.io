@@ -298,8 +298,39 @@ h2::before {
 	color: var(--accent-medium);
 }
 
-#contact p {
-	margin-bottom: 1em;
+#contact .contact-links {
+	display: flex;
+	gap: 1.5rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+#contact .contact-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--primary-color);
+	transition: all 0.15s ease;
+}
+
+#contact .contact-icon:hover {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+	border-radius: 4px;
+	transform: scale(1.1);
+}
+
+#contact .contact-icon:focus {
+	outline: 2px solid var(--focus-color);
+	outline-offset: 2px;
+	background-color: var(--hover-bg);
+	color: var(--primary-color);
+	border-radius: 4px;
+}
+
+#contact .contact-icon svg {
+	width: 24px;
+	height: 24px;
 }
 
 ul {
