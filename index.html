@@ -150,15 +150,23 @@
 					<strong>
 						Merge-Split Dynamic Tokenization for Flexibility (2026 for CSE 481M Machine Learning Capstone)
 					</strong><br>
-					This was the final project for my machine learning capstone, where my team explored dynamic
-					tokenization, which adapts token boundaries to the input at inference time without retraining
-					the underlying model. We introduced a two-stage merge-split pipeline that augments dynamic BPE
-					and cross-word SuperBPE merging with an entropy-guided split stage, and evaluated it on English
-					(MMLU) and Korean (KMMLU, KoBEST) benchmarks across seven models. We found that while neither
-					merging nor splitting beats the unmodified model, entropy-guided splitting is a useful corrective,
-					recovering up to 19 points of MMLU accuracy lost to aggressive cross-word merging.
+					<b>Abstract: </b>Dynamic tokenization adapts token boundaries to the input at inference time,
+					shortening sequences without retraining the underlying model. Existing approaches are merge-only:
+					they coarsen the tokenization but cannot restore finer granularity when aggressive merging
+					collapses linguistically meaningful boundaries&mdash;a particular risk for morphologically complex
+					languages. We introduce a two-stage, inference-time merge&ndash;split pipeline that augments dynamic
+					BPE and cross-word SuperBPE merging with an entropy-guided split stage: tokens whose next-token
+					prediction entropy exceeds a threshold &tau; are re-tokenized into finer units. Using a frozen
+					Mistral-7B with a pretrained embedding hypernetwork, we evaluate each stage in isolation and in
+					combination on English (MMLU) and Korean (KMMLU, KoBEST), and extend the study to six further
+					models spanning a range of Korean training data. Our analysis paints a nuanced picture: neither
+					merging nor splitting improves over the unmodified model, and the hypernetwork's embedding
+					approximation&mdash;not segmentation itself&mdash;is the dominant cost, especially for Korean.
+					Splitting is nonetheless a useful corrective: in the aggressive cross-word merging regime where
+					merge-only accuracy collapses toward chance, entropy-guided splitting recovers up to 19 points
+					on MMLU. We characterize when dynamic tokenization helps in terms of token-distribution shift,
+					entropy-threshold sensitivity, and base-tokenizer granularity.
 					<a href="/assets/CSE_481M_Final_Report.pdf" target="_blank" rel="noopener noreferrer">[Report]</a>
-					<a href="https://github.com/HuNtErJ1324/dynamic-tokenization" target="_blank" rel="noopener noreferrer">[Code]</a>
 				</li>
 				<li>
 					<strong>
