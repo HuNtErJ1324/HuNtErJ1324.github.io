@@ -1,0 +1,38 @@
+# Site settings — built automatically by GitHub Pages (Jekyll).
+# index.html and music.html are plain static files (no front matter) and are
+# copied through unchanged; Jekyll only renders the blog, 404, and sitemap.
+title: Justin Yang Chae
+description: CS/Math student at the University of Washington — AI/ML research, violin performance, and a blog.
+url: "https://justin-chae.org"
+lang: en
+timezone: America/Los_Angeles
+author:
+  name: Justin Yang Chae
+  email: jcjustin.chae@gmail.com
+
+# Blog post URLs: /blog/<slug>/
+permalink: /blog/:title/
+
+markdown: kramdown
+
+# Plugins must be on the GitHub Pages whitelist:
+# https://pages.github.com/versions/
+plugins:
+  - jekyll-redirect-from
+
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+      statusline_path: "~/blog"
+
+# Keep repository docs out of the published site
+exclude:
+  - README.md
+  - AGENTS.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - vendor

@@ -4,11 +4,14 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 	<title>Justin Yang Chae - Personal Portfolio</title>
 	<meta name="description" content="Justin Yang Chae - Computer Science & Mathematics student at University of Washington, focused on AI/ML research and violin performance">
 	<meta name="keywords" content="Justin Chae, computer science, mathematics, machine learning, violin, University of Washington, AI research">
 	<meta name="author" content="Justin Yang Chae">
-	
+	<meta name="theme-color" content="#191724">
+
 	<!-- Open Graph / Social Media -->
 	<meta property="og:title" content="Justin Yang Chae - Personal Portfolio">
 	<meta property="og:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
@@ -16,58 +19,101 @@
 	<meta property="og:url" content="https://justin-chae.org">
 	<meta property="og:type" content="website">
 	<meta property="og:site_name" content="Justin Yang Chae">
-	
+
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:title" content="Justin Yang Chae - Personal Portfolio">
 	<meta name="twitter:description" content="CS/Math student portfolio featuring AI/ML research and violin performances">
 	<meta name="twitter:image" content="https://justin-chae.org/assets/profile_photo.jpg">
-	
+
 	<!-- Canonical URL -->
 	<link rel="canonical" href="https://justin-chae.org">
-	
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&family=VT323&display=swap">
+
 	<link rel="stylesheet" href="home.css">
 	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 	<link rel="shortcut icon" href="/assets/favicon.ico">
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "Person",
+		"name": "Justin Yang Chae",
+		"alternateName": "채정인",
+		"url": "https://justin-chae.org",
+		"image": "https://justin-chae.org/assets/profile_photo.jpg",
+		"email": "mailto:jcjustin.chae@gmail.com",
+		"affiliation": {
+			"@type": "CollegeOrUniversity",
+			"name": "University of Washington"
+		},
+		"knowsAbout": ["Machine Learning", "Artificial Intelligence", "Computer Science", "Mathematics", "Violin"],
+		"sameAs": [
+			"https://www.linkedin.com/in/justin-c-92403120b",
+			"https://scholar.google.com/citations?user=icnjuIMAAAAJ",
+			"https://github.com/HuNtErJ1324"
+		]
+	}
+	</script>
 </head>
 
 <body>
-	<nav role="navigation" aria-label="Main navigation">
+	<a href="#main" class="skip-link">Skip to content</a>
+	<nav class="site-nav" role="navigation" aria-label="Main navigation">
 		<a href="#about">About</a>
 		<a href="#education">Education</a>
 		<a href="#papers">Papers</a>
 		<a href="#projects">Projects</a>
 		<a href="#achievements">Achievements</a>
-		<a href="#contact">Contact</a>
 		<a href="music.html">Violin</a>
-		<a href="blog.html">Blog</a>
+		<a href="/blog/">Blog</a>
 	</nav>
 	<div class="banner">
 		<header>
+			<p class="boot-line" aria-hidden="true">justin@uw:~$ ./welcome</p>
 			<div class="profile-container">
 				<div class="profile-text">
-					<h1>Justin Yang Chae <span class="korean-name">(채정인)</span></h1>
-					<p>Undergraduate @ University of Washington</p>
+					<h1>Justin Yang Chae <span class="korean-name" lang="ko">(채정인)</span></h1>
+					<p class="tagline"># undergraduate @ university of washington</p>
+					<p class="banner-meta" aria-hidden="true">
+						<span class="meta-key">focus:</span> ai/ml research
+						<span class="meta-sep">·</span>
+						<span class="meta-key">also:</span> violin, anime, games
+					</p>
+					<div class="contact-links">
+						<a class="contact-link" href="mailto:jcjustin.chae@gmail.com">
+							<svg class="contact-icon" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+								<rect x="3" y="5" width="18" height="14"></rect>
+								<path d="M3 6l9 7 9-7"></path>
+							</svg>
+							<span>Email</span>
+						</a>
+						<a class="contact-link" href="https://www.linkedin.com/in/justin-c-92403120b" target="_blank" rel="noopener noreferrer">
+							<svg class="contact-icon" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.852 3.37-1.852 3.601 0 4.267 2.37 4.267 5.455v6.288zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"></path>
+							</svg>
+							<span>LinkedIn</span>
+						</a>
+					</div>
 				</div>
-					<picture>
+				<picture>
 					<source srcset="assets/profile_photo.webp" type="image/webp">
 					<img src="assets/profile_photo.jpg"
 						 class="profile-image"
 						 alt="Profile photo of Justin Yang Chae"
 						 width="400"
-						 height="400">
+						 height="400"
+						 fetchpriority="high"
+						 decoding="async">
 				</picture>
 			</div>
+			<p class="scroll-hint" aria-hidden="true">▼ scroll</p>
 		</header>
 	</div>
 
-	<main>
-		<section id="about">
+	<main id="main">
+		<section id="about" data-label="~/about.txt">
 			<h2>About Me</h2>
 			<p class="about-me-text">
 				Hi, I'm Justin and I'm currently studying computer science and mathematics with a focus on artificial
@@ -80,29 +126,29 @@
 			</p>
 		</section>
 
-		<section id="education">
+		<section id="education" data-label="~/education.txt">
 			<h2>Education</h2>
 			<p>B.S. in Computer Science and B.A. in Mathematics, University of Washington</p>
 			<p>Expected to graduate in <time datetime="2027">2027</time></p>
 		</section>
 
-		<section id="papers">
+		<section id="papers" data-label="~/papers/">
 			<h2>Papers</h2>
 			<ul>
 				<li>
 					<strong><a href="https://arxiv.org/abs/2510.27072" target="_blank" rel="noopener noreferrer">Towards Understanding Self-play for LLM Reasoning</a></strong><br>
 					<em>The 5th Workshop on Mathematical Reasoning and AI at NeurIPS 2025</em><br>
-					<b>Abstract:</b> Recent advances in large language model (LLM) reasoning, 
-					led by reinforcement learning with verifiable rewards (RLVR), have inspired 
-					self-play post-training, where models improve by generating and solving their 
-					own problems. While self-play has shown strong in-domain and out-of-domain gains, 
-					the mechanisms behind these improvements remain poorly understood. In this work, 
-					we analyze the training dynamics of self-play through the lens of the Absolute Zero Reasoner, 
-					comparing it against RLVR and supervised fine-tuning (SFT). Our study examines parameter update sparsity, 
-					entropy dynamics of token distributions, and alternative proposer reward functions. We further connect 
-					these dynamics to reasoning performance using pass@k evaluations. Together, our findings clarify how 
-					self-play differs from other post-training strategies, highlight its inherent limitations, and point 
-					toward future directions for improving LLM math reasoning through self-play. 
+					<b>Abstract:</b> Recent advances in large language model (LLM) reasoning,
+					led by reinforcement learning with verifiable rewards (RLVR), have inspired
+					self-play post-training, where models improve by generating and solving their
+					own problems. While self-play has shown strong in-domain and out-of-domain gains,
+					the mechanisms behind these improvements remain poorly understood. In this work,
+					we analyze the training dynamics of self-play through the lens of the Absolute Zero Reasoner,
+					comparing it against RLVR and supervised fine-tuning (SFT). Our study examines parameter update sparsity,
+					entropy dynamics of token distributions, and alternative proposer reward functions. We further connect
+					these dynamics to reasoning performance using pass@k evaluations. Together, our findings clarify how
+					self-play differs from other post-training strategies, highlight its inherent limitations, and point
+					toward future directions for improving LLM math reasoning through self-play.
 				</li>
 				<li>
 					<strong>
@@ -143,9 +189,31 @@
 			</ul>
 		</section>
 
-		<section id="projects">
+		<section id="projects" data-label="~/projects/">
 			<h2>Projects</h2>
 			<ul>
+				<li>
+					<strong>
+						Merge-Split Dynamic Tokenization for Flexibility (2026 for CSE 481M Machine Learning Capstone)
+					</strong><br>
+					<b>Abstract: </b>Dynamic tokenization adapts token boundaries to the input at inference time,
+					shortening sequences without retraining the underlying model. Existing approaches are merge-only:
+					they coarsen the tokenization but cannot restore finer granularity when aggressive merging
+					collapses linguistically meaningful boundaries&mdash;a particular risk for morphologically complex
+					languages. We introduce a two-stage, inference-time merge&ndash;split pipeline that augments dynamic
+					BPE and cross-word SuperBPE merging with an entropy-guided split stage: tokens whose next-token
+					prediction entropy exceeds a threshold &tau; are re-tokenized into finer units. Using a frozen
+					Mistral-7B with a pretrained embedding hypernetwork, we evaluate each stage in isolation and in
+					combination on English (MMLU) and Korean (KMMLU, KoBEST), and extend the study to six further
+					models spanning a range of Korean training data. Our analysis paints a nuanced picture: neither
+					merging nor splitting improves over the unmodified model, and the hypernetwork's embedding
+					approximation&mdash;not segmentation itself&mdash;is the dominant cost, especially for Korean.
+					Splitting is nonetheless a useful corrective: in the aggressive cross-word merging regime where
+					merge-only accuracy collapses toward chance, entropy-guided splitting recovers up to 19 points
+					on MMLU. We characterize when dynamic tokenization helps in terms of token-distribution shift,
+					entropy-threshold sensitivity, and base-tokenizer granularity.
+					<a href="/assets/CSE_481M_Final_Report.pdf" target="_blank" rel="noopener noreferrer">[Report]</a>
+				</li>
 				<li>
 					<strong>
 						Reproduction of Rec-R1 (2025 for CSE 493S Advanced Machine Learning)
@@ -171,19 +239,10 @@
 					composition in the Southern Ocean using deep learning.
 					<a href="/assets/DeepLearning_Poster.pdf" target="_blank" rel="noopener noreferrer">[Poster]</a>
 				</li>
-				<li>
-					<strong>
-						The Monty Hall Problem: Understanding Probability and Decision Making
-						(2025 for CSE 442 Data Visualization)
-					</strong><br>
-					This was a final project for my data visualization course where we utilized data
-					visualization techniques, interactivity, and storytelling to help users better
-					understand the Monty Hall Problem. <a href="https://final-project-0c38d6.pages.cs.washington.edu/" target="_blank" rel="noopener noreferrer">[Website]</a>
-				</li>
 			</ul>
 		</section>
 
-		<section id="achievements">
+		<section id="achievements" data-label="~/achievements.log">
 			<h2>Achievements</h2>
 			<ul>
 				<li><strong>Leo Maddox Foundation Endowed Scholarship (2024)</strong><br>
@@ -220,13 +279,18 @@
 				</a>
 			</div>
 		</section>
-
 	</main>
 
-	<footer>
-		<p>&copy; 2026 Justin Yang Chae</p>
+	<footer class="statusline">
+		<span class="statusline-mode" aria-hidden="true">NORMAL</span>
+		<span class="statusline-path">justin@justin-chae.org:~/portfolio</span>
+		<span class="statusline-spacer" aria-hidden="true"></span>
+		<span class="statusline-copy">&copy; 2026 Justin Yang Chae</span>
+		<span class="statusline-hint" aria-hidden="true">? help</span>
+		<span class="statusline-cmd" id="showcmd" aria-hidden="true"></span>
+		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
 	</footer>
-	<button id="back-to-top" aria-label="Back to top">↑ Top</button>
+	<button id="back-to-top" aria-label="Back to top">[ ↑ top ]</button>
 	<script src="script.js"></script>
 </body>
 
