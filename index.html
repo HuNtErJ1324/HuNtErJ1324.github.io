@@ -180,6 +180,28 @@
 			<ul>
 				<li>
 					<strong>
+						Merge-Split Dynamic Tokenization for Flexibility (2026 for CSE 481M Machine Learning Capstone)
+					</strong><br>
+					<b>Abstract: </b>Dynamic tokenization adapts token boundaries to the input at inference time,
+					shortening sequences without retraining the underlying model. Existing approaches are merge-only:
+					they coarsen the tokenization but cannot restore finer granularity when aggressive merging
+					collapses linguistically meaningful boundaries&mdash;a particular risk for morphologically complex
+					languages. We introduce a two-stage, inference-time merge&ndash;split pipeline that augments dynamic
+					BPE and cross-word SuperBPE merging with an entropy-guided split stage: tokens whose next-token
+					prediction entropy exceeds a threshold &tau; are re-tokenized into finer units. Using a frozen
+					Mistral-7B with a pretrained embedding hypernetwork, we evaluate each stage in isolation and in
+					combination on English (MMLU) and Korean (KMMLU, KoBEST), and extend the study to six further
+					models spanning a range of Korean training data. Our analysis paints a nuanced picture: neither
+					merging nor splitting improves over the unmodified model, and the hypernetwork's embedding
+					approximation&mdash;not segmentation itself&mdash;is the dominant cost, especially for Korean.
+					Splitting is nonetheless a useful corrective: in the aggressive cross-word merging regime where
+					merge-only accuracy collapses toward chance, entropy-guided splitting recovers up to 19 points
+					on MMLU. We characterize when dynamic tokenization helps in terms of token-distribution shift,
+					entropy-threshold sensitivity, and base-tokenizer granularity.
+					<a href="/assets/CSE_481M_Final_Report.pdf" target="_blank" rel="noopener noreferrer">[Report]</a>
+				</li>
+				<li>
+					<strong>
 						Reproduction of Rec-R1 (2025 for CSE 493S Advanced Machine Learning)
 					</strong><br>
 					Reproduced paper published in TMLR. Rec-R1 post-trains LLMs for product recommendation
@@ -202,15 +224,6 @@
 					phytoplankton community
 					composition in the Southern Ocean using deep learning.
 					<a href="/assets/DeepLearning_Poster.pdf" target="_blank" rel="noopener noreferrer">[Poster]</a>
-				</li>
-				<li>
-					<strong>
-						The Monty Hall Problem: Understanding Probability and Decision Making
-						(2025 for CSE 442 Data Visualization)
-					</strong><br>
-					This was a final project for my data visualization course where we utilized data
-					visualization techniques, interactivity, and storytelling to help users better
-					understand the Monty Hall Problem. <a href="https://final-project-0c38d6.pages.cs.washington.edu/" target="_blank" rel="noopener noreferrer">[Website]</a>
 				</li>
 			</ul>
 		</section>
