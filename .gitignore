@@ -1,5 +1,8 @@
 .env
 .claude/
+.pi/
+.polly/
+.worktrees/
 
 # Jekyll build artifacts (local preview only)
 _site/
