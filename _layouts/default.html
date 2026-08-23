@@ -39,9 +39,11 @@
 	<a href="#main" class="skip-link">Skip to content</a>
 	{% assign in_blog = false %}{% if page.url == '/blog/' or page.layout == 'post' %}{% assign in_blog = true %}{% endif %}
 	<nav class="site-nav" role="navigation" aria-label="Main navigation">
+		<a class="brand" href="/index.html">justin-chae:~$</a>
 		<a href="/">Home</a>
 		<a href="/music.html">Violin</a>
-		<a href="/blog/"{% if in_blog %} class="active"{% endif %}{% if page.url == '/blog/' %} aria-current="page"{% endif %}>Blog</a>
+		<a href="/blog/"		{% if in_blog %} class="active"{% endif %}{% if page.url == '/blog/' %} aria-current="page"{% endif %}>Blog</a>
+		<span class="nav-spacer" aria-hidden="true"></span>
 	</nav>
 	<main id="main">
 		{{ content }}

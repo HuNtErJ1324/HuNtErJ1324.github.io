@@ -1,15 +1,15 @@
 /* ==========================================================================
    justin-chae.org — terminal design system, Rosé Pine edition
    Palette: https://rosepinetheme.com (main variant). Clean flat surfaces,
-   no CRT effects. Type: VT323 (display) + IBM Plex Mono (body).
+   no CRT effects. Type: Departure Mono (display) + CommitMono (body).
    ========================================================================== */
 
-/* All fonts are self-hosted subsets (OFL 1.1, see assets/fonts/README.md).
+/* All fonts are self-hosted (OFL 1.1, see assets/fonts/README.md).
    Do NOT load fonts from Google Fonts: Cloudflare Fonts rewrites those links
    into inline <style> blocks that the strict CSP rightfully blocks. */
 @font-face {
-	font-family: 'VT323';
-	src: url('/assets/fonts/VT323-Regular.woff2') format('woff2');
+	font-family: 'Departure Mono';
+	src: url('/assets/fonts/DepartureMono-Regular.woff2') format('woff2');
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
@@ -74,7 +74,7 @@
 	--love: #eb6f92;                 /* errors, 404 */
 
 	/* Type */
-	--font-display: 'VT323', 'Nanum Gothic Coding', monospace;
+	--font-display: 'Departure Mono', 'Nanum Gothic Coding', monospace;
 	--font-body: 'CommitMono Nerd Font', 'Nanum Gothic Coding', monospace;
 
 	/* Layout */
@@ -90,6 +90,8 @@
 
 html {
 	scroll-behavior: smooth;
+	scrollbar-color: var(--border-bright) var(--bg);
+	scrollbar-width: thin;
 }
 
 body {
@@ -173,7 +175,7 @@ nav.site-nav {
 	-webkit-backdrop-filter: blur(8px);
 	border-bottom: 1px solid var(--border);
 	font-family: var(--font-display);
-	font-size: 1.3rem;
+	font-size: 1.15rem;
 	letter-spacing: 0.04em;
 }
 
@@ -184,6 +186,23 @@ nav.site-nav a {
 	text-decoration: none;
 	transition: color 0.15s ease, background-color 0.15s ease;
 	position: relative;
+}
+
+/* Persistent identity wordmark, pinned left of the centered links
+   (paired with .nav-spacer so the link group stays truly centered) */
+nav.site-nav a.brand {
+	margin-right: auto;
+	color: var(--text);
+}
+
+nav.site-nav a.brand:hover {
+	color: var(--rose);
+	background-color: transparent;
+}
+
+nav.site-nav .nav-spacer {
+	flex-shrink: 0;
+	margin-left: auto;
 }
 
 nav.site-nav a::before {
@@ -254,7 +273,7 @@ nav.site-nav a.active:hover {
 	text-align: left;
 	font-family: var(--font-display);
 	font-size: 1.25rem;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .profile-container {
@@ -374,7 +393,7 @@ nav.site-nav a.active:hover {
 	transform: translateX(-50%);
 	font-family: var(--font-display);
 	font-size: 1.05rem;
-	color: var(--muted);
+	color: var(--subtle);
 	animation: bob 2.4s ease-in-out infinite;
 }
 
@@ -422,13 +441,15 @@ header p {
 	max-width: 100%;
 	object-fit: cover;
 	border: 1px solid var(--border-bright);
-	transition: border-color 0.45s ease, box-shadow 0.45s ease;
+	filter: grayscale(1);
+	transition: border-color 0.45s ease, box-shadow 0.45s ease, filter 0.45s ease;
 }
 
 .profile-container picture:hover .profile-image,
 .profile-container picture:focus-within .profile-image {
 	border-color: var(--rose);
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+	filter: grayscale(0);
 }
 
 /* --------------------------------------------------------------------------
@@ -439,8 +460,14 @@ main {
 }
 
 p {
-	max-width: 800px;
+	max-width: 72ch;
 	margin: auto;
+}
+
+/* Prose inside panels hugs the left edge, like terminal output */
+section p {
+	margin-left: 0;
+	margin-right: auto;
 }
 
 section {
@@ -595,6 +622,69 @@ li:last-child {
 
 li:hover {
 	border-left-color: var(--rose);
+}
+
+/* --------------------------------------------------------------------------
+   Entry meta chips + collapsible abstracts (papers / projects)
+   -------------------------------------------------------------------------- */
+.entry-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.4em 0.6em;
+	margin: 0.35em 0 0;
+	font-size: 0.92rem;
+}
+
+.chip {
+	display: inline-block;
+	padding: 0 0.55em;
+	background: var(--bg);
+	border: 1px solid var(--border);
+	color: var(--gold);
+	font-family: var(--font-display);
+	font-size: 0.88rem;
+	line-height: 1.6;
+	letter-spacing: 0.05em;
+	white-space: nowrap;
+}
+
+.entry-meta a {
+	align-self: center;
+}
+
+details.abstract {
+	margin-top: 0.5em;
+}
+
+details.abstract summary {
+	cursor: pointer;
+	list-style: none;
+	color: var(--subtle);
+	font-style: italic;
+	user-select: none;
+}
+
+details.abstract summary::-webkit-details-marker {
+	display: none;
+}
+
+details.abstract summary::before {
+	content: '[+] ';
+	color: var(--gold);
+	font-style: normal;
+}
+
+details.abstract[open] summary::before {
+	content: '[-] ';
+}
+
+details.abstract summary:hover {
+	color: var(--text);
+}
+
+details.abstract > p {
+	margin: 0.75em 0 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -982,7 +1072,7 @@ pre code {
 	background: var(--bg-raised);
 	border-top: 1px solid var(--border);
 	font-family: var(--font-display);
-	font-size: 1.08rem;
+	font-size: 0.95rem;
 	letter-spacing: 0.04em;
 	color: var(--subtle);
 }
@@ -1017,7 +1107,7 @@ pre code {
 
 .statusline-hint {
 	white-space: nowrap;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .statusline-pct {
@@ -1183,6 +1273,16 @@ kbd {
 		padding: 0.15rem 0.45rem;
 	}
 
+	nav.site-nav a.brand {
+		order: -1;
+		width: 100%;
+		text-align: center;
+	}
+
+	nav.site-nav .nav-spacer {
+		display: none;
+	}
+
 	.banner {
 		padding-top: 1.5rem;
 	}
@@ -1308,6 +1408,10 @@ kbd {
 		background: #fff;
 		color: #000;
 		border-color: #999;
+	}
+
+	.profile-image {
+		filter: none;
 	}
 
 	a,
