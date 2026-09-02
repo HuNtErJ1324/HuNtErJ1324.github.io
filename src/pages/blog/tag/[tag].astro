@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+	const all = await getCollection('blog');
+	const counts = new Map<string, number>();
+	for (const post of all) {
+		for (const tag of post.data.tags) {
+			counts.set(tag, (counts.get(tag) ?? 0) + 1);
+		}
+	}
+	return [...counts.entries()].map(([tag, count]) => ({
+		params: { tag },
+		props: {
+			tag,
+			count,
+			posts: all
+				.filter((p) => p.data.tags.includes(tag))
+				.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+		}
+	}));
+}
+
+const { tag, count, posts } = Astro.props;
+---
+
+<Base
+	title={`#${tag} | Justin Yang Chae`}
+	description={`Posts tagged ${tag} on justin-chae.org`}
+	canonical={`/blog/tag/${tag}/`}
+	statuslinePath={`~/blog/tag/${tag}`}
+	activeNavLink="blog"
+>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~$ grep -l '#{tag}' ~/blog/*.md</p>
+		<h1>#{tag}</h1>
+		<p>
+			Posts tagged <strong>{tag}</strong> — <a href="/blog/">[ all posts ]</a>
+		</p>
+	</header>
+	<section data-label={`~/blog/tag/${tag}`}>
+		<h2>Posts</h2>
+		<p class="listing-meta">total {count}</p>
+		<ul class="post-list">
+			{posts.map((post) => (
+				<li>
+					{(post.data.category || post.data.tags.length > 0) && (
+						<div class="entry-meta">
+							{post.data.category && <span class="chip">{post.data.category}</span>}
+							{post.data.tags.map((t) => (
+								<a class="chip chip-tag" href={`/blog/tag/${t}/`}>{t}</a>
+							))}
+						</div>
+					)}
+					<time class="post-date" datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10)}</time>
+					<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
+					<p class="post-excerpt">{post.data.description}</p>
+				</li>
+			))}
+		</ul>
+	</section>
+</Base>

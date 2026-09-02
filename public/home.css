@@ -649,10 +649,21 @@ li:hover {
 	white-space: nowrap;
 }
 
-/* Tags are quieter than the category chip */
+/* Tags are quieter than the category chip; tag chips link to /blog/tag/<tag>/ */
 .chip-tag {
 	color: var(--iris);
 	border-color: var(--bg-inset);
+}
+
+a.chip {
+	text-decoration: none;
+}
+
+a.chip:hover,
+a.chip:focus {
+	background: var(--bg-inset);
+	border-color: var(--border-bright);
+	color: var(--text);
 }
 
 .entry-meta a {
