@@ -649,6 +649,12 @@ li:hover {
 	white-space: nowrap;
 }
 
+/* Tags are quieter than the category chip */
+.chip-tag {
+	color: var(--iris);
+	border-color: var(--bg-inset);
+}
+
 .entry-meta a {
 	align-self: center;
 }

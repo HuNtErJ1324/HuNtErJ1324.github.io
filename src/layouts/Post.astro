@@ -41,6 +41,9 @@ const dateLabel = date.toISOString().slice(0, 10);
 			<h1>{title}</h1>
 			<p class="post-meta">
 				{category && <span class="chip">{category}</span>}
+				{post.data.tags.map((tag) => (
+					<span class="chip chip-tag">{tag}</span>
+				))}
 				<time class="post-date" datetime={dateIso}>{dateLabel}</time>
 				<span class="meta-sep" aria-hidden="true">&middot;</span>
 				<span>{minutes} min read</span>

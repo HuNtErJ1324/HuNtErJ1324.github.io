@@ -2,6 +2,7 @@
 title: "Annotated agent traces"
 description: "How this blog renders Prime Intellect-style walkthroughs — collapsible tool calls, outputs, and annotations with running step numbers."
 category: research
+tags: ["meta", "agent-traces"]
 date: 2026-08-30
 ---
 

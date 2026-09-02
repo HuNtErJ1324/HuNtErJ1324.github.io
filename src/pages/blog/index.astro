@@ -29,6 +29,14 @@ const posts = (await getCollection('blog')).sort(
 				<ul class="post-list">
 					{posts.map((post) => (
 						<li>
+							{(post.data.category || post.data.tags.length > 0) && (
+								<div class="entry-meta">
+									{post.data.category && <span class="chip">{post.data.category}</span>}
+									{post.data.tags.map((tag) => (
+										<span class="chip chip-tag">{tag}</span>
+									))}
+								</div>
+							)}
 							<time class="post-date" datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10)}</time>
 							<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
 							<p class="post-excerpt">{post.data.description}</p>

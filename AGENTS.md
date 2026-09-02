@@ -24,7 +24,7 @@ This document serves as the primary source of truth for coding agents (AI) opera
 
 ### Blog posts
 
-*   Files: `src/content/blog/<slug>.md` (or `.mdx`) with `title`, `description`, `date`, optional `category` front matter. Output URL: `/blog/<slug>/`. The blog index and `sitemap.xml` update automatically. No RSS feed — the user explicitly removed it; do not reintroduce feeds.
+*   Files: `src/content/blog/<slug>.md` (or `.mdx`) with `title`, `description`, `date`, optional `category` (single chip, gold) and optional `tags: [...]` (multiple chips, iris) front matter. Output URL: `/blog/<slug>/`. The blog index and `sitemap.xml` update automatically; the index and post header both render the category + tag chips. No RSS feed — the user explicitly removed it; do not reintroduce feeds.
 *   **Math:** write `$$…$$` in markdown; it passes through literally and renders client-side by the **self-hosted MathJax 3.2.2 SVG** bundle (`/assets/mathjax/tex-svg.js` + `/assets/mathjax-config.js`, delimiters `\(…\)` `\[…\]` `$$…$$`). Loaded by `Post.astro` only.
 *   **Syntax highlighting:** Shiki with the `rose-pine` theme (config in `astro.config.mjs`).
 
