@@ -8,6 +8,7 @@ layout: default
 	<header class="post-header">
 		<h1>{{ page.title | escape }}</h1>
 		<p class="post-meta">
+			{% if page.category %}<span class="chip">{{ page.category }}</span>{% endif %}
 			<time class="post-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time>
 			<span class="meta-sep" aria-hidden="true">·</span>
 			<span>{{ content | strip_html | number_of_words | divided_by: 200 | at_least: 1 }} min read</span>
@@ -21,4 +22,19 @@ layout: default
 		<a href="/blog/">[ index ]</a>
 		{% if page.next %}<a href="{{ page.next.url }}">newer &rarr;</a>{% else %}<span>newer &rarr;</span>{% endif %}
 	</nav>
+	{% assign other_posts = site.posts | where_exp: "post", "post.url != page.url" %}
+	{% if other_posts.size > 0 %}
+	<aside class="related-posts" aria-label="Related posts">
+		<h2>related posts</h2>
+		<ul class="post-list">
+			{% for post in other_posts limit: 3 %}
+			<li>
+				<time class="post-date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
+				<a class="post-title" href="{{ post.url }}">{{ post.title | escape }}</a>
+				{% if post.description %}<p class="post-excerpt">{{ post.description | escape }}</p>{% endif %}
+			</li>
+			{% endfor %}
+		</ul>
+	</aside>
+	{% endif %}
 </article>

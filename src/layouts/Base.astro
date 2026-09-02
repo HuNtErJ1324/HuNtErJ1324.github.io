@@ -1,0 +1,118 @@
+---
+// Shared chrome for every page — ported 1:1 from the Jekyll default layout.
+// CSP note: 'post' pages allow style-src 'unsafe-inline' (MathJax SVG styles
+// and Shiki's inline token colors); every other page stays strict.
+interface Props {
+	title: string;
+	description: string;
+	canonical: string;
+	statuslinePath?: string;
+	csp?: 'strict' | 'post';
+	ogType?: 'website' | 'article';
+	ogImage?: string;
+	publishedTime?: string;
+	activeNavLink?: 'home' | 'violin' | 'blog';
+	navVariant?: 'home' | 'inner';
+}
+
+const {
+	title,
+	description,
+	canonical,
+	statuslinePath = '~/portfolio',
+	csp = 'strict',
+	ogType = 'website',
+	ogImage = '/assets/profile_photo.jpg',
+	publishedTime,
+	activeNavLink,
+	navVariant = 'inner'
+} = Astro.props;
+
+const cspContent =
+	csp === 'post'
+		? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+		: "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
+
+const siteUrl = 'https://justin-chae.org';
+const linkClass = (key: string) => (activeNavLink === key ? 'active' : undefined);
+const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy" content={cspContent}>
+	<title>{title}</title>
+	<meta name="description" content={description}>
+	<meta name="author" content="Justin Yang Chae">
+	<meta name="theme-color" content="#191724">
+
+	<!-- Open Graph / Social Media -->
+	<meta property="og:title" content={title}>
+	<meta property="og:description" content={description}>
+	<meta property="og:image" content={`${siteUrl}${ogImage}`}>
+	<meta property="og:url" content={`${siteUrl}${canonical}`}>
+	<meta property="og:type" content={ogType}>
+	<meta property="og:site_name" content="Justin Yang Chae">
+	{publishedTime && <meta property="article:published_time" content={publishedTime} />}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content={csp === 'post' ? 'summary' : 'summary_large_image'}>
+	<meta name="twitter:title" content={title}>
+	<meta name="twitter:description" content={description}>
+	<meta name="twitter:image" content={`${siteUrl}${ogImage}`}>
+
+	<link rel="canonical" href={`${siteUrl}${canonical}`}>
+
+	<link rel="stylesheet" href="/home.css">
+	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+	<link rel="shortcut icon" href="/assets/favicon.ico">
+
+	<slot name="head" />
+</head>
+
+<body>
+	<a href="#main" class="skip-link">Skip to content</a>
+	<nav class="site-nav" role="navigation" aria-label="Main navigation">
+		<a class="brand" href="/index.html">justin-chae:~$</a>
+		{navVariant === 'home' ? (
+			<>
+				<a href="/#about">About</a>
+				<a href="/#education">Education</a>
+				<a href="/#papers">Papers</a>
+				<a href="/#projects">Projects</a>
+				<a href="/#achievements">Achievements</a>
+				<a href="/music/">Violin</a>
+				<a href="/blog/">Blog</a>
+			</>
+		) : (
+			<>
+				<a href="/index.html" class={linkClass('home')} aria-current={linkCurrent('home')}>Home</a>
+				<a href="/music/" class={linkClass('violin')} aria-current={linkCurrent('violin')}>Violin</a>
+				<a href="/blog/" class={linkClass('blog')} aria-current={linkCurrent('blog')}>Blog</a>
+			</>
+		)}
+		<span class="nav-spacer" aria-hidden="true"></span>
+	</nav>
+	<main id="main">
+		<slot />
+	</main>
+	<footer class="statusline">
+		<span class="statusline-mode" aria-hidden="true">NORMAL</span>
+		<span class="statusline-path">justin@justin-chae.org:{statuslinePath}</span>
+		<span class="statusline-spacer" aria-hidden="true"></span>
+		<span class="statusline-copy">&copy; 2026 Justin Yang Chae</span>
+		<span class="statusline-hint" aria-hidden="true">? help</span>
+		<span class="statusline-cmd" id="showcmd" aria-hidden="true"></span>
+		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
+	</footer>
+	<button id="back-to-top" aria-label="Back to top">[ &uarr; top ]</button>
+	<script is:inline src="/script.js"></script>
+</body>
+
+</html>

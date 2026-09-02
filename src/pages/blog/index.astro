@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+
+<Base
+	title="Blog | Justin Yang Chae"
+	description="Notes on machine learning, math, music, and whatever else I'm thinking about."
+	canonical="/blog/"
+	statuslinePath="~/blog"
+	activeNavLink="blog"
+>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~$ ls ~/blog</p>
+		<h1>Blog</h1>
+		<p>
+			Notes on machine learning, math, music, and whatever else I'm thinking about.
+		</p>
+	</header>
+	<section data-label="~/blog/">
+		<h2>Posts</h2>
+		{posts.length > 0 ? (
+			<>
+				<p class="listing-meta">total {posts.length}</p>
+				<ul class="post-list">
+					{posts.map((post) => (
+						<li>
+							<time class="post-date" datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10)}</time>
+							<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
+							<p class="post-excerpt">{post.data.description}</p>
+						</li>
+					))}
+				</ul>
+			</>
+		) : (
+			<p class="listing-meta">total 0 — nothing here yet. check back soon.</p>
+		)}
+	</section>
+</Base>

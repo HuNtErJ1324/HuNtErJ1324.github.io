@@ -1,0 +1,76 @@
+---
+// Post layout — ported from the Jekyll post layout, plus the related-posts
+// aside the general post anatomy calls for. MathJax loads here (post pages
+// only), exactly like the Jekyll setup did.
+import Base from './Base.astro';
+
+interface Props {
+	post: any;
+	minutes: number;
+	previous: any | null;
+	next: any | null;
+	related: any[];
+}
+
+const { post, minutes, previous, next, related } = Astro.props;
+const { date, title, description, category } = post.data;
+const dateIso = date.toISOString();
+const dateLabel = date.toISOString().slice(0, 10);
+---
+
+<Base
+	title={`${title} | Justin Yang Chae`}
+	description={description}
+	canonical={`/blog/${post.id}/`}
+	statuslinePath="~/blog"
+	csp="post"
+	ogType="article"
+	publishedTime={dateIso}
+	activeNavLink="blog"
+>
+	<Fragment slot="head">
+		<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
+		<script is:inline src="/assets/mathjax-config.js"></script>
+		<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
+	</Fragment>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {post.id}.md</p>
+	</header>
+	<article class="post">
+		<header class="post-header">
+			<h1>{title}</h1>
+			<p class="post-meta">
+				{category && <span class="chip">{category}</span>}
+				<time class="post-date" datetime={dateIso}>{dateLabel}</time>
+				<span class="meta-sep" aria-hidden="true">&middot;</span>
+				<span>{minutes} min read</span>
+			</p>
+		</header>
+		<div class="post-content">
+			<slot />
+		</div>
+		<nav class="post-nav" aria-label="Post navigation">
+			{previous
+				? <a href={`/blog/${previous.id}/`}>&larr; older</a>
+				: <span>&larr; older</span>}
+			<a href="/blog/">[ index ]</a>
+			{next
+				? <a href={`/blog/${next.id}/`}>newer &rarr;</a>
+				: <span>newer &rarr;</span>}
+		</nav>
+		{related.length > 0 && (
+			<aside class="related-posts" aria-label="Related posts">
+				<h2>related posts</h2>
+				<ul class="post-list">
+					{related.map((p) => (
+						<li>
+							<time class="post-date" datetime={p.data.date.toISOString()}>{p.data.date.toISOString().slice(0, 10)}</time>
+							<a class="post-title" href={`/blog/${p.id}/`}>{p.data.title}</a>
+							<p class="post-excerpt">{p.data.description}</p>
+						</li>
+					))}
+				</ul>
+			</aside>
+		)}
+	</article>
+</Base>
