@@ -188,23 +188,6 @@ nav.site-nav a {
 	position: relative;
 }
 
-/* Persistent identity wordmark, pinned left of the centered links
-   (paired with .nav-spacer so the link group stays truly centered) */
-nav.site-nav a.brand {
-	margin-right: auto;
-	color: var(--text);
-}
-
-nav.site-nav a.brand:hover {
-	color: var(--rose);
-	background-color: transparent;
-}
-
-nav.site-nav .nav-spacer {
-	flex-shrink: 0;
-	margin-left: auto;
-}
-
 nav.site-nav a::before {
 	content: '[';
 	opacity: 0;
@@ -427,7 +410,7 @@ header p {
 }
 
 /* --------------------------------------------------------------------------
-   Profile image: greyscale at rest, true color on hover/focus
+   Profile image: always full color; rose border + shadow on hover
    -------------------------------------------------------------------------- */
 .profile-container picture {
 	position: relative;
@@ -441,15 +424,12 @@ header p {
 	max-width: 100%;
 	object-fit: cover;
 	border: 1px solid var(--border-bright);
-	filter: grayscale(1);
-	transition: border-color 0.45s ease, box-shadow 0.45s ease, filter 0.45s ease;
+	transition: border-color 0.45s ease, box-shadow 0.45s ease;
 }
 
-.profile-container picture:hover .profile-image,
-.profile-container picture:focus-within .profile-image {
+.profile-container picture:hover .profile-image {
 	border-color: var(--rose);
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-	filter: grayscale(0);
 }
 
 /* --------------------------------------------------------------------------
@@ -720,6 +700,12 @@ details.abstract > p {
 	details.abstract[open]::details-content {
 		block-size: auto;
 	}
+}
+
+/* Keep sub/superscripts (e.g. CO₂) from stretching their line box */
+sub,
+sup {
+	line-height: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -1077,7 +1063,7 @@ mjx-container {
 }
 
 /* --------------------------------------------------------------------------
-   Code: inline, blocks, rouge syntax theme (Rosé Pine)
+   Code: inline, blocks, Shiki syntax theme (Rosé Pine)
    -------------------------------------------------------------------------- */
 code {
 	font-family: var(--font-body);
@@ -1124,7 +1110,7 @@ pre code {
 
 /* --------------------------------------------------------------------------
    Blog: annotated trace blocks (Prime Intellect-style walkthroughs) and
-   copy buttons. Tag a fenced code block with {:.tool-call} etc. in a post;
+   copy buttons. Wrap a block in a :::tool-call (etc.) container in a post;
    script.js wraps it in these collapsible panels.
    -------------------------------------------------------------------------- */
 .code-block {
@@ -1291,7 +1277,7 @@ pre code {
 
 /* --------------------------------------------------------------------------
    Blog: general post anatomy (Prime Intellect-style)
-   tl;dr callout: {:.tldr} on a paragraph or blockquote
+   tl;dr callout: :::tldr container around a paragraph or blockquote
    -------------------------------------------------------------------------- */
 .post-content .tldr {
 	background: var(--bg-inset);
@@ -1744,22 +1730,18 @@ mark.search-hit.current {
 
 	nav.site-nav a {
 		display: inline-block;
-		margin: 0.15rem 0.2rem;
-		padding: 0.15rem 0.45rem;
-	}
-
-	nav.site-nav a.brand {
-		order: -1;
-		width: 100%;
-		text-align: center;
-	}
-
-	nav.site-nav .nav-spacer {
-		display: none;
+		margin: 0.15rem 0.1rem;
+		padding: 0.15rem 0.4rem;
 	}
 
 	.banner {
 		padding-top: 1.5rem;
+	}
+
+	/* The in-flow mobile nav pushes the hero down, so the hint would sit
+	   behind the statusline */
+	.scroll-hint {
+		display: none;
 	}
 
 	.boot-line {
@@ -1820,6 +1802,14 @@ mark.search-hit.current {
 	.post-list .post-date {
 		display: block;
 		margin-bottom: 0.1em;
+	}
+}
+
+/* Keep Home / Violin / Blog on one row on the narrowest phones */
+@media (max-width: 359px) {
+	nav.site-nav {
+		font-size: 1rem;
+		letter-spacing: 0.02em;
 	}
 }
 
@@ -1917,10 +1907,6 @@ mark.search-hit.current {
 		background: #fff;
 		color: #000;
 		border-color: #999;
-	}
-
-	.profile-image {
-		filter: none;
 	}
 
 	mark.search-hit {

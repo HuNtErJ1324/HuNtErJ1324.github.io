@@ -48,77 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 3. Active Navigation Highlighting (same-page section links only)
-        const navLinks = document.querySelectorAll('nav a[href^="#"]');
-        const sections = document.querySelectorAll('section[id]');
-
-        if (sections.length > 0 && navLinks.length > 0) {
-            let navTicking = false;
-            let clickedId = null;
-            let clickTimer = null;
-
-            function setActive(id) {
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    link.removeAttribute('aria-current');
-                });
-                if (id) {
-                    const link = document.querySelector(`nav a[href="#${id}"]`);
-                    if (link) {
-                        link.classList.add('active');
-                        link.setAttribute('aria-current', 'true');
-                    }
-                }
-            }
-
-            function getScrollActiveId() {
-                // Pick the last section whose top has scrolled past the offset
-                const offset = 80;
-                let current = null;
-                for (const section of sections) {
-                    if (section.getBoundingClientRect().top <= offset) {
-                        current = section.getAttribute('id');
-                    }
-                }
-                return current;
-            }
-
-            function updateActiveNav() {
-                if (clickedId) return;
-                setActive(getScrollActiveId());
-            }
-
-            // When a nav link is clicked, lock highlighting to that section
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    const href = link.getAttribute('href');
-                    if (!href || !href.startsWith('#')) return;
-                    clickedId = href.slice(1);
-                    setActive(clickedId);
-
-                    // Release lock after scroll settles
-                    clearTimeout(clickTimer);
-                    clickTimer = setTimeout(() => {
-                        clickedId = null;
-                        updateActiveNav();
-                    }, 800);
-                });
-            });
-
-            window.addEventListener('scroll', () => {
-                if (!navTicking) {
-                    requestAnimationFrame(() => {
-                        updateActiveNav();
-                        navTicking = false;
-                    });
-                    navTicking = true;
-                }
-            }, { passive: true });
-
-            updateActiveNav();
-        }
-
-        // 4. Lite YouTube Embeds (privacy-enhanced, loaded on click)
+        // 3. Lite YouTube Embeds (privacy-enhanced, loaded on click)
         const videoPlaceholders = document.querySelectorAll('.video-placeholder');
 
         // Regex to validate YouTube video IDs (11 characters, alphanumeric, dash, underscore)
@@ -157,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 4b. Lite X embeds (privacy-enhanced, loaded on click)
+        // 3b. Lite X embeds (privacy-enhanced, loaded on click)
         // Authoring stays plain markdown — paste a normal link such as
         // [my post](https://x.com/user/status/123...) and JS upgrades it
         // into a click-to-load placeholder. Without JS it remains a link.
@@ -227,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 5. Back to Top button + statusline scroll position (vim style)
+        // 4. Back to Top button + statusline scroll position (vim style)
         const backToTopButton = document.getElementById('back-to-top');
         const scrollPct = document.getElementById('scroll-pct');
 
@@ -279,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 6. Vim-style keyboard navigation (hjkl + friends)
+        // 5. Vim-style keyboard navigation (hjkl + friends)
         //    j/k line scroll, d/u half page, gg/G top/bottom,
         //    h/l previous/next page, ? toggles the :help overlay.
         const LINE_STEP = 72;
@@ -314,17 +244,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const current = window.scrollY;
             const diff = scrollTarget - current;
-            if (Math.abs(diff) < 1) {
+            // Time-based ease out (~18% of remaining distance per 60fps frame,
+            // normalized by dt so it feels the same at any refresh rate)
+            const factor = 1 - Math.pow(0.82, dt / 16.67);
+            const step = diff * factor;
+            // Snap once a step drops below a pixel: sub-pixel steps round back to
+            // the same scroll offset and would otherwise loop forever
+            if (Math.abs(diff) < 1 || Math.abs(step) < 1) {
                 window.scrollTo({ top: scrollTarget, behavior: 'instant' });
                 scrollTarget = null;
                 scrollAnimating = false;
                 lastFrameTime = null;
                 return;
             }
-            // Time-based ease out (~18% of remaining distance per 60fps frame,
-            // normalized by dt so it feels the same at any refresh rate)
-            const factor = 1 - Math.pow(0.82, dt / 16.67);
-            window.scrollTo({ top: current + diff * factor, behavior: 'instant' });
+            window.scrollTo({ top: current + step, behavior: 'instant' });
             requestAnimationFrame(animateScrollStep);
         };
 
@@ -520,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 7. Vim command mode (:) — an ex-style command line docked above the
+        // 6. Vim command mode (:) — an ex-style command line docked above the
         //    statusline. Bare section names jump (cross-page when needed),
         //    :email copies the contact address, :help opens the key overlay.
         //    Feedback lands in the statusline (showcmd) plus a visually-hidden
@@ -815,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modeBlock) modeBlock.textContent = baseMode();
         }
 
-        // 8. Vim-style search (/) — case-insensitive substring search over the
+        // 7. Vim-style search (/) — case-insensitive substring search over the
         //    page text. Matches are wrapped in <mark class="search-hit"> (no
         //    inline styles — CSP), n/N cycle through them (:noh clears).
         const clearSearch = () => {
@@ -924,11 +857,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hashed && hashed.tagName === 'SECTION') flashSection(hashed);
         }
 
-        // 9. Blog post enhancements: Prime Intellect-style annotated trace
-        //    walkthroughs + copy buttons on code blocks. Authors tag fenced
-        //    code blocks with a kramdown IAL ({:.tool-call} on the line after
-        //    the fence); JS wraps them in collapsible <details> panels with a
-        //    typed label and a running step number. Everything degrades to a
+        // 8. Blog post enhancements: Prime Intellect-style annotated trace
+        //    walkthroughs + copy buttons on code blocks. Authors wrap blocks in
+        //    :::tool-call / :::tool-output / ... containers (remarkTraceDirectives
+        //    puts the class on the wrapper); JS wraps them in collapsible <details>
+        //    panels with a typed label and a running step number. Everything degrades to a
         //    normal code block without JS.
         const postContent = document.querySelector('.post-content');
         if (postContent) {
@@ -954,9 +887,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // them in document order so step numbers interleave correctly
             const traceItems = [];
             postContent.querySelectorAll('pre').forEach((pre) => {
-                // kramdown lands IAL classes on the block, its parent wrapper
-                // (div.language-x.highlighter-rouge), or the grandparent —
-                // probe all three so the convention survives renderer changes.
+                // The directive class may land on the <pre>, its wrapper, or the
+                // grandparent — probe all three so the convention survives renderer changes.
                 const type = traceTypeOf(pre)
                     || traceTypeOf(pre.parentElement)
                     || traceTypeOf(pre.parentElement && pre.parentElement.parentElement);

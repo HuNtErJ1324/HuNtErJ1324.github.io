@@ -10,14 +10,22 @@ permissions:
   pages: write
   id-token: write
 
+# Allow only one deployment at a time; let an in-progress one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install, build, and upload site
-        uses: withastro/action@v3
+        uses: withastro/action@v6
+        with:
+          # The restored content cache would keep serving deleted posts.
+          cache: false
 
   deploy:
     needs: build
@@ -28,4 +36,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

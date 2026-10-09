@@ -5,18 +5,19 @@ This document serves as the primary source of truth for coding agents (AI) opera
 ## 1. Project Overview & Environment
 
 *   **Type:** Astro 5 static site (the site was ported from Jekyll — sources preserved under `_jekyll/` for reference).
-*   **Hosting:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`, `withastro/action`). The `astro-port` branch carries the port; `main` may still hold the Jekyll site until the merge.
+*   **Hosting:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`, `withastro/action`). The repo's Pages source must stay set to **GitHub Actions** (`build_type: workflow`) — the legacy "deploy from branch" mode runs a Jekyll build that fails on `.astro` front matter. Keep `cache: false` on `withastro/action`: its restored content cache would keep serving deleted posts.
 *   **Structure:**
-    *   `src/pages/` — `index.astro` (home), `music.astro` (violin), `404.astro`, `blog/index.astro`, `blog/[...slug].astro` (post route), `sitemap.xml.js` (hand-rolled endpoint).
+    *   `src/pages/` — `index.astro` (home), `music.astro` (violin), `404.astro`, `blog/index.astro`, `blog/[...slug].astro` (post route), `blog/tag/[tag].astro` (tag listing route), `sitemap.xml.js` (hand-rolled endpoint).
     *   `src/layouts/` — `Base.astro` (head/CSP/nav/statusline chrome), `Post.astro` (post header/related posts/MathJax).
-    *   `src/content/blog/` — posts as `.md` or `.mdx` (MDX enabled: posts can import components).
+        *   **Site nav** (`Base.astro`): the same three page links on every page — Home / Violin / Blog — with the current page marked server-side via the `activeNavLink` prop (`'home' | 'violin' | 'blog'` → `.active` + `aria-current="page"`). The user removed the `justin-chae:~$` brand wordmark and the home-page section anchor links (About/Education/…); do not reintroduce them — sections stay reachable via `:about` etc.
+    *   `src/content/blog/` — posts as `.md` or `.mdx` (MDX enabled: posts can import components). Keep the `.gitkeep`: with zero posts `/blog/` renders its empty state, no post/tag pages are generated, and the build's `[glob-loader] No files found` warning is expected. Locally, Astro's content cache (`node_modules/.astro/`) keeps serving deleted posts when the folder ends up empty — use `npx astro build --force` after removing posts.
     *   `src/plugins/remark-trace-directives.js` — maps `:::tool-call`-style containers onto the class conventions `public/script.js` expects.
     *   `public/` — `home.css`, `script.js`, `assets/` (fonts, favicons, PDFs, MathJax), `CNAME`, `robots.txt`, `.nojekyll`, and `music.html`/`blog.html` meta-refresh shims for the legacy URLs.
 *   **URLs:** `/` , `/music/`, `/blog/`, `/blog/<slug>/` (slug = filename). The old `/music.html` and `/blog.html` redirect via shims in `public/`.
 
 ### Build & Run Commands
 
-*   `npm install` (once; Node 20+)
+*   `npm install` (once; Node 22+ — CI builds on Node 24)
 *   `npm run dev` — dev server with HMR for local work
 *   `npm run build` — static build into `dist/`
 *   `npm run preview` — serve `dist/` for final checks
@@ -25,7 +26,7 @@ This document serves as the primary source of truth for coding agents (AI) opera
 ### Blog posts
 
 *   Files: `src/content/blog/<slug>.md` (or `.mdx`) with `title`, `description`, `date`, optional `category` (single chip, gold) and optional `tags: [...]` (multiple chips, iris; use kebab-case — tags become URL segments) front matter. Output URL: `/blog/<slug>/`. The blog index and post header both render the category + tag chips, and **tag chips link to `/blog/tag/<tag>/`** listing pages (generated automatically for every tag in use). The blog index and `sitemap.xml` update automatically. No RSS feed — the user explicitly removed it; do not reintroduce feeds.
-*   **Math:** write `$$…$$` in markdown; it passes through literally and renders client-side by the **self-hosted MathJax 3.2.2 SVG** bundle (`/assets/mathjax/tex-svg.js` + `/assets/mathjax-config.js`, delimiters `\(…\)` `\[…\]` `$$…$$`). Loaded by `Post.astro` only.
+*   **Math:** write `$$…$$` in markdown; it renders client-side by the **self-hosted MathJax 3.2.2 SVG** bundle (`/assets/mathjax/tex-svg.js` + `/assets/mathjax-config.js`, delimiters `\(…\)` `\[…\]` `$$…$$`). Loaded by `Post.astro` only. Caveat: the markdown parser still processes `$$…$$` contents, so backslash-punctuation escapes (`\;` `\,` `\{` `\\`) and `_…_`/`*…*` get eaten — double the backslashes or add `remark-math` before relying on them.
 *   **Syntax highlighting:** Shiki with the `rose-pine` theme (config in `astro.config.mjs`).
 
 ## 2. Code Style & Conventions
@@ -49,6 +50,8 @@ This document serves as the primary source of truth for coding agents (AI) opera
 *   **Korean text:** `assets/fonts/NanumGothicCoding-name.woff2` contains ONLY the three glyphs 채정인. If you add any other Korean text, re-subset it with wider `--unicodes` (see `assets/fonts/README.md`).
 *   **Units:** `rem` for font sizes/padding; kebab-case class names; multi-line rules.
 *   **Motion:** every animation/transition must have a `prefers-reduced-motion: reduce` override.
+*   **Profile photo:** stays in full color — no grayscale/desaturate filter (explicit user request); hover only adds the rose border + shadow.
+*   **Cache-busting:** `Base.astro` appends `?v=<commit>` (from `GITHUB_SHA`) to `/home.css` and `/script.js`, because Cloudflare caches them in browsers for hours. Keep it if you move or rename either file.
 
 ### JavaScript (`public/script.js`)
 
@@ -61,14 +64,14 @@ This document serves as the primary source of truth for coding agents (AI) opera
 
 ### Interactivity (public/script.js)
 *   **Centralization:** All interactivity lives in `public/script.js` (shared by every Astro page). No inline JS in HTML.
-*   Features: typed boot line, scroll reveal, active-nav highlighting (+`aria-current`), lite YouTube embeds, back-to-top, statusline scroll position + showcmd, and vim keyboard navigation (`j`/`k` scroll, `d`/`u` half page, `gg`/`G` top/bottom, `h`/`l` previous/next page, `?` help overlay, `Esc` close). The keydown handler must keep ignoring modifier combos and form fields, and the help overlay is built with `createElement` (no inline styles — CSP).
+*   Features: typed boot line, scroll reveal, lite YouTube embeds, lite X embeds (on post pages, plain `x.com/<user>/status/<id>` links become click-to-load placeholders; the `post` CSP allows the platform.twitter.com frame), back-to-top, statusline scroll position + showcmd, and vim keyboard navigation (`j`/`k` scroll, `d`/`u` half page, `gg`/`G` top/bottom, `h`/`l` previous/next page, `?` help overlay, `Esc` close). The keydown handler must keep ignoring modifier combos and form fields, and the help overlay is built with `createElement` (no inline styles — CSP).
 *   **Vim command mode (`:`):** pressing `:` opens an ex-style command line docked above the statusline (mode block shows `CMD`). Commands: `:about`/`:education`/`:papers`/`:projects`/`:achievements` scroll to sections (navigating to `/index.html#<section>` first when on another page), `:music`/`:blog`/`:home` navigate pages, `:email` copies the contact address to the clipboard, `:linkedin`/`:scholar`/`:github`/`:x`/`:twitter` open those profiles in a new tab (`noopener`), `:help` opens the key overlay, `:ls` lists sections, `:top`/`:bottom` (+ `:1`/`:$`) scroll, `:noh`/`:nohlsearch` clears search highlights, and `:q`/`:q!`/`:wq` are deliberate easter eggs. Supports `↑`/`↓` history, `Tab` prefix completion with candidate list, and `Esc` to close. Unknown commands echo `E492: not an editor command: <name>` in the `--love` color. Feedback is echoed into `#showcmd` (`.flash-msg`/`.err` classes) AND mirrored into a `.visually-hidden` `aria-live` region — keep both when editing.
 *   **Vim search (`/`, `n`, `N`):** `/` opens the same docked command line in SEARCH mode; Enter runs a case-insensitive substring search over `<main>` text and wraps hits in `mark.search-hit` (`.current` = rose; `n`/`N` cycle and auto-open collapsed `details`/reveal hidden sections; empty Enter reuses the last pattern). Misses echo `E486: pattern not found`, `n` with no prior search echoes `E35`. Highlights clear via `:noh` or a new page load. Keep the `prefers-reduced-motion` (pulse) and print (transparent) overrides when editing.
 *   **Blog trace blocks (Prime Intellect-style):** in a post, wrap code blocks or prose in directive containers — `:::tool-call` / `:::tool-output` / `:::annotation` / `:::reasoning` (starts collapsed) / `:::bibtex` (unnumbered) / `:::tldr` — and the `remarkTraceDirectives` plugin puts the class on the wrapper. On post pages `script.js` wraps these in numbered collapsible `details.trace-block` panels (steps run in document order across mixed code/prose) and every `pre` gets an overlay `[copy]` button (`.copied`/`.err` feedback states). Footnotes via `[^1]`/`[^1]: text` (GFM) render as a `~/footnotes` well. Plain code blocks stay unnumbered. Without JS everything degrades to normal code blocks/paragraphs.
 *   **Blog post anatomy (general pattern):** optional `category: research|announcement|...` front matter renders a chip in the post header. Start with a `:::tldr` callout, then H2 sections (context → method → results → limits → related work), trace blocks for agent walkthroughs, a `## Citation` H2 with a `:::bibtex` block, and `[^n]` footnotes. The post layout auto-appends up to 3 **related posts** (`aside.related-posts`). `.mdx` posts may import components for charts/widgets (CSP applies — no inline scripts; load self-hosted files).
 *   **Section flash:** command-mode jumps and `#hash` arrivals flash the target panel's border via the `.section-flash` class (animation restarts through reflow). Must keep its `prefers-reduced-motion: reduce` override.
 *   **Abstract disclosure animation:** `details.abstract` animates open/close via `::details-content` + `interpolate-size: allow-keywords` inside an `@supports` block (progressive enhancement; unsupported browsers keep the instant toggle).
-*   **Contact links:** intro icon buttons on the home page (Email, LinkedIn, Scholar, X) — mirror any changes in the JSON-LD `sameAs` array and the `:` command table.
+*   **Contact links:** intro icon buttons on the home page (Email, LinkedIn, Scholar, GitHub, X) — mirror any changes in the JSON-LD `sameAs` array and the `:` command table.
 
 ### Assets
 *   **Images:** WebP preferred with fallbacks (`<picture>`). Stored in `public/assets/`.
@@ -77,5 +80,5 @@ This document serves as the primary source of truth for coding agents (AI) opera
 ## 4. Git & Version Control
 
 *   **Commit Messages:** Present tense, imperative style (e.g., "Add scroll animation").
-*   **Branching:** Direct commits to `main` are acceptable for this personal project, but complex features should use feature branches (the Astro port lives on `astro-port`).
+*   **Branching:** Direct commits to `main` are acceptable for this personal project, but complex features should use feature branches.
 *   **Never ignore `CNAME`:** it must stay committed (root copy and `public/CNAME`) or the custom domain breaks.

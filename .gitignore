@@ -9,6 +9,7 @@ dist/
 .pi/
 .polly/
 .worktrees/
+.cursor/
 
 # Archived Jekyll build artifacts (sources kept in _jekyll/)
 _site/

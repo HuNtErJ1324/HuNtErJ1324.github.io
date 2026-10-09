@@ -27,7 +27,7 @@ const jsonLd = {
 	title="Justin Yang Chae - Personal Portfolio"
 	description="Justin Yang Chae - Computer Science & Mathematics student at University of Washington, focused on AI/ML research and violin performance"
 	canonical="/"
-	navVariant="home"
+	activeNavLink="home"
 	statuslinePath="~/portfolio"
 >
 	<Fragment slot="head">
@@ -66,6 +66,11 @@ const jsonLd = {
 								<path d="M18 10v4"></path>
 							</svg>
 						</a>
+						<a class="contact-link" href="https://github.com/HuNtErJ1324" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+							<svg class="contact-icon" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
+							</svg>
+						</a>
 						<a class="contact-link" href="https://x.com/HuNtEr_J1324" target="_blank" rel="noopener noreferrer" aria-label="X">
 							<svg class="contact-icon" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
 								<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
@@ -98,7 +103,8 @@ const jsonLd = {
 			through research! I also love to play violin and am currently playing in the University of
 			Washington Symphony Orchestra! I am an enjoyer of anime and video games. My favorite anime
 			work right now is <i>Cyberpunk Edgerunners</i> and I am currently playing through <i>God of War (2018)</i>.
-			<br>
+		</p>
+		<p class="about-me-text">
 			I am currently in the Prime Intellect RL Residency program working on data-curation agents.
 		</p>
 	</section>
@@ -135,29 +141,26 @@ const jsonLd = {
 				</details>
 			</li>
 			<li>
-				<strong>
-					<a href="https://arxiv.org/abs/2511.20814v2" target="_blank" rel="noopener noreferrer">
-						Sphinx: Visual Perception and Reasoning Gym
-					</a>
-				</strong>
+				<strong><a href="https://arxiv.org/abs/2511.20814" target="_blank" rel="noopener noreferrer">SPHINX: A Synthetic Environment for Visual Perception and Reasoning</a></strong>
 				<div class="entry-meta">
-					<span class="chip">cvpr 2026 · findings workshop</span>
-					<span class="chip">neurips 2025 · multimodal algorithmic reasoning workshop</span>
+					<span class="chip">cvpr 2026 · findings</span>
+					<span class="chip">neurips 2025 · multimodal algorithmic reasoning workshop (spotlight)</span>
+					<a href="https://maveryn.github.io/sphinx/" target="_blank" rel="noopener noreferrer">[project]</a>
 				</div>
 				<details class="abstract">
 					<summary>abstract</summary>
 					<p>
-						We introduce Sphinx, a synthetic gym for visual perception and reasoning that
-						targets core cognitive primitives, including symmetry, transformation, and sequence
-						induction. It procedurally generates motif- and tiling-based puzzles with verifiable
-						solutions, enabling precise evaluation and the creation of scalable datasets. Sphinx
-						implements twelve tasks across four categories, spanning symmetry detection,
-						visual sequences, spatial reasoning, and transformations. Benchmarking three
-						ChatGPT models and five open-source vision–language models reveals that even
-						the recent GPT-5 achieves only 45.2% accuracy, with no model exceeding 70%
-						on any task. A preliminary study further demonstrates that reinforcement learning
-						with verifiable rewards (RLVR) improves model performance, highlighting its
-						potential for advancing multimodal reasoning.
+						We present Sphinx, a synthetic environment for visual perception and reasoning that
+						targets core cognitive primitives. Sphinx procedurally generates puzzles using motifs,
+						tiles, charts, icons, and geometric primitives, each paired with verifiable ground-truth
+						solutions, enabling both precise evaluation and large-scale dataset construction. The
+						benchmark covers 25 task types spanning symmetry detection, geometric transformations,
+						spatial reasoning, chart interpretation, and sequence prediction. Evaluating recent large
+						vision-language models (LVLMs) shows that even state-of-the-art GPT-5 attains only 51.1%
+						accuracy, well below human performance. Finally, we demonstrate that reinforcement learning
+						with verifiable rewards (RLVR) substantially improves model accuracy on these tasks and
+						yields gains on external visual reasoning benchmarks, highlighting its promise for
+						advancing multimodal reasoning.
 					</p>
 				</details>
 			</li>
@@ -226,9 +229,9 @@ const jsonLd = {
 					<summary>description</summary>
 					<p>
 						The Southern Ocean is a large component of the global
-						carbon cycle, and phytoplankton play a key role by converting CO2 to organic carbon,
+						carbon cycle, and phytoplankton play a key role by converting CO<sub>2</sub> to organic carbon,
 						which can be transported to the
-						deep ocean. Current studies examine phytoplankton presence and CO2 flux but do not take
+						deep ocean. Current studies examine phytoplankton presence and CO<sub>2</sub> flux but do not take
 						community species composition into account. In the past, we have explored training
 						a classical machine learning model to predict species distributions. Now we aim to model
 						phytoplankton community
@@ -249,14 +252,9 @@ const jsonLd = {
 				an automobile accident.
 			</li>
 			<li><strong>National Merit Boeing Scholarship (2023)</strong><br>
-				The National Merit Scholarship Program is an annual academic competition among high school
-				students for recognition and college undergraduate scholarships that began in 1955. The
-				program is conducted by National Merit Scholarship Corporation (NMSC&reg;), a not-for-profit
-				organization that operates without government assistance. United States high school students
-				enter the National Merit Scholarship Program by taking the Preliminary SAT/National Merit Scholarship
-				Qualifying Test (PSAT/NMSQT&reg;), which serves as an initial screen of over 1.3 million entrants each
-				year,
-				and by meeting published program entry and participation requirements.
+				I received a National Merit Scholarship sponsored by Boeing through the National Merit
+				Scholarship Program, which starts with the PSAT/NMSQT&reg; taken by over 1.3 million high
+				school students each year.
 			</li>
 		</ul>
 	</section>

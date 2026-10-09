@@ -1,5 +1,5 @@
 ---
-// Shared chrome for every page — ported 1:1 from the Jekyll default layout.
+// Shared chrome for every page (originally ported from the Jekyll default layout).
 // CSP note: 'post' pages allow style-src 'unsafe-inline' (MathJax SVG styles
 // and Shiki's inline token colors); every other page stays strict.
 interface Props {
@@ -12,7 +12,6 @@ interface Props {
 	ogImage?: string;
 	publishedTime?: string;
 	activeNavLink?: 'home' | 'violin' | 'blog';
-	navVariant?: 'home' | 'inner';
 }
 
 const {
@@ -24,8 +23,7 @@ const {
 	ogType = 'website',
 	ogImage = '/assets/profile_photo.jpg',
 	publishedTime,
-	activeNavLink,
-	navVariant = 'inner'
+	activeNavLink
 } = Astro.props;
 
 const cspContent =
@@ -34,6 +32,9 @@ const cspContent =
 		: "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
 
 const siteUrl = 'https://justin-chae.org';
+// Cloudflare caches /home.css and /script.js in browsers for hours; tag them
+// with the deployed commit so a new deploy never pairs fresh HTML with stale assets.
+const assetQuery = import.meta.env.GITHUB_SHA ? `?v=${import.meta.env.GITHUB_SHA.slice(0, 7)}` : '';
 const linkClass = (key: string) => (activeNavLink === key ? 'active' : undefined);
 const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined);
 ---
@@ -67,7 +68,7 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 
 	<link rel="canonical" href={`${siteUrl}${canonical}`}>
 
-	<link rel="stylesheet" href="/home.css">
+	<link rel="stylesheet" href={`/home.css${assetQuery}`}>
 	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
@@ -79,25 +80,9 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 <body>
 	<a href="#main" class="skip-link">Skip to content</a>
 	<nav class="site-nav" role="navigation" aria-label="Main navigation">
-		<a class="brand" href="/index.html">justin-chae:~$</a>
-		{navVariant === 'home' ? (
-			<>
-				<a href="/#about">About</a>
-				<a href="/#education">Education</a>
-				<a href="/#papers">Papers</a>
-				<a href="/#projects">Projects</a>
-				<a href="/#achievements">Achievements</a>
-				<a href="/music/">Violin</a>
-				<a href="/blog/">Blog</a>
-			</>
-		) : (
-			<>
-				<a href="/index.html" class={linkClass('home')} aria-current={linkCurrent('home')}>Home</a>
-				<a href="/music/" class={linkClass('violin')} aria-current={linkCurrent('violin')}>Violin</a>
-				<a href="/blog/" class={linkClass('blog')} aria-current={linkCurrent('blog')}>Blog</a>
-			</>
-		)}
-		<span class="nav-spacer" aria-hidden="true"></span>
+		<a href="/" class={linkClass('home')} aria-current={linkCurrent('home')}>Home</a>
+		<a href="/music/" class={linkClass('violin')} aria-current={linkCurrent('violin')}>Violin</a>
+		<a href="/blog/" class={linkClass('blog')} aria-current={linkCurrent('blog')}>Blog</a>
 	</nav>
 	<main id="main">
 		<slot />
@@ -112,7 +97,7 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
 	</footer>
 	<button id="back-to-top" aria-label="Back to top">[ &uarr; top ]</button>
-	<script is:inline src="/script.js"></script>
+	<script is:inline src={`/script.js${assetQuery}`}></script>
 </body>
 
 </html>
