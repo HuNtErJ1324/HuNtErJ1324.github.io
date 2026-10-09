@@ -157,6 +157,76 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // 4b. Lite X embeds (privacy-enhanced, loaded on click)
+        // Authoring stays plain markdown — paste a normal link such as
+        // [my post](https://x.com/user/status/123...) and JS upgrades it
+        // into a click-to-load placeholder. Without JS it remains a link.
+        // No widgets.js: click swaps in a platform.twitter.com iframe, so no
+        // third-party JS runs until the reader consents.
+        const postScope = document.querySelector('.post-content');
+        if (postScope) {
+            const tweetLinks = postScope.querySelectorAll(
+                'a[href*="x.com/"][href*="/status/"], a[href*="twitter.com/"][href*="/status/"]'
+            );
+            const validTweetIdRegex = /^\d{2,25}$/;
+
+            tweetLinks.forEach((link) => {
+                try {
+                    if (link.closest('.x-container')) return;
+                    const href = link.getAttribute('href') || '';
+                    const match = href.match(/\/status\/(\d+)/);
+                    const tweetId = match ? match[1] : '';
+                    if (!tweetId || !validTweetIdRegex.test(tweetId)) return;
+
+                    const container = document.createElement('div');
+                    container.className = 'x-container';
+
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'x-placeholder';
+
+                    const label = document.createElement('p');
+                    label.className = 'x-label';
+                    label.textContent = '𝕏 post — x.com';
+
+                    const openLink = document.createElement('a');
+                    openLink.setAttribute('href', href);
+                    openLink.setAttribute('target', '_blank');
+                    openLink.setAttribute('rel', 'noopener noreferrer');
+                    openLink.className = 'x-open';
+                    openLink.textContent = 'open on x.com';
+
+                    const loadBtn = document.createElement('button');
+                    loadBtn.type = 'button';
+                    loadBtn.className = 'x-load';
+                    loadBtn.setAttribute('aria-label', 'Load embedded X post');
+                    loadBtn.textContent = '[ load post ]';
+                    loadBtn.addEventListener('click', () => {
+                        try {
+                            const iframe = document.createElement('iframe');
+                            iframe.setAttribute(
+                                'src',
+                                `https://platform.twitter.com/embed/Tweet.html?id=${tweetId}&dnt=true&theme=dark`
+                            );
+                            iframe.setAttribute('title', 'Embedded X post');
+                            iframe.setAttribute('loading', 'lazy');
+                            iframe.setAttribute('referrerpolicy', 'no-referrer');
+                            iframe.setAttribute('allowfullscreen', '');
+                            iframe.classList.add('x-embed');
+                            container.replaceChildren(iframe);
+                        } catch (error) {
+                            console.error('Error loading X post:', error);
+                        }
+                    });
+
+                    placeholder.append(label, openLink, loadBtn);
+                    container.appendChild(placeholder);
+                    link.replaceWith(container);
+                } catch (error) {
+                    console.error('Error enhancing X link:', error);
+                }
+            });
+        }
+
         // 5. Back to Top button + statusline scroll position (vim style)
         const backToTopButton = document.getElementById('back-to-top');
         const scrollPct = document.getElementById('scroll-pct');
