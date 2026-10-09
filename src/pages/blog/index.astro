@@ -1,10 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import { getPosts, isDraft } from '../../lib/posts';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-);
+const posts = await getPosts();
 ---
 
 <Base
@@ -29,8 +27,9 @@ const posts = (await getCollection('blog')).sort(
 				<ul class="post-list">
 					{posts.map((post) => (
 						<li>
-							{(post.data.category || post.data.tags.length > 0) && (
+							{(isDraft(post) || post.data.category || post.data.tags.length > 0) && (
 								<div class="entry-meta">
+									{isDraft(post) && <span class="chip chip-draft">draft</span>}
 									{post.data.category && <span class="chip">{post.data.category}</span>}
 									{post.data.tags.map((tag) => (
 										<a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a>

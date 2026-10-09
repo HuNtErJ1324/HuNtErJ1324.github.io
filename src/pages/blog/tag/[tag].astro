@@ -1,9 +1,9 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
+import { getPosts, isDraft } from '../../../lib/posts';
 
 export async function getStaticPaths() {
-	const all = await getCollection('blog');
+	const all = await getPosts();
 	const counts = new Map<string, number>();
 	for (const post of all) {
 		for (const tag of post.data.tags) {
@@ -15,9 +15,7 @@ export async function getStaticPaths() {
 		props: {
 			tag,
 			count,
-			posts: all
-				.filter((p) => p.data.tags.includes(tag))
-				.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+			posts: all.filter((p) => p.data.tags.includes(tag))
 		}
 	}));
 }
@@ -45,8 +43,9 @@ const { tag, count, posts } = Astro.props;
 		<ul class="post-list">
 			{posts.map((post) => (
 				<li>
-					{(post.data.category || post.data.tags.length > 0) && (
+					{(isDraft(post) || post.data.category || post.data.tags.length > 0) && (
 						<div class="entry-meta">
+							{isDraft(post) && <span class="chip chip-draft">draft</span>}
 							{post.data.category && <span class="chip">{post.data.category}</span>}
 							{post.data.tags.map((t) => (
 								<a class="chip chip-tag" href={`/blog/tag/${t}/`}>{t}</a>

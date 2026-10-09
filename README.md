@@ -11,7 +11,7 @@ Dedicated sections highlight my publications, projects, scholarships, and milest
 A collection of my orchestral and solo performances.
 
 ### 3. **Blog**
-Markdown/MDX posts rendered by Astro — see [Writing a blog post](#writing-a-blog-post).
+Markdown/MDX posts rendered by Astro, with private drafts and [giscus](https://giscus.app) comments (GitHub Discussions) — see [Writing a blog post](#writing-a-blog-post).
 
 ## Tech
 
@@ -20,20 +20,28 @@ Markdown/MDX posts rendered by Astro — see [Writing a blog post](#writing-a-bl
 
 ## Writing a blog post
 
-1. Create `src/content/blog/some-slug.md` (or `.mdx`)
-2. Add front matter:
+Drafts live in `drafts/`, a git-ignored clone of the **private** repo
+[`blog-drafts`](https://github.com/HuNtErJ1324/blog-drafts), so unpublished text never reaches this public repo.
+On a new machine, set it up once with `git clone git@github.com:HuNtErJ1324/blog-drafts.git drafts`.
+
+1. `npm run draft:new -- some-slug "Post Title"` (add `--mdx` for MDX). This creates `drafts/some-slug.md` with starter front matter. All supported fields:
    ```yaml
    ---
-   title: "Post title"
+   title: "Post Title"
    description: "One-line summary shown on the blog index."
    date: 2026-10-09
    category: research       # optional
    tags: ["some-tag"]       # optional, kebab-case
+   comments: false          # optional: only to hide the comments section
    ---
    ```
-3. Write markdown below it, commit, and push to `main`.
+2. `npm run dev` and open `http://localhost:4321/blog/some-slug/`. Drafts show a red **draft** chip and are left out of production builds.
+3. `npm run drafts:sync` backs drafts up to the private repo (pull, commit, push).
+4. When it's ready: `npm run draft:publish -- some-slug`. This moves it to `src/content/blog/` and sets `date:` to today (`--keep-date` keeps it). Then commit and push this repo, and run `npm run drafts:sync`.
 
 The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages, and sitemap update automatically.
+
+**Comments:** every published post gets a giscus comment thread (stored in this repo's GitHub Discussions, *Announcements* category). Readers sign in with GitHub to comment, reply, and upvote with 👍. Moderate (hide, delete, lock) on GitHub.
 
 **Math:** wrap LaTeX in `$$…$$` (used for both inline and display). It renders with self-hosted MathJax — for example `$$E = mc^2$$` inline, or a `$$…$$` block on its own line for centered display math.
 

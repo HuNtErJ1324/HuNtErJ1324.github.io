@@ -23,8 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(typeNextChar, 250);
         }
 
-        // 2. Scroll Reveal Animation
-        const revealElements = document.querySelectorAll('section');
+        // 2. Scroll Reveal Animation (not the comments panel: a long giscus thread
+        //    can be too tall to ever reach the 15% visibility threshold)
+        const revealElements = document.querySelectorAll('section:not(.post-comments)');
 
         if (revealElements.length > 0 && 'IntersectionObserver' in window) {
             const revealObserver = new IntersectionObserver((entries) => {
@@ -198,6 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }, { passive: true });
 
             updateScrollUi();
+
+            // Late layout growth (the giscus iframe resizes itself) fires no scroll event
+            if ('ResizeObserver' in window) {
+                new ResizeObserver(() => requestAnimationFrame(updateScrollUi)).observe(document.body);
+            }
 
             if (backToTopButton) {
                 backToTopButton.addEventListener('click', () => {
@@ -965,6 +971,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrap.replaceWith(details);
                 details.append(summary, wrap);
             });
+        }
+
+        // 9. Comments (giscus): inject giscus's client script once the comments
+        //    panel nears the viewport, so readers who never scroll that far make
+        //    no third-party requests. Config lives in data-* on .giscus
+        //    (Post.astro); client.js renders its iframe into that element.
+        const giscusMount = document.querySelector('.post-comments .giscus');
+        if (giscusMount) {
+            const loadGiscus = () => {
+                const script = document.createElement('script');
+                script.src = 'https://giscus.app/client.js';
+                script.async = true;
+                script.crossOrigin = 'anonymous';
+                // client.js reads its config from its own <script> element
+                Object.assign(script.dataset, giscusMount.dataset);
+                giscusMount.after(script);
+            };
+
+            // Back from giscus's GitHub sign-in (?giscus=<session>): load right away so
+            // client.js stores the session and strips it from the address bar
+            const returningFromSignIn = new URLSearchParams(window.location.search).has('giscus');
+            if (returningFromSignIn && 'ResizeObserver' in window) {
+                // The #giscus-thread anchor is reached while the mount is still empty;
+                // once giscus sizes its iframe, bring the panel into view (unless the
+                // reader has already started scrolling)
+                let readerScrolled = false;
+                ['wheel', 'touchstart', 'keydown'].forEach((eventName) => {
+                    window.addEventListener(eventName, () => {
+                        readerScrolled = true;
+                    }, { once: true, passive: true });
+                });
+                const returnObserver = new ResizeObserver(() => {
+                    if (giscusMount.offsetHeight === 0) return;
+                    returnObserver.disconnect();
+                    if (!readerScrolled) giscusMount.closest('section').scrollIntoView({ block: 'start' });
+                });
+                returnObserver.observe(giscusMount);
+            }
+            if (!returningFromSignIn && 'IntersectionObserver' in window) {
+                const giscusObserver = new IntersectionObserver((entries) => {
+                    if (entries.some((entry) => entry.isIntersecting)) {
+                        giscusObserver.disconnect();
+                        loadGiscus();
+                    }
+                }, { rootMargin: '600px 0px' });
+                giscusObserver.observe(giscusMount);
+            } else {
+                loadGiscus();
+            }
         }
     } catch (error) {
         console.error('Error initializing site scripts:', error);

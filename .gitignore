@@ -11,6 +11,10 @@ dist/
 .worktrees/
 .cursor/
 
+# Blog drafts: a separate PRIVATE repo (HuNtErJ1324/blog-drafts) cloned here.
+# Never commit drafts to this public repo.
+drafts/
+
 # Archived Jekyll build artifacts (sources kept in _jekyll/)
 _site/
 .jekyll-cache/

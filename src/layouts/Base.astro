@@ -1,13 +1,16 @@
 ---
 // Shared chrome for every page (originally ported from the Jekyll default layout).
 // CSP note: 'post' pages allow style-src 'unsafe-inline' (MathJax SVG styles
-// and Shiki's inline token colors); every other page stays strict.
+// and Shiki's inline token colors); posts with comments also allow
+// https://giscus.app for its script, default.css, and iframe. Every other page
+// stays strict.
 interface Props {
 	title: string;
 	description: string;
 	canonical: string;
 	statuslinePath?: string;
 	csp?: 'strict' | 'post';
+	comments?: boolean;
 	ogType?: 'website' | 'article';
 	ogImage?: string;
 	publishedTime?: string;
@@ -20,15 +23,17 @@ const {
 	canonical,
 	statuslinePath = '~/portfolio',
 	csp = 'strict',
+	comments = false,
 	ogType = 'website',
 	ogImage = '/assets/profile_photo.jpg',
 	publishedTime,
 	activeNavLink
 } = Astro.props;
 
+const giscusSrc = csp === 'post' && comments ? ' https://giscus.app' : '';
 const cspContent =
 	csp === 'post'
-		? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://twitter.com https://x.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+		? `default-src 'self'; script-src 'self'${giscusSrc}; style-src 'self' 'unsafe-inline'${giscusSrc}; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://twitter.com https://x.com${giscusSrc}; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`
 		: "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
 
 const siteUrl = 'https://justin-chae.org';

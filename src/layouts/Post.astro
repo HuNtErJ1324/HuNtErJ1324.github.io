@@ -1,8 +1,10 @@
 ---
 // Post layout — ported from the Jekyll post layout, plus the related-posts
-// aside the general post anatomy calls for. MathJax loads here (post pages
-// only), exactly like the Jekyll setup did.
+// aside the general post anatomy calls for and giscus comments. MathJax loads
+// here (post pages only), exactly like the Jekyll setup did.
 import Base from './Base.astro';
+import { giscus } from '../lib/giscus';
+import { isDraft } from '../lib/posts';
 
 interface Props {
 	post: any;
@@ -16,6 +18,17 @@ const { post, minutes, previous, next, related } = Astro.props;
 const { date, title, description, category } = post.data;
 const dateIso = date.toISOString();
 const dateLabel = date.toISOString().slice(0, 10);
+const draft = isDraft(post);
+const showComments = !draft && post.data.comments;
+// giscus loads the theme from inside its iframe, so it gets the absolute
+// production URL (also in dev), versioned like home.css to beat Cloudflare's cache
+const themeVersion = import.meta.env.GITHUB_SHA ? `?v=${import.meta.env.GITHUB_SHA.slice(0, 7)}` : '';
+const giscusTheme = new URL(`/assets/giscus-rose-pine.css${themeVersion}`, Astro.site).href;
+// Pin the thread key and the discussion's backlink to the canonical URL, so
+// /index.html, query strings, or localhost previews never fork or mislabel a thread.
+// The term matches what pathname mapping produces for /blog/<slug>/.
+const giscusTerm = `blog/${post.id}/`;
+const canonicalUrl = new URL(`/blog/${post.id}/`, Astro.site).href;
 ---
 
 <Base
@@ -24,6 +37,7 @@ const dateLabel = date.toISOString().slice(0, 10);
 	canonical={`/blog/${post.id}/`}
 	statuslinePath="~/blog"
 	csp="post"
+	comments={showComments}
 	ogType="article"
 	publishedTime={dateIso}
 	activeNavLink="blog"
@@ -32,6 +46,7 @@ const dateLabel = date.toISOString().slice(0, 10);
 		<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
 		<script is:inline src="/assets/mathjax-config.js"></script>
 		<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
+		{showComments && <meta name="giscus:backlink" content={canonicalUrl}>}
 	</Fragment>
 	<header class="banner page-banner">
 		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {post.id}.md</p>
@@ -40,6 +55,7 @@ const dateLabel = date.toISOString().slice(0, 10);
 		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="post-meta">
+				{draft && <span class="chip chip-draft">draft</span>}
 				{category && <span class="chip">{category}</span>}
 				{post.data.tags.map((tag) => (
 					<a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a>
@@ -48,6 +64,12 @@ const dateLabel = date.toISOString().slice(0, 10);
 				<span class="meta-sep" aria-hidden="true">&middot;</span>
 				<span>{minutes} min read</span>
 			</p>
+			{draft && (
+				<p class="draft-note">
+					Draft — only visible under <code>npm run dev</code>. Publish with
+					<code>npm run draft:publish -- {post.id}</code>.
+				</p>
+			)}
 		</header>
 		<div class="post-content">
 			<slot />
@@ -76,4 +98,32 @@ const dateLabel = date.toISOString().slice(0, 10);
 			</aside>
 		)}
 	</article>
+	{showComments && (
+		<section class="post-comments" id="comments" data-label="~/comments" aria-labelledby="comments-heading">
+			<h2 id="comments-heading">Comments</h2>
+			<!-- script.js loads giscus here once the panel nears the viewport -->
+			<!-- The id makes giscus's GitHub sign-in return to #giscus-thread -->
+			<div
+				class="giscus"
+				id="giscus-thread"
+				data-repo={giscus.repo}
+				data-repo-id={giscus.repoId}
+				data-category={giscus.category}
+				data-category-id={giscus.categoryId}
+				data-mapping="specific"
+				data-term={giscusTerm}
+				data-strict="1"
+				data-reactions-enabled="1"
+				data-emit-metadata="0"
+				data-input-position="top"
+				data-lang="en"
+				data-theme={giscusTheme}
+			></div>
+			<p class="comments-fallback">
+				Comments run on <a href="https://giscus.app" target="_blank" rel="noopener noreferrer">giscus</a> (GitHub
+				Discussions): sign in with GitHub to comment, reply, or upvote with &#128077;. You can also
+				<a href={giscus.discussionsUrl} target="_blank" rel="noopener noreferrer">join the discussion on GitHub</a>.
+			</p>
+		</section>
+	)}
 </Base>

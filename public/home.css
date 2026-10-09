@@ -1347,6 +1347,35 @@ pre code {
 	font-size: 0.9rem;
 }
 
+/* Drafts (from the private drafts/ repo) only render under `astro dev` */
+.chip-draft {
+	color: var(--love);
+	border-color: var(--love);
+}
+
+.draft-note {
+	margin: 0.8em 0 0;
+	padding: 0.5em 0.8em;
+	border: 1px dashed var(--love);
+	color: var(--subtle);
+	font-size: 0.88rem;
+}
+
+/* Comments panel: script.js loads the giscus iframe into .giscus */
+.post-comments .giscus {
+	min-height: 10rem;
+}
+
+.post-comments .giscus:empty {
+	min-height: 0;
+}
+
+.comments-fallback {
+	margin: 1em 0 0;
+	color: var(--subtle);
+	font-size: 0.85rem;
+}
+
 /* --------------------------------------------------------------------------
    Under construction / 404
    -------------------------------------------------------------------------- */
@@ -1893,7 +1922,8 @@ mark.search-hit.current {
 	.boot-line,
 	.scroll-hint,
 	.skip-link,
-	.key-help {
+	.key-help,
+	.post-comments {
 		display: none;
 	}
 

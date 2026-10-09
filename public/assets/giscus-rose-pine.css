@@ -1,0 +1,330 @@
+/* ==========================================================================
+   giscus-rose-pine.css: custom giscus comments theme for justin-chae.org
+   Loaded by giscus itself, not by our pages: the embed's
+   data-theme="https://justin-chae.org/assets/giscus-rose-pine.css" makes the
+   giscus.app iframe add a <link rel="stylesheet" crossorigin="anonymous">.
+   Built on giscus's dark.css (every custom property kept, MIT, GitHub Inc.)
+   with colors remapped to Rosé Pine to match home.css: flat surfaces, square
+   corners, no shadows or glows, CommitMono type (400/700 only).
+   giscus markup can change between releases; recheck the gsc-* selectors
+   after a giscus upgrade.
+   ========================================================================== */
+
+/* Absolute URLs: this file is applied inside the giscus.app iframe, so
+   root-relative paths would resolve against giscus.app. Fonts need CORS,
+   which GitHub Pages (and Cloudflare in front of it) sends as
+   access-control-allow-origin: *. */
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('https://justin-chae.org/assets/fonts/CommitMonoNF-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('https://justin-chae.org/assets/fonts/CommitMonoNF-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('https://justin-chae.org/assets/fonts/CommitMonoNF-Italic.woff2') format('woff2');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+/* :root (0,1,0) beats giscus's `:host, html` font variables. The background
+   is painted here so the frame reads as a surface panel. Never add padding
+   or borders to body: giscus sizes the iframe from body's content box. */
+:root {
+	color-scheme: dark;
+	background-color: #1f1d2e;
+	color: #e0def4;
+	scrollbar-color: #524f67 transparent;
+	--font-family-sans: 'CommitMono Nerd Font', ui-monospace, monospace;
+	--font-family-monospace: 'CommitMono Nerd Font', ui-monospace, monospace;
+	--font-family-default: 'CommitMono Nerd Font', ui-monospace, monospace;
+}
+
+/* --------------------------------------------------------------------------
+   Palette: every custom property from giscus dark.css, same order.
+   base #191724 · surface #1f1d2e · overlay #26233a
+   text #e0def4 · subtle #908caa · muted #6e6a86
+   highlight med #403d52 · highlight high #524f67
+   rose #ebbcba · gold #f6c177 · iris #c4a7e7 · foam #9ccfd8
+   pine #31748f · love #eb6f92
+   -------------------------------------------------------------------------- */
+main {
+	/* Syntax: the site's Rosé Pine token mapping (home.css) */
+	--color-prettylights-syntax-comment: #6e6a86;
+	--color-prettylights-syntax-constant: #c4a7e7;
+	--color-prettylights-syntax-entity: #ebbcba;
+	--color-prettylights-syntax-storage-modifier-import: #e0def4;
+	--color-prettylights-syntax-entity-tag: #9ccfd8;
+	--color-prettylights-syntax-keyword: #9ccfd8;
+	--color-prettylights-syntax-string: #f6c177;
+	--color-prettylights-syntax-variable: #c4a7e7;
+	--color-prettylights-syntax-brackethighlighter-unmatched: #eb6f92;
+	--color-prettylights-syntax-invalid-illegal-text: #e0def4;
+	--color-prettylights-syntax-invalid-illegal-bg: rgb(235 111 146 / 35%);
+	--color-prettylights-syntax-carriage-return-text: #e0def4;
+	--color-prettylights-syntax-carriage-return-bg: rgb(235 111 146 / 50%);
+	--color-prettylights-syntax-string-regexp: #9ccfd8;
+	--color-prettylights-syntax-markup-list: #f6c177;
+	--color-prettylights-syntax-markup-heading: #f6c177;
+	--color-prettylights-syntax-markup-italic: #e0def4;
+	--color-prettylights-syntax-markup-bold: #e0def4;
+	--color-prettylights-syntax-markup-deleted-text: #eb6f92;
+	--color-prettylights-syntax-markup-deleted-bg: rgb(235 111 146 / 15%);
+	--color-prettylights-syntax-markup-inserted-text: #9ccfd8;
+	--color-prettylights-syntax-markup-inserted-bg: rgb(156 207 216 / 15%);
+	--color-prettylights-syntax-markup-changed-text: #f6c177;
+	--color-prettylights-syntax-markup-changed-bg: rgb(246 193 119 / 15%);
+	--color-prettylights-syntax-markup-ignored-text: #e0def4;
+	--color-prettylights-syntax-markup-ignored-bg: rgb(49 116 143 / 60%);
+	--color-prettylights-syntax-meta-diff-range: #c4a7e7;
+	--color-prettylights-syntax-brackethighlighter-angle: #908caa;
+	--color-prettylights-syntax-sublimelinter-gutter-mark: #524f67;
+	--color-prettylights-syntax-constant-other-reference-link: #f6c177;
+
+	/* Buttons: overlay on surface; no shadows anywhere */
+	--color-btn-text: #e0def4;
+	--color-btn-bg: #26233a;
+	--color-btn-border: #403d52;
+	--color-btn-shadow: 0 0 transparent;
+	--color-btn-inset-shadow: 0 0 transparent;
+	--color-btn-hover-bg: #403d52;
+	--color-btn-hover-border: #524f67;
+	--color-btn-active-bg: #524f67;
+	--color-btn-active-border: #ebbcba;
+	--color-btn-selected-bg: #191724;
+
+	/* Primary buttons: rose with base text, like the active nav link
+	   (10.4:1); hover inverts to text like .contact-link:hover (13.4:1) */
+	--color-btn-primary-text: #191724;
+	--color-btn-primary-bg: #ebbcba;
+	--color-btn-primary-border: #ebbcba;
+	--color-btn-primary-shadow: 0 0 transparent;
+	--color-btn-primary-inset-shadow: 0 0 transparent;
+	--color-btn-primary-hover-bg: #e0def4;
+	--color-btn-primary-hover-border: #e0def4;
+	--color-btn-primary-selected-bg: #ebbcba;
+	--color-btn-primary-selected-shadow: 0 0 transparent;
+	--color-btn-primary-disabled-text: #191724;
+	--color-btn-primary-disabled-bg: rgb(235 188 186 / 45%);
+	--color-btn-primary-disabled-border: transparent;
+
+	/* Oldest/newest toggle: selected segment gets the rose "active" edge */
+	--color-action-list-item-default-hover-bg: #403d52;
+	--color-segmented-control-bg: #26233a;
+	--color-segmented-control-button-bg: #1f1d2e;
+	--color-segmented-control-button-selected-border: #ebbcba;
+
+	/* Text */
+	--color-fg-default: #e0def4;
+	--color-fg-muted: #908caa;
+	--color-fg-subtle: #6e6a86;
+
+	/* Surfaces: cards sit on surface like home.css panels; popovers, tabs and
+	   code use overlay; the replies well and textarea sink to base */
+	--color-canvas-default: #1f1d2e;
+	--color-canvas-overlay: #26233a;
+	--color-canvas-inset: #191724;
+	--color-canvas-subtle: #26233a;
+
+	/* Lines: border-muted only draws the reply timeline (quiet structure) */
+	--color-border-default: #403d52;
+	--color-border-muted: #31748f;
+	--color-neutral-muted: rgb(110 106 134 / 25%);
+
+	/* Accent = iris (links, reacted state) */
+	--color-accent-fg: #c4a7e7;
+	--color-accent-emphasis: #c4a7e7;
+	--color-accent-muted: rgb(196 167 231 / 40%);
+	--color-accent-subtle: rgb(196 167 231 / 10%);
+
+	/* States: foam (no green in Rosé Pine), gold, love */
+	--color-success-fg: #9ccfd8;
+	--color-attention-fg: #f6c177;
+	--color-attention-muted: rgb(246 193 119 / 40%);
+	--color-attention-subtle: rgb(246 193 119 / 15%);
+	--color-danger-fg: #eb6f92;
+	--color-danger-muted: rgb(235 111 146 / 40%);
+	--color-danger-subtle: rgb(235 111 146 / 10%);
+	--color-primer-shadow-inset: 0 0 transparent;
+	--color-scale-gray-7: #26233a;
+	--color-scale-blue-8: rgb(196 167 231 / 20%);
+
+	/* Reaction chip hovers (giscus extensions) */
+	--color-social-reaction-bg-hover: var(--color-scale-gray-7);
+	--color-social-reaction-bg-reacted-hover: var(--color-scale-blue-8);
+}
+
+main .pagination-loader-container {
+	background-image: url('https://github.com/images/modules/pulls/progressive-disclosure-line-dark.svg');
+}
+
+main .gsc-loading-image {
+	background-image: url('https://github.githubassets.com/images/mona-loading-dark.gif');
+}
+
+/* --------------------------------------------------------------------------
+   Flat: square corners and no shadows, like home.css panels.
+   #__next main * (1,0,1) outranks every class-only giscus/Primer rule;
+   the Tailwind utilities are scoped to #__next (1,1,0), so they are
+   listed with the extra element to outrank them too.
+   -------------------------------------------------------------------------- */
+#__next main *,
+#__next main *::before,
+#__next main *::after {
+	border-radius: 0;
+	box-shadow: none;
+}
+
+#__next main .rounded,
+#__next main .rounded-md,
+#__next main .rounded-xl,
+#__next main .rounded-full,
+#__next main .rounded-t,
+#__next main .rounded-b-md {
+	border-radius: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Focus: the site's rose ring (outline, never a glow). Offset outward so it
+   stays visible on rose primary buttons.
+   -------------------------------------------------------------------------- */
+#__next main a:focus-visible,
+#__next main button:focus-visible,
+#__next main summary:focus-visible,
+#__next main [role="button"]:focus-visible,
+#__next main input:focus-visible {
+	outline: 2px solid #ebbcba;
+	outline-offset: 2px;
+}
+
+/* The textarea's ring sits on its wrapper (giscus draws it there too) */
+main .form-control:not(.gsc-comment-box-textarea):focus,
+main .gsc-comment-box-write:focus-within {
+	outline: 2px solid #ebbcba;
+	outline-offset: 0;
+}
+
+main ::selection {
+	background-color: #ebbcba;
+	color: #191724;
+}
+
+/* --------------------------------------------------------------------------
+   Weights: CommitMono ships 400 and 700 only, so giscus's 600s become 700
+   -------------------------------------------------------------------------- */
+#__next main .font-semibold,
+main .text-bold,
+main .gsc-reactions-count,
+main .gsc-comments-count,
+main .gsc-comments-count-separator,
+main .team-mention,
+main .user-mention,
+main .email-hidden-toggle a,
+main .BtnGroup-item.BtnGroup-item--selected,
+main .markdown strong,
+main .markdown h1,
+main .markdown h2,
+main .markdown h3,
+main .markdown h4,
+main .markdown h5,
+main .markdown h6,
+main .markdown table th {
+	font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Gold: counts, labels and dates (home.css --gold role)
+   -------------------------------------------------------------------------- */
+main .gsc-reactions-count,
+main .gsc-comments-count,
+main .gsc-comments-count .color-text-primary,
+main .gsc-replies-count,
+main .gsc-comment-replies-count .color-text-tertiary,
+main .gsc-social-reaction-summary-item-count {
+	color: #f6c177;
+}
+
+main .gsc-comments-count-separator {
+	color: #6e6a86;
+}
+
+/* Author-association badge ("Owner", "Author") styled like the site's .chip */
+main .gsc-comment-author .color-box-border-info,
+main .gsc-reply-author .color-box-border-info {
+	background-color: #191724;
+	border-color: #403d52;
+	color: #f6c177;
+}
+
+/* Comment timestamps */
+main .gsc-comment-author .link-secondary,
+main .gsc-reply-author .link-secondary {
+	color: #f6c177;
+}
+
+main .gsc-comment-author .link-secondary:hover,
+main .gsc-reply-author .link-secondary:hover {
+	color: #c4a7e7;
+}
+
+/* --------------------------------------------------------------------------
+   Comment bodies: the site's link, code, kbd and quote treatments
+   -------------------------------------------------------------------------- */
+main .markdown a {
+	text-decoration-color: #6e6a86;
+	text-underline-offset: 3px;
+}
+
+main .markdown a:hover {
+	background-color: #c4a7e7;
+	color: #191724;
+	text-decoration: none;
+}
+
+main .markdown code:not(pre > code),
+main .markdown tt {
+	border: 1px solid #403d52;
+	color: #f6c177;
+}
+
+/* Code blocks like home.css pre: surface, hairline border, pine rule */
+main .markdown pre,
+main .markdown .highlight pre {
+	background-color: #1f1d2e;
+	border: 1px solid #403d52;
+	border-left: 3px solid #31748f;
+}
+
+main .markdown kbd {
+	border-color: #524f67;
+	border-bottom-width: 2px;
+	color: #f6c177;
+}
+
+main .markdown blockquote {
+	border-left-color: #c4a7e7;
+	color: #908caa;
+	font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Motion: drop giscus's hover/popover transitions when asked to
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	#__next main *,
+	#__next main *::before,
+	#__next main *::after {
+		transition: none;
+	}
+}
