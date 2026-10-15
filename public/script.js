@@ -658,6 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyContactEmail();
                 return null;
             },
+            cv: () => {
+                window.open('/assets/justin_chae_cv.pdf', '_blank', 'noopener');
+                return 'opening cv ...';
+            },
             linkedin: () => {
                 window.open('https://www.linkedin.com/in/justin-c-92403120b', '_blank', 'noopener');
                 return 'opening linkedin ...';
