@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 <Base
 	title="404 — not found"
 	description="That path doesn't exist."
-	canonical="/404.html"
+	noindex
 	statuslinePath="~"
 >
 	<div class="error-page">
@@ -17,6 +17,7 @@ import Base from '../layouts/Base.astro';
    | |_| |_| |  | |
    |_(_)\___/   |_|
 		</pre>
+		<!-- script.js swaps in the path that was actually requested -->
 		<p class="error-cmd">bash: <span class="err-path">requested path</span>: No such file or directory</p>
 		<p><a href="/">cd ~</a> &nbsp;·&nbsp; <a href="/blog/">cd ~/blog</a> &nbsp;·&nbsp; <a href="/music/">cd ~/violin</a></p>
 	</div>

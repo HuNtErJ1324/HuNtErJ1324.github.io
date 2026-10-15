@@ -1,26 +1,21 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { getPosts, isDraft } from '../../../lib/posts';
+import PostList from '../../../components/PostList.astro';
+import { getPosts } from '../../../lib/posts';
 
 export async function getStaticPaths() {
 	const all = await getPosts();
-	const counts = new Map<string, number>();
-	for (const post of all) {
-		for (const tag of post.data.tags) {
-			counts.set(tag, (counts.get(tag) ?? 0) + 1);
-		}
-	}
-	return [...counts.entries()].map(([tag, count]) => ({
+	const tags = new Set(all.flatMap((post) => post.data.tags));
+	return [...tags].map((tag) => ({
 		params: { tag },
 		props: {
 			tag,
-			count,
-			posts: all.filter((p) => p.data.tags.includes(tag))
+			posts: all.filter((post) => post.data.tags.includes(tag))
 		}
 	}));
 }
 
-const { tag, count, posts } = Astro.props;
+const { tag, posts } = Astro.props;
 ---
 
 <Base
@@ -39,24 +34,7 @@ const { tag, count, posts } = Astro.props;
 	</header>
 	<section data-label={`~/blog/tag/${tag}`}>
 		<h2>Posts</h2>
-		<p class="listing-meta">total {count}</p>
-		<ul class="post-list">
-			{posts.map((post) => (
-				<li>
-					{(isDraft(post) || post.data.category || post.data.tags.length > 0) && (
-						<div class="entry-meta">
-							{isDraft(post) && <span class="chip chip-draft">draft</span>}
-							{post.data.category && <span class="chip">{post.data.category}</span>}
-							{post.data.tags.map((t) => (
-								<a class="chip chip-tag" href={`/blog/tag/${t}/`}>{t}</a>
-							))}
-						</div>
-					)}
-					<time class="post-date" datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10)}</time>
-					<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
-					<p class="post-excerpt">{post.data.description}</p>
-				</li>
-			))}
-		</ul>
+		<p class="listing-meta">total {posts.length}</p>
+		<PostList posts={posts} />
 	</section>
 </Base>

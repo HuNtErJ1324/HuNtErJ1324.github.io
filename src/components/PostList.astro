@@ -1,0 +1,26 @@
+---
+// Post listing used by the blog index and the tag pages.
+import PostChips from './PostChips.astro';
+import { formatDate, isDraft, type Post } from '../lib/posts';
+
+interface Props {
+	posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ul class="post-list">
+	{posts.map((post) => (
+		<li>
+			{(isDraft(post) || post.data.category || post.data.tags.length > 0) && (
+				<div class="entry-meta">
+					<PostChips post={post} />
+				</div>
+			)}
+			<time class="post-date" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+			<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
+			<p class="post-excerpt">{post.data.description}</p>
+		</li>
+	))}
+</ul>

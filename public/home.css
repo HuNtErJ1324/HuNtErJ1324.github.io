@@ -312,7 +312,7 @@ nav.site-nav a.active:hover {
 	box-shadow: 1px 1px 0 var(--border);
 }
 
-.contact-link:focus {
+.contact-link:focus-visible {
 	outline: 2px solid var(--rose);
 	outline-offset: 2px;
 	background-color: var(--bg);
@@ -512,47 +512,6 @@ h2::before {
 	color: var(--muted);
 }
 
-#contact .contact-links {
-	display: flex;
-	gap: 1.5rem;
-	justify-content: center;
-	flex-wrap: wrap;
-	margin-top: 0;
-}
-
-#contact .contact-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.5rem;
-	height: 2.5rem;
-	border: 1px solid var(--border);
-	background-color: var(--bg-inset);
-	color: var(--text);
-	text-decoration: none;
-	transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-#contact .contact-icon:hover {
-	background-color: var(--text);
-	color: var(--bg);
-	border-radius: 4px;
-	transform: scale(1.1);
-}
-
-#contact .contact-icon:focus {
-	outline: 2px solid var(--rose);
-	outline-offset: 2px;
-	background-color: var(--bg-inset);
-	color: var(--text);
-	border-radius: 4px;
-}
-
-#contact .contact-icon svg {
-	width: 24px;
-	height: 24px;
-}
-
 h2 a {
 	color: inherit;
 }
@@ -640,7 +599,7 @@ a.chip {
 }
 
 a.chip:hover,
-a.chip:focus {
+a.chip:focus-visible {
 	background: var(--bg-inset);
 	border-color: var(--border-bright);
 	color: var(--text);
@@ -729,11 +688,6 @@ a:hover {
 	text-decoration: none;
 }
 
-a:focus {
-	outline: 2px solid var(--rose);
-	outline-offset: 2px;
-}
-
 /* --------------------------------------------------------------------------
    Video embeds (lite YouTube pattern)
    -------------------------------------------------------------------------- */
@@ -784,14 +738,9 @@ a:focus {
 }
 
 .play-button:hover,
-.play-button:focus {
+.play-button:focus-visible {
 	background: var(--rose);
 	color: var(--bg);
-}
-
-.play-button:focus {
-	outline: 2px solid var(--rose);
-	outline-offset: 2px;
 }
 
 .youtube-video {
@@ -1063,7 +1012,7 @@ mjx-container {
 }
 
 /* --------------------------------------------------------------------------
-   Code: inline, blocks, Shiki syntax theme (Rosé Pine)
+   Code: inline and blocks (Shiki colors tokens inline with its rose-pine theme)
    -------------------------------------------------------------------------- */
 code {
 	font-family: var(--font-body);
@@ -1091,22 +1040,6 @@ pre code {
 	color: var(--text);
 	font-size: 0.88rem;
 }
-
-/* Rouge token colors (Rosé Pine mapping) */
-.highlight .c, .highlight .c1, .highlight .cm, .highlight .cs { color: var(--muted); font-style: italic; }
-.highlight .k, .highlight .kd, .highlight .kn, .highlight .kr, .highlight .kt, .highlight .kp { color: var(--foam); }
-.highlight .s, .highlight .s1, .highlight .s2, .highlight .sa, .highlight .sb, .highlight .sh, .highlight .si, .highlight .sx { color: var(--gold); }
-.highlight .m, .highlight .mi, .highlight .mf, .highlight .mh, .highlight .mo { color: var(--iris); }
-.highlight .nf, .highlight .nc, .highlight .nn { color: var(--rose); }
-.highlight .nb, .highlight .bp { color: var(--foam); }
-.highlight .o, .highlight .ow { color: var(--subtle); }
-.highlight .na { color: var(--iris); }
-.highlight .nt { color: var(--foam); }
-.highlight .p { color: var(--subtle); }
-.highlight .err { color: var(--love); background: none; }
-.highlight .gd { color: var(--love); }
-.highlight .gi { color: var(--foam); }
-.highlight .gh, .highlight .gu { color: var(--gold); }
 
 /* --------------------------------------------------------------------------
    Blog: annotated trace blocks (Prime Intellect-style walkthroughs) and
@@ -1239,26 +1172,45 @@ pre code {
 	margin: 0;
 }
 
-/* --------------------------------------------------------------------------
-   Blog: kramdown footnotes ( [^1] refs → ~/footnotes well at the end )
-   -------------------------------------------------------------------------- */
-.post-content sup.footnote {
-	font-size: 0.75em;
+/* Prose (or prose + code) panels read as a padded well */
+.trace-block > .trace-prose {
+	padding: 0.75em 0.85em;
+	border-top: 1px solid var(--border);
 }
 
-.post-content sup.footnote a {
+.trace-block > .trace-prose > :last-child {
+	margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Blog: GFM footnotes ( [^1] refs → ~/footnotes well at the end )
+   -------------------------------------------------------------------------- */
+.post-content a[data-footnote-ref] {
 	background: var(--bg-inset);
 	border: 1px solid var(--border);
 	padding: 0 0.35em;
 	text-decoration: none;
 }
 
+/* GFM renders the notes as a <section>: undo the panel styling */
 .post-content .footnotes {
-	margin-top: 2.6em;
-	padding-top: 1.1em;
+	max-width: none;
+	margin: 2.6em 0 0;
+	padding: 1.1em 0 0;
+	background: none;
+	border: none;
 	border-top: 1px solid var(--border);
 	font-size: 0.88rem;
 	color: var(--subtle);
+}
+
+.post-content .footnotes:hover {
+	border-color: var(--border);
+	box-shadow: none;
+}
+
+.post-content .footnotes::after {
+	content: none;
 }
 
 .post-content .footnotes::before {
@@ -1271,7 +1223,7 @@ pre code {
 	color: var(--gold);
 }
 
-.post-content .footnotes a.reversefootnote {
+.post-content .footnotes a[data-footnote-backref] {
 	text-decoration: none;
 }
 
@@ -1377,9 +1329,8 @@ pre code {
 }
 
 /* --------------------------------------------------------------------------
-   Under construction / 404
+   404
    -------------------------------------------------------------------------- */
-.under-construction,
 .error-page {
 	text-align: center;
 	min-height: 55vh;
@@ -1390,7 +1341,6 @@ pre code {
 	padding-top: calc(var(--nav-h) + 1.5rem);
 }
 
-.under-construction pre,
 .error-page pre {
 	margin: 1.5em 0;
 	font-size: 0.9em;
@@ -1643,6 +1593,7 @@ mark.search-hit {
 
 mark.search-hit.current {
 	background: var(--rose);
+	animation: searchPulse 0.5s ease-out;
 }
 
 @keyframes searchPulse {
@@ -1657,12 +1608,9 @@ mark.search-hit.current {
 	}
 }
 
-mark.search-hit.current {
-	animation: searchPulse 0.5s ease-out;
-}
-
-/* Screen-reader-only announcement region (command feedback) */
-.visually-hidden {
+/* Screen-reader-only text: command feedback, GFM's footnotes heading */
+.visually-hidden,
+.sr-only {
 	position: absolute;
 	width: 1px;
 	height: 1px;
@@ -1803,7 +1751,6 @@ mark.search-hit.current {
 		scroll-margin-top: 1rem;
 	}
 
-	.under-construction,
 	.error-page {
 		padding-top: 1.5rem;
 	}
@@ -1931,6 +1878,14 @@ mark.search-hit.current {
 		border: 1px solid #999;
 		background: none;
 		box-shadow: none;
+	}
+
+	.reveal-hidden,
+	.reveal-visible li {
+		opacity: 1;
+		transform: none;
+		transition: none;
+		animation: none;
 	}
 
 	section[data-label]::before {

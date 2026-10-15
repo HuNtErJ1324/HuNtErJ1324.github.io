@@ -1,34 +1,36 @@
 ---
 // Post layout — ported from the Jekyll post layout, plus the related-posts
 // aside the general post anatomy calls for and giscus comments. MathJax loads
-// here (post pages only), exactly like the Jekyll setup did.
+// only on posts that contain math (hasMath, set by remark-mathjax).
 import Base from './Base.astro';
+import PostChips from '../components/PostChips.astro';
 import { giscus } from '../lib/giscus';
-import { isDraft } from '../lib/posts';
+import { formatDate, isDraft, type Post } from '../lib/posts';
+import { assetVersion } from '../lib/site';
 
 interface Props {
-	post: any;
+	post: Post;
 	minutes: number;
-	previous: any | null;
-	next: any | null;
-	related: any[];
+	hasMath: boolean;
+	previous: Post | null;
+	next: Post | null;
+	related: Post[];
 }
 
-const { post, minutes, previous, next, related } = Astro.props;
-const { date, title, description, category } = post.data;
+const { post, minutes, hasMath, previous, next, related } = Astro.props;
+const { date, title, description } = post.data;
 const dateIso = date.toISOString();
-const dateLabel = date.toISOString().slice(0, 10);
 const draft = isDraft(post);
 const showComments = !draft && post.data.comments;
 // giscus loads the theme from inside its iframe, so it gets the absolute
 // production URL (also in dev), versioned like home.css to beat Cloudflare's cache
-const themeVersion = import.meta.env.GITHUB_SHA ? `?v=${import.meta.env.GITHUB_SHA.slice(0, 7)}` : '';
-const giscusTheme = new URL(`/assets/giscus-rose-pine.css${themeVersion}`, Astro.site).href;
+const giscusTheme = new URL(`/assets/giscus-rose-pine.css${assetVersion}`, Astro.site).href;
 // Pin the thread key and the discussion's backlink to the canonical URL, so
 // /index.html, query strings, or localhost previews never fork or mislabel a thread.
 // The term matches what pathname mapping produces for /blog/<slug>/.
 const giscusTerm = `blog/${post.id}/`;
 const canonicalUrl = new URL(`/blog/${post.id}/`, Astro.site).href;
+const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 ---
 
 <Base
@@ -43,24 +45,24 @@ const canonicalUrl = new URL(`/blog/${post.id}/`, Astro.site).href;
 	activeNavLink="blog"
 >
 	<Fragment slot="head">
-		<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
-		<script is:inline src="/assets/mathjax-config.js"></script>
-		<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
+		{hasMath && (
+			<>
+				<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
+				<script is:inline src="/assets/mathjax-config.js"></script>
+				<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
+			</>
+		)}
 		{showComments && <meta name="giscus:backlink" content={canonicalUrl}>}
 	</Fragment>
 	<header class="banner page-banner">
-		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {post.id}.md</p>
+		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {fileName}</p>
 	</header>
 	<article class="post">
 		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="post-meta">
-				{draft && <span class="chip chip-draft">draft</span>}
-				{category && <span class="chip">{category}</span>}
-				{post.data.tags.map((tag) => (
-					<a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a>
-				))}
-				<time class="post-date" datetime={dateIso}>{dateLabel}</time>
+				<PostChips post={post} />
+				<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
 				<span class="meta-sep" aria-hidden="true">&middot;</span>
 				<span>{minutes} min read</span>
 			</p>
@@ -89,7 +91,7 @@ const canonicalUrl = new URL(`/blog/${post.id}/`, Astro.site).href;
 				<ul class="post-list">
 					{related.map((p) => (
 						<li>
-							<time class="post-date" datetime={p.data.date.toISOString()}>{p.data.date.toISOString().slice(0, 10)}</time>
+							<time class="post-date" datetime={p.data.date.toISOString()}>{formatDate(p.data.date)}</time>
 							<a class="post-title" href={`/blog/${p.id}/`}>{p.data.title}</a>
 							<p class="post-excerpt">{p.data.description}</p>
 						</li>

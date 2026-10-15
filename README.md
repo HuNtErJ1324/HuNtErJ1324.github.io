@@ -31,7 +31,7 @@ On a new machine, set it up once with `git clone git@github.com:HuNtErJ1324/blog
    description: "One-line summary shown on the blog index."
    date: 2026-10-09
    category: research       # optional
-   tags: ["some-tag"]       # optional, kebab-case
+   tags: ["some-tag"]       # optional, must be kebab-case
    comments: false          # optional: only to hide the comments section
    ---
    ```
@@ -43,7 +43,9 @@ The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages
 
 **Comments:** every published post gets a giscus comment thread (stored in this repo's GitHub Discussions, *Announcements* category). Readers sign in with GitHub to comment, reply, and upvote with 👍. Moderate (hide, delete, lock) on GitHub.
 
-**Math:** wrap LaTeX in `$$…$$` (used for both inline and display). It renders with self-hosted MathJax — for example `$$E = mc^2$$` inline, or a `$$…$$` block on its own line for centered display math.
+**Math:** wrap LaTeX in `$$…$$` (used for both inline and display). It renders with self-hosted MathJax — for example `$$E = mc^2$$` inline, or a `$$…$$` block on its own line for centered display math. Write plain LaTeX: escapes such as `\;`, `\{`, and `\\` work as-is. MathJax only loads on posts that contain math.
+
+**Embeds:** an `x.com/<user>/status/<id>` link on a line of its own becomes a click-to-load X post (links inside a sentence stay links).
 
 ## Local preview
 

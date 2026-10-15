@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Post from '../../layouts/Post.astro';
-import { getPosts } from '../../lib/posts';
+import { getPosts, relatedPosts } from '../../lib/posts';
 
 export async function getStaticPaths() {
 	const posts = await getPosts();
@@ -11,17 +11,24 @@ export async function getStaticPaths() {
 			post,
 			previous: posts[i + 1] ?? null,
 			next: posts[i - 1] ?? null,
-			related: posts.filter((p) => p.id !== post.id).slice(0, 3)
+			related: relatedPosts(post, posts)
 		}
 	}));
 }
 
 const { post, previous, next, related } = Astro.props;
-const { Content } = await render(post);
-const words = post.body.split(/\s+/).filter(Boolean).length;
+const { Content, remarkPluginFrontmatter } = await render(post);
+const words = (post.body ?? '').split(/\s+/).filter(Boolean).length;
 const minutes = Math.max(1, Math.round(words / 200));
 ---
 
-<Post post={post} minutes={minutes} previous={previous} next={next} related={related}>
+<Post
+	post={post}
+	minutes={minutes}
+	hasMath={Boolean(remarkPluginFrontmatter?.hasMath)}
+	previous={previous}
+	next={next}
+	related={related}
+>
 	<Content />
 </Post>

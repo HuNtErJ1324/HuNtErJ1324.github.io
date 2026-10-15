@@ -79,12 +79,10 @@ const performances = [
 					: p.title}
 			</h2>
 			<p>{p.blurb}</p>
-			<div>
-				<div class="video-container">
-					<div class="video-placeholder" data-video-id={p.videoId}>
-						<img src={`https://img.youtube.com/vi/${p.videoId}/hqdefault.jpg`} alt={p.alt} loading="lazy" width="480" height="360">
-						<button class="play-button" aria-label="Play Video">▶ Play</button>
-					</div>
+			<div class="video-container">
+				<div class="video-placeholder" data-video-id={p.videoId} data-video-title={p.title}>
+					<img src={`https://img.youtube.com/vi/${p.videoId}/hqdefault.jpg`} alt={p.alt} loading="lazy" width="480" height="360">
+					<button class="play-button" type="button" aria-label={`Play video: ${p.title}`}>▶ Play</button>
 				</div>
 			</div>
 		</section>

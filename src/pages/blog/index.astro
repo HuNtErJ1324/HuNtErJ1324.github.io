@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getPosts, isDraft } from '../../lib/posts';
+import PostList from '../../components/PostList.astro';
+import { getPosts } from '../../lib/posts';
 
 const posts = await getPosts();
 ---
@@ -24,24 +25,7 @@ const posts = await getPosts();
 		{posts.length > 0 ? (
 			<>
 				<p class="listing-meta">total {posts.length}</p>
-				<ul class="post-list">
-					{posts.map((post) => (
-						<li>
-							{(isDraft(post) || post.data.category || post.data.tags.length > 0) && (
-								<div class="entry-meta">
-									{isDraft(post) && <span class="chip chip-draft">draft</span>}
-									{post.data.category && <span class="chip">{post.data.category}</span>}
-									{post.data.tags.map((tag) => (
-										<a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a>
-									))}
-								</div>
-							)}
-							<time class="post-date" datetime={post.data.date.toISOString()}>{post.data.date.toISOString().slice(0, 10)}</time>
-							<a class="post-title" href={`/blog/${post.id}/`}>{post.data.title}</a>
-							<p class="post-excerpt">{post.data.description}</p>
-						</li>
-					))}
-				</ul>
+				<PostList posts={posts} />
 			</>
 		) : (
 			<p class="listing-meta">total 0 — nothing here yet. check back soon.</p>
