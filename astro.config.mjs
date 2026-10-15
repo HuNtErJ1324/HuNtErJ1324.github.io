@@ -2,7 +2,8 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import remarkDirective from 'remark-directive';
-import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import { remarkMathJax } from './src/plugins/remark-mathjax.js';
 import { remarkTraceDirectives } from './src/plugins/remark-trace-directives.js';
 
 // Drafts (./drafts) may only ever render under `astro dev`. Gate on the CLI
@@ -30,9 +31,15 @@ export default defineConfig({
 	site: 'https://justin-chae.org',
 	integrations: [draftsGate, mdx()],
 	markdown: {
-		// Math stays literal ($$…$$) and is rendered client-side by the
-		// self-hosted MathJax bundle, exactly as on the Jekyll site.
-		remarkPlugins: [remarkDirective, remarkTraceDirectives, remarkGfm],
+		// GFM (tables, footnotes, autolinks) is on by default. $$…$$ math is
+		// parsed by remark-math and rendered client-side by the self-hosted
+		// MathJax bundle (see src/plugins/remark-mathjax.js).
+		remarkPlugins: [
+			[remarkMath, { singleDollarTextMath: false }],
+			remarkMathJax,
+			remarkDirective,
+			remarkTraceDirectives
+		],
 		shikiConfig: {
 			// Matches the site's Rosé Pine palette
 			theme: 'rose-pine'

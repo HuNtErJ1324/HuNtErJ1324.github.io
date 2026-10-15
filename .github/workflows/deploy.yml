@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Build pull requests too (without deploying), so a broken build shows up
+  # before it reaches main.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,9 +15,10 @@ permissions:
   id-token: write
 
 # Allow only one deployment at a time; let an in-progress one finish.
+# Pull request builds get their own group, and a newer push cancels an older build.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -28,6 +33,7 @@ jobs:
           cache: false
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

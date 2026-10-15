@@ -2,6 +2,36 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+        // Clipboard: the async API where available, else (or if it is refused)
+        // the legacy execCommand route through an off-screen textarea
+        const copyWithTextarea = (text) => {
+            const previousFocus = document.activeElement;
+            const helper = document.createElement('textarea');
+            helper.value = text;
+            helper.setAttribute('readonly', '');
+            helper.className = 'visually-hidden';
+            // Pinned to the viewport so focusing it never scrolls the page
+            helper.style.position = 'fixed';
+            helper.style.top = '0';
+            document.body.appendChild(helper);
+            helper.focus({ preventScroll: true });
+            helper.select();
+            const copied = document.execCommand('copy');
+            helper.remove();
+            if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+            if (!copied) throw new Error('copy command failed');
+        };
+
+        const copyText = (text) => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text).catch(() => copyWithTextarea(text));
+            }
+            return new Promise((resolve) => {
+                copyWithTextarea(text);
+                resolve();
+            });
+        };
+
         // 1. Typed boot line in the banner (progressive enhancement: full text
         //    is present in the HTML for no-JS and reduced-motion visitors)
         const bootLine = document.querySelector('.boot-line');
@@ -23,19 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(typeNextChar, 250);
         }
 
-        // 2. Scroll Reveal Animation (not the comments panel: a long giscus thread
-        //    can be too tall to ever reach the 15% visibility threshold)
-        const revealElements = document.querySelectorAll('section:not(.post-comments)');
+        // 2. Scroll Reveal Animation for the page's panels (not sections nested
+        //    in post content, such as footnotes, and not the comments panel,
+        //    whose giscus iframe should never sit invisible)
+        const revealElements = document.querySelectorAll('main > section:not(.post-comments)');
 
         if (revealElements.length > 0 && 'IntersectionObserver' in window) {
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('reveal-visible');
+                        revealObserver.unobserve(entry.target);
                     }
                 });
             }, {
-                threshold: 0.15
+                // Reveal once a panel's top clears the bottom 10% of the viewport.
+                // A margin rather than a visibility ratio, so panels taller than
+                // the screen still reveal.
+                rootMargin: '0px 0px -10% 0px'
             });
 
             revealElements.forEach(element => {
@@ -69,18 +104,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const iframe = document.createElement('iframe');
 
-                    const origin = window.location.origin;
+                    const origin = encodeURIComponent(window.location.origin);
+                    const videoTitle = target.dataset.videoTitle;
                     iframe.setAttribute('src', `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&origin=${origin}`);
-                    iframe.setAttribute('frameborder', '0');
                     iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
                     iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
                     iframe.setAttribute('allowfullscreen', '');
-                    iframe.setAttribute('title', 'YouTube video player');
+                    iframe.setAttribute('title', videoTitle ? `YouTube video player: ${videoTitle}` : 'YouTube video player');
                     iframe.classList.add('youtube-video');
 
                     const parent = target.parentElement;
                     if (parent) {
                         parent.replaceChildren(iframe);
+                        // The play button is gone; keep keyboard focus on the player
+                        iframe.focus();
                     }
                 } catch (error) {
                     console.error('Error loading YouTube video:', error);
@@ -89,25 +126,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 3b. Lite X embeds (privacy-enhanced, loaded on click)
-        // Authoring stays plain markdown — paste a normal link such as
-        // [my post](https://x.com/user/status/123...) and JS upgrades it
-        // into a click-to-load placeholder. Without JS it remains a link.
+        // Authoring stays plain markdown — put a normal post link such as
+        // https://x.com/user/status/123... (or [my post](...)) in a paragraph
+        // of its own and JS upgrades it into a click-to-load placeholder.
+        // Links inside a sentence stay links. Without JS it remains a link.
         // No widgets.js: click swaps in a platform.twitter.com iframe, so no
         // third-party JS runs until the reader consents.
         const postScope = document.querySelector('.post-content');
         if (postScope) {
-            const tweetLinks = postScope.querySelectorAll(
-                'a[href*="x.com/"][href*="/status/"], a[href*="twitter.com/"][href*="/status/"]'
-            );
-            const validTweetIdRegex = /^\d{2,25}$/;
+            const X_HOSTS = new Set(['x.com', 'www.x.com', 'mobile.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com']);
 
-            tweetLinks.forEach((link) => {
+            const tweetIdOf = (link) => {
+                let url;
+                try {
+                    url = new URL(link.href);
+                } catch (error) {
+                    return null;
+                }
+                if (!X_HOSTS.has(url.hostname)) return null;
+                const match = url.pathname.match(/\/status\/(\d{2,25})(?:\/|$)/);
+                return match ? match[1] : null;
+            };
+
+            // The paragraph the link stands alone in, if any
+            const ownParagraph = (link) => {
+                const parent = link.parentElement;
+                if (!parent || parent.tagName !== 'P') return null;
+                const alone = Array.from(parent.childNodes).every((node) => (
+                    node === link || (node.nodeType === Node.TEXT_NODE && !node.textContent.trim())
+                ));
+                return alone ? parent : null;
+            };
+
+            postScope.querySelectorAll('a[href]').forEach((link) => {
                 try {
                     if (link.closest('.x-container')) return;
-                    const href = link.getAttribute('href') || '';
-                    const match = href.match(/\/status\/(\d+)/);
-                    const tweetId = match ? match[1] : '';
-                    if (!tweetId || !validTweetIdRegex.test(tweetId)) return;
+                    const tweetId = tweetIdOf(link);
+                    const paragraph = tweetId ? ownParagraph(link) : null;
+                    if (!paragraph) return;
+                    const href = link.getAttribute('href');
 
                     const container = document.createElement('div');
                     container.className = 'x-container';
@@ -151,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     placeholder.append(label, openLink, loadBtn);
                     container.appendChild(placeholder);
-                    link.replaceWith(container);
+                    paragraph.replaceWith(container);
                 } catch (error) {
                     console.error('Error enhancing X link:', error);
                 }
@@ -307,9 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentPageIndex = () => {
             const path = window.location.pathname;
-            if (path === '/' || path.endsWith('/index.html')) return 0;
-            if (path === '/music/' || path.startsWith('/music/') || path.endsWith('/music.html')) return 1;
             if (path.startsWith('/blog')) return 2;
+            if (path.startsWith('/music')) return 1;
+            if (path === '/' || path === '/index.html') return 0;
             return -1;
         };
 
@@ -328,25 +385,48 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.setAttribute('aria-label', 'Keyboard shortcuts');
             overlay.hidden = true;
 
+            // {x} marks a key cap; everything else is plain text
             const rows = [
-                ['<kbd>j</kbd> / <kbd>k</kbd>', 'scroll down / up'],
-                ['<kbd>d</kbd> / <kbd>u</kbd>', 'half page down / up'],
-                ['<kbd>g</kbd><kbd>g</kbd> / <kbd>G</kbd>', 'top / bottom'],
-                ['<kbd>h</kbd> / <kbd>l</kbd>', 'previous / next page'],
-                ['<kbd>/</kbd> · <kbd>n</kbd> / <kbd>N</kbd>', 'search · next / prev hit'],
-                ['<kbd>:</kbd>', 'command mode'],
-                ['<kbd>:</kbd><kbd>email</kbd>', 'copy email address'],
-                ['<kbd>?</kbd>', 'toggle this help'],
-                ['<kbd>Esc</kbd>', 'close']
+                ['{j} / {k}', 'scroll down / up'],
+                ['{d} / {u}', 'half page down / up'],
+                ['{g}{g} / {G}', 'top / bottom'],
+                ['{h} / {l}', 'previous / next page'],
+                ['{/} · {n} / {N}', 'search · next / prev hit'],
+                ['{:}', 'command mode'],
+                ['{:}{email}', 'copy email address'],
+                ['{?}', 'toggle this help'],
+                ['{Esc}', 'close']
             ];
 
             const panel = document.createElement('div');
             panel.className = 'key-help-panel';
             panel.setAttribute('tabindex', '-1');
-            panel.innerHTML = `
-                <p class="key-help-title">help keys.txt</p>
-                ${rows.map(([keys, desc]) => `<div class="key-row"><span class="keys">${keys}</span><span class="key-desc">${desc}</span></div>`).join('')}
-            `;
+
+            const title = document.createElement('p');
+            title.className = 'key-help-title';
+            title.textContent = 'help keys.txt';
+            panel.appendChild(title);
+
+            rows.forEach(([keys, desc]) => {
+                const row = document.createElement('div');
+                row.className = 'key-row';
+                const keysCell = document.createElement('span');
+                keysCell.className = 'keys';
+                keys.split(/(\{[^}]+\})/).filter(Boolean).forEach((part) => {
+                    if (/^\{[^}]+\}$/.test(part)) {
+                        const kbd = document.createElement('kbd');
+                        kbd.textContent = part.slice(1, -1);
+                        keysCell.appendChild(kbd);
+                    } else {
+                        keysCell.appendChild(document.createTextNode(part));
+                    }
+                });
+                const descCell = document.createElement('span');
+                descCell.className = 'key-desc';
+                descCell.textContent = desc;
+                row.append(keysCell, descCell);
+                panel.appendChild(row);
+            });
 
             overlay.appendChild(panel);
             overlay.addEventListener('click', (e) => {
@@ -372,15 +452,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
 
             const target = e.target;
-            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
 
             if (helpIsOpen()) {
                 if (e.key === 'Escape' || e.key === '?' || e.key === 'q') {
                     e.preventDefault();
                     toggleHelp(false);
+                } else if (e.key === 'Tab') {
+                    // Modal dialog: keep focus on the panel
+                    e.preventDefault();
                 }
                 return;
             }
@@ -474,13 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let commandHistory = [];
         let historyIndex = 0;
         let liveRegion = null;
-        let flashTimer = null;
 
         // Search state (vim /, n, N, :noh)
         let searchMarks = [];
         let searchCurrent = -1;
         let lastPattern = '';
-        const SEARCH_SKIP_SELECTOR = 'nav, .statusline, .cmdline, .key-help, script, style, template';
+        const SEARCH_SKIP_SELECTOR = 'nav, .statusline, .cmdline, .key-help, script, style, template, noscript, button, svg, mjx-container, .visually-hidden';
 
         const baseMode = () => (helpIsOpen() ? 'HELP' : 'NORMAL');
 
@@ -496,12 +578,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const flashStatus = (text, isError) => {
             if (!showcmd) return;
-            clearTimeout(flashTimer);
+            clearTimeout(showcmdTimer);
             showcmd.textContent = text;
             showcmd.classList.add('flash-msg');
             showcmd.classList.toggle('err', Boolean(isError));
             announce(text);
-            flashTimer = setTimeout(() => {
+            showcmdTimer = setTimeout(() => {
                 showcmd.textContent = '';
                 showcmd.classList.remove('flash-msg', 'err');
             }, 2600);
@@ -517,35 +599,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }, { once: true });
         };
 
+        // Document offset from layout, so a panel's pending reveal transform
+        // (translateY) doesn't skew the jump
+        const pageTop = (el) => {
+            let top = 0;
+            for (let node = el; node; node = node.offsetParent) top += node.offsetTop;
+            return top;
+        };
+
         const scrollToSection = (id) => {
             const el = document.getElementById(id);
             if (!el) return false;
-            scrollToY(el.getBoundingClientRect().top + window.scrollY - 80);
+            scrollToY(pageTop(el) - 80);
             flashSection(el);
             return true;
         };
 
         const copyContactEmail = () => {
-            const done = () => flashStatus(`copied: ${CONTACT_EMAIL}`, false);
-            const fail = () => flashStatus('copy failed — clipboard unavailable', true);
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(CONTACT_EMAIL).then(done, fail);
-                return;
-            }
-            try {
-                const helper = document.createElement('textarea');
-                helper.value = CONTACT_EMAIL;
-                helper.setAttribute('readonly', '');
-                helper.style.position = 'fixed';
-                helper.style.left = '-9999px';
-                document.body.appendChild(helper);
-                helper.select();
-                document.execCommand('copy');
-                document.body.removeChild(helper);
-                done();
-            } catch (err) {
-                fail();
-            }
+            copyText(CONTACT_EMAIL).then(
+                () => flashStatus(`copied: ${CONTACT_EMAIL}`, false),
+                () => flashStatus('copy failed — clipboard unavailable', true)
+            );
         };
 
         const goToSection = (id) => {
@@ -636,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const runCommand = (raw) => {
             const text = raw.trim().replace(/^:+/, '');
             if (!text) return;
-            commandHistory.push(text);
+            if (commandHistory[commandHistory.length - 1] !== text) commandHistory.push(text);
             historyIndex = commandHistory.length;
             const name = text.split(/\s+/)[0].toLowerCase();
             const handler = COMMANDS[name];
@@ -693,8 +767,17 @@ document.addEventListener('DOMContentLoaded', () => {
             hint.textContent = 'tab complete · esc';
 
             cmdline.append(cmdlinePrompt, cmdlineInput, hint);
-            cmdline.addEventListener('click', (e) => {
-                if (e.target === cmdline) cmdlineInput.focus();
+            // Clicks on the bar's prompt/hint keep focus in the input
+            cmdline.addEventListener('mousedown', (e) => {
+                if (e.target !== cmdlineInput) {
+                    e.preventDefault();
+                    cmdlineInput.focus();
+                }
+            });
+            // Clicking elsewhere on the page leaves command mode (switching
+            // windows does not)
+            cmdlineInput.addEventListener('blur', () => {
+                if (document.hasFocus()) closeCommandLine();
             });
             cmdlineInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -702,10 +785,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     closeCommandLine();
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
+                    // Like vim, Enter runs the line and returns to normal mode
                     const value = cmdlineInput.value;
-                    cmdlineInput.value = '';
-                    if (cmdlineMode === 'search') {
-                        closeCommandLine();
+                    const mode = cmdlineMode;
+                    closeCommandLine();
+                    if (mode === 'search') {
                         runSearch(value.trim());
                     } else {
                         runCommand(value);
@@ -742,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cmdlineInput.setAttribute('placeholder', isSearch
                 ? 'type to search — enter to find, esc to cancel'
                 : 'type a command — help for options');
+            historyIndex = commandHistory.length;
             cmdline.hidden = false;
             if (modeBlock) modeBlock.textContent = isSearch ? 'SEARCH' : 'CMD';
             cmdlineInput.focus();
@@ -750,6 +835,9 @@ document.addEventListener('DOMContentLoaded', () => {
         function closeCommandLine() {
             if (!cmdline || cmdline.hidden) return;
             cmdline.hidden = true;
+            // Hand focus back now: browsers only move it off a hidden element on
+            // the next frame, and keys pressed before then would be swallowed
+            if (document.activeElement === cmdlineInput) cmdlineInput.blur();
             cmdlineInput.value = '';
             if (modeBlock) modeBlock.textContent = baseMode();
         }
@@ -859,16 +947,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Flash the target panel when arriving via a URL hash (e.g. /index.html#papers)
         if (window.location.hash) {
-            const hashed = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+            let hashId = window.location.hash.slice(1);
+            try {
+                hashId = decodeURIComponent(hashId);
+            } catch (error) {
+                // Malformed escape: look the raw fragment up instead
+            }
+            const hashed = document.getElementById(hashId);
             if (hashed && hashed.tagName === 'SECTION') flashSection(hashed);
         }
 
         // 8. Blog post enhancements: Prime Intellect-style annotated trace
-        //    walkthroughs + copy buttons on code blocks. Authors wrap blocks in
-        //    :::tool-call / :::tool-output / ... containers (remarkTraceDirectives
-        //    puts the class on the wrapper); JS wraps them in collapsible <details>
-        //    panels with a typed label and a running step number. Everything degrades to a
-        //    normal code block without JS.
+        //    walkthroughs + copy buttons on code blocks. Authors wrap code or
+        //    prose in :::tool-call / :::tool-output / ... containers
+        //    (remarkTraceDirectives puts the class on the wrapper); JS wraps
+        //    each container in a collapsible <details> panel with a typed label
+        //    and a running step number. Everything degrades to normal code
+        //    blocks and paragraphs without JS.
         const postContent = document.querySelector('.post-content');
         if (postContent) {
             const TRACE_TYPES = {
@@ -879,77 +974,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 'bibtex': { label: 'bibtex', open: true, numbered: false }
             };
 
-            const traceTypeOf = (element) => {
-                if (!element || !element.classList) return null;
-                for (const type of Object.keys(TRACE_TYPES)) {
-                    if (element.classList.contains(type)) return type;
-                }
-                return null;
-            };
+            const traceTypeOf = (element) => (
+                Object.keys(TRACE_TYPES).find((type) => element.classList.contains(type)) || null
+            );
 
-            let traceStep = 0;
-
-            // Collect code blocks and prose annotation paragraphs, then process
-            // them in document order so step numbers interleave correctly
-            const traceItems = [];
+            // Copy affordance: wrap every code block so the button can overlay
+            // it without polluting the copied text
             postContent.querySelectorAll('pre').forEach((pre) => {
-                // The directive class may land on the <pre>, its wrapper, or the
-                // grandparent — probe all three so the convention survives renderer changes.
-                const type = traceTypeOf(pre)
-                    || traceTypeOf(pre.parentElement)
-                    || traceTypeOf(pre.parentElement && pre.parentElement.parentElement);
-                traceItems.push({ element: pre, type, isCode: true });
-            });
-            postContent.querySelectorAll('.post-content > .annotation, .post-content .annotation').forEach((block) => {
-                traceItems.push({ element: block, type: 'annotation', isCode: false });
-            });
-            traceItems.sort((a, b) => (
-                a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
-            ));
+                const wrap = document.createElement('div');
+                wrap.className = 'code-block';
+                pre.replaceWith(wrap);
+                wrap.appendChild(pre);
 
-            traceItems.forEach(({ element, type, isCode }) => {
-                // Copy affordance: wrap every code block so the button can
-                // overlay it without polluting the copied text
-                let wrap;
-                if (isCode) {
-                    wrap = document.createElement('div');
-                    wrap.className = 'code-block';
-                    element.replaceWith(wrap);
-                    wrap.appendChild(element);
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'code-copy';
+                copyBtn.textContent = '[copy]';
+                copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
 
-                    const copyBtn = document.createElement('button');
-                    copyBtn.type = 'button';
-                    copyBtn.className = 'code-copy';
-                    copyBtn.textContent = '[copy]';
-                    copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
-                    copyBtn.addEventListener('click', () => {
-                        const text = element.innerText;
-                        const done = () => {
-                            copyBtn.textContent = '[copied]';
-                            copyBtn.classList.add('copied');
-                            announce('code block copied to clipboard');
-                            window.setTimeout(() => {
-                                copyBtn.textContent = '[copy]';
-                                copyBtn.classList.remove('copied');
-                            }, 1600);
-                        };
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(text).then(done, () => {
-                                copyBtn.textContent = '[failed]';
-                                copyBtn.classList.add('err');
-                                window.setTimeout(() => {
-                                    copyBtn.textContent = '[copy]';
-                                    copyBtn.classList.remove('err');
-                                }, 1600);
-                            });
-                        }
+                let resetTimer = null;
+                const showResult = (label, className) => {
+                    clearTimeout(resetTimer);
+                    copyBtn.textContent = label;
+                    copyBtn.classList.remove('copied', 'err');
+                    copyBtn.classList.add(className);
+                    resetTimer = window.setTimeout(() => {
+                        copyBtn.textContent = '[copy]';
+                        copyBtn.classList.remove(className);
+                    }, 1600);
+                };
+
+                copyBtn.addEventListener('click', () => {
+                    copyText(pre.innerText).then(() => {
+                        showResult('[copied]', 'copied');
+                        announce('code block copied to clipboard');
+                    }, () => {
+                        showResult('[failed]', 'err');
+                        announce('copy failed');
                     });
-                    wrap.appendChild(copyBtn);
-                } else {
-                    wrap = element;
-                }
+                });
+                wrap.appendChild(copyBtn);
+            });
 
-                if (!type) return;
+            // Panels in document order, so step numbers interleave correctly
+            // across code and prose
+            let traceStep = 0;
+            const containers = Object.keys(TRACE_TYPES).map((type) => `.${type}`).join(', ');
+            postContent.querySelectorAll(containers).forEach((container) => {
+                const type = traceTypeOf(container);
                 const config = TRACE_TYPES[type];
                 const details = document.createElement('details');
                 details.className = `trace-block tb-${type}`;
@@ -968,8 +1040,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 labelSpan.textContent = config.label;
                 summary.appendChild(labelSpan);
 
-                wrap.replaceWith(details);
-                details.append(summary, wrap);
+                // A lone code block sits flush in the panel; anything else
+                // (prose, or prose mixed with code) gets padded like a well
+                const onlyCode = container.children.length === 1
+                    && container.firstElementChild.classList.contains('code-block');
+                if (!onlyCode) container.classList.add('trace-prose');
+
+                container.replaceWith(details);
+                details.append(summary, container);
             });
         }
 
@@ -1020,6 +1098,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 loadGiscus();
             }
+        }
+
+        // 10. 404 page: echo the path that was actually requested
+        const errPath = document.querySelector('.error-page .err-path');
+        if (errPath) {
+            let requested = window.location.pathname;
+            try {
+                requested = decodeURIComponent(requested);
+            } catch (error) {
+                // Malformed escape: show the raw path
+            }
+            errPath.textContent = requested;
         }
     } catch (error) {
         console.error('Error initializing site scripts:', error);

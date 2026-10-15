@@ -6,7 +6,10 @@ const postSchema = z.object({
 	description: z.string(),
 	date: z.coerce.date(),
 	category: z.string().optional(),
-	tags: z.array(z.string()).default([]),
+	// Tags become URL segments (/blog/tag/<tag>/), so keep them kebab-case
+	tags: z.array(
+		z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'tags must be kebab-case, e.g. "llm-reasoning"')
+	).default([]),
 	// Set to false to hide the giscus comments section on a post
 	comments: z.boolean().default(true)
 });

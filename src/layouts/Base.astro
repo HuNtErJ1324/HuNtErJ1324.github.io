@@ -4,10 +4,14 @@
 // and Shiki's inline token colors); posts with comments also allow
 // https://giscus.app for its script, default.css, and iframe. Every other page
 // stays strict.
+import { assetVersion } from '../lib/site';
+
 interface Props {
 	title: string;
 	description: string;
-	canonical: string;
+	// Site-relative path; omit on pages that should not be indexed (with noindex)
+	canonical?: string;
+	noindex?: boolean;
 	statuslinePath?: string;
 	csp?: 'strict' | 'post';
 	comments?: boolean;
@@ -21,6 +25,7 @@ const {
 	title,
 	description,
 	canonical,
+	noindex = false,
 	statuslinePath = '~/portfolio',
 	csp = 'strict',
 	comments = false,
@@ -36,12 +41,11 @@ const cspContent =
 		? `default-src 'self'; script-src 'self'${giscusSrc}; style-src 'self' 'unsafe-inline'${giscusSrc}; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://twitter.com https://x.com${giscusSrc}; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`
 		: "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
 
-const siteUrl = 'https://justin-chae.org';
-// Cloudflare caches /home.css and /script.js in browsers for hours; tag them
-// with the deployed commit so a new deploy never pairs fresh HTML with stale assets.
-const assetQuery = import.meta.env.GITHUB_SHA ? `?v=${import.meta.env.GITHUB_SHA.slice(0, 7)}` : '';
-const linkClass = (key: string) => (activeNavLink === key ? 'active' : undefined);
-const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined);
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const year = new Date().getFullYear();
+type NavKey = NonNullable<Props['activeNavLink']>;
+const linkClass = (key: NavKey) => (activeNavLink === key ? 'active' : undefined);
+const linkCurrent = (key: NavKey) => (activeNavLink === key ? ('page' as const) : undefined);
 ---
 
 <!DOCTYPE html>
@@ -55,25 +59,26 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 	<meta name="description" content={description}>
 	<meta name="author" content="Justin Yang Chae">
 	<meta name="theme-color" content="#191724">
+	{noindex && <meta name="robots" content="noindex">}
 
 	<!-- Open Graph / Social Media -->
 	<meta property="og:title" content={title}>
 	<meta property="og:description" content={description}>
-	<meta property="og:image" content={`${siteUrl}${ogImage}`}>
-	<meta property="og:url" content={`${siteUrl}${canonical}`}>
+	<meta property="og:image" content={absolute(ogImage)}>
+	{canonical && <meta property="og:url" content={absolute(canonical)}>}
 	<meta property="og:type" content={ogType}>
 	<meta property="og:site_name" content="Justin Yang Chae">
 	{publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
 	<!-- Twitter Card -->
-	<meta name="twitter:card" content={csp === 'post' ? 'summary' : 'summary_large_image'}>
+	<meta name="twitter:card" content={ogType === 'article' ? 'summary' : 'summary_large_image'}>
 	<meta name="twitter:title" content={title}>
 	<meta name="twitter:description" content={description}>
-	<meta name="twitter:image" content={`${siteUrl}${ogImage}`}>
+	<meta name="twitter:image" content={absolute(ogImage)}>
 
-	<link rel="canonical" href={`${siteUrl}${canonical}`}>
+	{canonical && <link rel="canonical" href={absolute(canonical)}>}
 
-	<link rel="stylesheet" href={`/home.css${assetQuery}`}>
+	<link rel="stylesheet" href={`/home.css${assetVersion}`}>
 	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
@@ -84,7 +89,7 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 
 <body>
 	<a href="#main" class="skip-link">Skip to content</a>
-	<nav class="site-nav" role="navigation" aria-label="Main navigation">
+	<nav class="site-nav" aria-label="Main navigation">
 		<a href="/" class={linkClass('home')} aria-current={linkCurrent('home')}>Home</a>
 		<a href="/music/" class={linkClass('violin')} aria-current={linkCurrent('violin')}>Violin</a>
 		<a href="/blog/" class={linkClass('blog')} aria-current={linkCurrent('blog')}>Blog</a>
@@ -96,13 +101,13 @@ const linkCurrent = (key: string) => (activeNavLink === key ? 'page' : undefined
 		<span class="statusline-mode" aria-hidden="true">NORMAL</span>
 		<span class="statusline-path">justin@justin-chae.org:{statuslinePath}</span>
 		<span class="statusline-spacer" aria-hidden="true"></span>
-		<span class="statusline-copy">&copy; 2026 Justin Yang Chae</span>
+		<span class="statusline-copy">&copy; {year} Justin Yang Chae</span>
 		<span class="statusline-hint" aria-hidden="true">? help</span>
 		<span class="statusline-cmd" id="showcmd" aria-hidden="true"></span>
 		<span class="statusline-pct" id="scroll-pct" aria-hidden="true">0%</span>
 	</footer>
-	<button id="back-to-top" aria-label="Back to top">[ &uarr; top ]</button>
-	<script is:inline src={`/script.js${assetQuery}`}></script>
+	<button id="back-to-top" type="button" aria-label="Back to top">[ &uarr; top ]</button>
+	<script is:inline src={`/script.js${assetVersion}`}></script>
 </body>
 
 </html>
