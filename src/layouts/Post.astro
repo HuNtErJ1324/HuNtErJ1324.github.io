@@ -47,7 +47,7 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 	<Fragment slot="head">
 		{hasMath && (
 			<>
-				<!-- Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle -->
+				{/* Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle */}
 				<script is:inline src="/assets/mathjax-config.js"></script>
 				<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
 			</>

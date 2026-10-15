@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import { unified } from '@astrojs/markdown-remark';
 import remarkDirective from 'remark-directive';
 import remarkMath from 'remark-math';
 import { remarkMathJax } from './src/plugins/remark-mathjax.js';
@@ -30,16 +31,24 @@ const draftsGate = {
 export default defineConfig({
 	site: 'https://justin-chae.org',
 	integrations: [draftsGate, mdx()],
+	// Astro 7 defaults to JSX whitespace rules ('jsx'), which drop the spaces
+	// between inline elements on separate lines (chips, "focus: …" meta, the
+	// 404 links). Keep the HTML-aware compression the site was built with.
+	compressHTML: true,
 	markdown: {
+		// The remark/rehype (unified) pipeline, not Astro 7's default Sätteri
+		// processor: the plugins below are remark plugins. MDX inherits it.
 		// GFM (tables, footnotes, autolinks) is on by default. $$…$$ math is
 		// parsed by remark-math and rendered client-side by the self-hosted
 		// MathJax bundle (see src/plugins/remark-mathjax.js).
-		remarkPlugins: [
-			[remarkMath, { singleDollarTextMath: false }],
-			remarkMathJax,
-			remarkDirective,
-			remarkTraceDirectives
-		],
+		processor: unified({
+			remarkPlugins: [
+				[remarkMath, { singleDollarTextMath: false }],
+				remarkMathJax,
+				remarkDirective,
+				remarkTraceDirectives
+			]
+		}),
 		shikiConfig: {
 			// Matches the site's Rosé Pine palette
 			theme: 'rose-pine'

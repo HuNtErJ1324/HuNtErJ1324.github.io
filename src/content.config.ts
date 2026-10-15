@@ -1,5 +1,6 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob, type Loader } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 const postSchema = z.object({
 	title: z.string(),
@@ -8,7 +9,7 @@ const postSchema = z.object({
 	category: z.string().optional(),
 	// Tags become URL segments (/blog/tag/<tag>/), so keep them kebab-case
 	tags: z.array(
-		z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'tags must be kebab-case, e.g. "llm-reasoning"')
+		z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { error: 'tags must be kebab-case, e.g. "llm-reasoning"' })
 	).default([]),
 	// Set to false to hide the giscus comments section on a post
 	comments: z.boolean().default(true)

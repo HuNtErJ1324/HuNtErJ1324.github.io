@@ -15,7 +15,7 @@ Markdown/MDX posts rendered by Astro, with private drafts and [giscus](https://g
 
 ## Tech
 
-- **Framework**: [Astro 5](https://astro.build) static site with MDX; hand-written CSS and vanilla JS (`public/home.css`, `public/script.js`) with a Rosé Pine terminal aesthetic and vim-style keyboard navigation (`hjkl`, `gg`/`G`, `:` commands, `/` search, `?` for help)
+- **Framework**: [Astro 7](https://astro.build) static site with MDX (rendered through the unified/remark pipeline for its plugins); hand-written CSS and vanilla JS (`public/home.css`, `public/script.js`) with a Rosé Pine terminal aesthetic and vim-style keyboard navigation (`hjkl`, `gg`/`G`, `:` commands, `/` search, `?` for help)
 - **Hosting**: GitHub Pages via GitHub Actions (`withastro/action`) with a custom domain (`CNAME`)
 
 ## Writing a blog post
@@ -49,5 +49,5 @@ The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages
 
 ## Local preview
 
-- `npm install` (Node 22+), then `npm run dev` for a hot-reloading dev server
+- `npm install` (Node 22.12+), then `npm run dev` for a hot-reloading dev server
 - `npm run build && npm run preview` to check the production build in `dist/` (after deleting posts, build with `npx astro build --force` so Astro's content cache doesn't bring them back)

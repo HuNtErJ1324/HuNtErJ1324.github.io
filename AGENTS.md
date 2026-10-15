@@ -4,7 +4,11 @@ This document serves as the primary source of truth for coding agents (AI) opera
 
 ## 1. Project Overview & Environment
 
-*   **Type:** Astro 5 static site (the site was ported from Jekyll — sources preserved under `_jekyll/` for reference).
+*   **Type:** Astro 7 static site (the site was ported from Jekyll — sources preserved under `_jekyll/` for reference).
+*   **Astro 7 settings to keep** (`astro.config.mjs`):
+    *   `markdown.processor: unified({ remarkPlugins: [...] })` from `@astrojs/markdown-remark`. Astro 7's default Markdown processor is Sätteri, which cannot run the remark plugins this site depends on (`remark-math`, `remark-directive`, `remark-mathjax.js`, `remark-trace-directives.js`). MDX inherits the processor. Add new remark/rehype plugins to `unified({ ... })`, not to the deprecated `markdown.remarkPlugins`; switching to Sätteri means porting every plugin first.
+    *   `compressHTML: true`. Astro 7's default (`'jsx'`) drops whitespace between inline elements on separate lines, which glues together the chips, the post header's date/`·`/reading time, and the home page's `focus: … · also: …` line. Don't remove it.
+    *   Import Zod from `astro/zod` (Zod 4), not `astro:content`; custom messages use `{ error: '…' }`.
 *   **Hosting:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`, `withastro/action`). The repo's Pages source must stay set to **GitHub Actions** (`build_type: workflow`) — the legacy "deploy from branch" mode runs a Jekyll build that fails on `.astro` front matter. Keep `cache: false` on `withastro/action`: its restored content cache would keep serving deleted posts. Pull requests into `main` run the build job only (the deploy job is skipped), so a broken build fails the PR before it can ship.
 *   **Structure:**
     *   `src/pages/` — `index.astro` (home), `music.astro` (violin), `404.astro`, `blog/index.astro`, `blog/[...slug].astro` (post route), `blog/tag/[tag].astro` (tag listing route), `sitemap.xml.js` (hand-rolled endpoint).
@@ -23,7 +27,7 @@ This document serves as the primary source of truth for coding agents (AI) opera
 
 ### Build & Run Commands
 
-*   `npm install` (once; Node 22+ — CI builds on Node 24)
+*   `npm install` (once; Node 22.12+ — Astro 7's minimum; CI builds on Node 24)
 *   `npm run dev` — dev server with HMR for local work
 *   `npm run build` — static build into `dist/`
 *   `npm run preview` — serve `dist/` for final checks
