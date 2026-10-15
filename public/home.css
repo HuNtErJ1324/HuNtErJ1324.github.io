@@ -92,6 +92,9 @@ html {
 	scroll-behavior: smooth;
 	scrollbar-color: var(--border-bright) var(--bg);
 	scrollbar-width: thin;
+	/* Reserve the scrollbar's width on every page, so short pages (an empty
+	   blog, the 404) don't shift the centered nav and panels sideways */
+	scrollbar-gutter: stable;
 }
 
 body {

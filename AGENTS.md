@@ -62,6 +62,7 @@ This document serves as the primary source of truth for coding agents (AI) opera
 *   **Korean text:** `assets/fonts/NanumGothicCoding-name.woff2` contains ONLY the three glyphs 채정인. If you add any other Korean text, re-subset it with wider `--unicodes` (see `assets/fonts/README.md`).
 *   **Units:** `rem` for font sizes/padding; kebab-case class names; multi-line rules.
 *   **Motion:** every animation/transition must have a `prefers-reduced-motion: reduce` override.
+*   **Scrollbar gutter:** `html` keeps `scrollbar-gutter: stable`. Without it, short pages (an empty blog, the 404) have no scrollbar and the centered nav and panels shift 5px sideways versus long pages.
 *   **Profile photo:** stays in full color — no grayscale/desaturate filter (explicit user request); hover only adds the rose border + shadow.
 *   **Cache-busting:** `Base.astro` appends `assetVersion` (`?v=<commit>` from `GITHUB_SHA`, defined in `src/lib/site.ts`) to `/home.css` and `/script.js`, and `Post.astro` to the giscus theme URL, because Cloudflare caches them in browsers for hours. Keep it if you move or rename any of them.
 
