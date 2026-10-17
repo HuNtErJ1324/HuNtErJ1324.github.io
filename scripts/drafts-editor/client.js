@@ -1455,7 +1455,12 @@ async function openDraft(slug, { push = true } = {}) {
         selection: EditorSelection.range(anchor, head),
         extensions: extensions()
     }));
-    if (saved?.line) requestAnimationFrame(() => scrollEditorToLine(saved.line));
+    // Let CodeMirror scroll once it has measured the new document; setting
+    // scrollTop before that measure gets reset to the top
+    if (saved?.line) {
+        const line = view.state.doc.line(clamp(Math.floor(saved.line), 1, view.state.doc.lines));
+        view.dispatch({ effects: EditorView.scrollIntoView(line.from, { y: 'start' }) });
+    }
     const title = drafts.find((d) => d.slug === slug)?.title ?? slug;
     document.title = `${title} · drafts editor`;
     els.select.value = slug;
