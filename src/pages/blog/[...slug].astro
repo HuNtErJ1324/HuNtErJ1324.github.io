@@ -18,7 +18,14 @@ export async function getStaticPaths() {
 
 const { post, previous, next, related } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(post);
-const words = (post.body ?? '').split(/\s+/).filter(Boolean).length;
+// Count prose only: in .mdx posts, import/export lines, component props
+// (chart data), and code blocks would otherwise inflate the estimate
+const prose = (post.body ?? '')
+	.replace(/^(import|export)\s.*$/gm, '')
+	.replace(/```[\s\S]*?```/g, '')
+	.replace(/<[A-Z][\s\S]*?\/>/g, '')
+	.replace(/<\/?[A-Z][^>]*>/g, '');
+const words = prose.split(/\s+/).filter(Boolean).length;
 const minutes = Math.max(1, Math.round(words / 200));
 ---
 

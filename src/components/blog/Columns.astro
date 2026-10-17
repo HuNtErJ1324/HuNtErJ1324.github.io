@@ -1,0 +1,81 @@
+---
+// Side-by-side column panels for small discrete distributions (e.g. a
+// next-token distribution before/after training). Titles and notes are HTML
+// so they stay readable at any width; each panel's columns are a small SVG
+// with native tooltips. Panels stay side by side even on phones.
+import { type ChartColor, chartId, r1 } from '../../lib/charts';
+
+interface Panel {
+	title: string;
+	note?: string;
+	color: ChartColor;
+	values: number[];
+	// Optional ✓ under columns, e.g. which solutions the verifier accepts
+	checks?: boolean[];
+}
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	labels: string[];
+	panels: Panel[];
+	max: number;
+	caption?: string;
+}
+
+const { title, subtitle, labels, panels, max, caption } = Astro.props;
+
+const W = 150;
+const H = 112;
+const top = 6;
+const bottom = 32;
+const plotH = H - top - bottom;
+const slot = W / labels.length;
+const colW = Math.min(16, slot - 5);
+const id = chartId('cols');
+const pct = (v: number) => `${Math.round(v * 100)}%`;
+const base = top + plotH;
+const column = (cx: number, h: number) => {
+	const r = Math.min(4, h / 2);
+	const [x0, x1, y] = [r1(cx - colW / 2), r1(cx + colW / 2), r1(base - h)];
+	return `M${x0} ${base}V${r1(y + r)}Q${x0} ${y} ${r1(x0 + r)} ${y}H${r1(x1 - r)}Q${x1} ${y} ${x1} ${r1(y + r)}V${base}Z`;
+};
+---
+
+<figure class="chart chart-columns">
+	<div class="chart-head">
+		<p class="chart-title" id={`${id}-title`}>{title}</p>
+		{subtitle && <p class="chart-sub">{subtitle}</p>}
+	</div>
+	<div class="chart-panels">
+		{panels.map((panel) => (
+			<div class="chart-panel">
+				<p class="chart-panel-title">{panel.title}</p>
+				{panel.note && <p class="chart-panel-note">{panel.note}</p>}
+				<svg class="chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}: ${panel.title}`}>
+					<line class="chart-axis" x1="0" x2={W} y1={base} y2={base} />
+					{panel.values.map((v, i) => {
+						const cx = slot * i + slot / 2;
+						const h = (plotH * v) / max;
+						return (
+							<g>
+								<title>{`${panel.title} · ${labels[i]}: ${pct(v)}${panel.checks?.[i] ? ' (correct)' : ''}`}</title>
+								<rect class="chart-hit" x={r1(cx - slot / 2)} y={top} width={r1(slot)} height={plotH} />
+								{h > 0
+									? <path class={`chart-bar c-${panel.color}`} d={column(cx, h)} />
+									: <rect class="chart-empty" x={r1(cx - colW / 2)} y={base - 6} width={colW} height="6" />}
+								<text class="chart-col-label" x={r1(cx)} y={base + 13} text-anchor="middle">{labels[i]}</text>
+								{panel.checks?.[i] && (
+									<text class="chart-col-check" x={r1(cx)} y={base + 26} text-anchor="middle">✓</text>
+								)}
+							</g>
+						);
+					})}
+				</svg>
+			</div>
+		))}
+	</div>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

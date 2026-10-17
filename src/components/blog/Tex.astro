@@ -1,0 +1,15 @@
+---
+// LaTeX for .mdx posts. MDX treats { } as JavaScript, so $$…$$ math with
+// braces can't be written inline there; pass the TeX as a string instead:
+//   <Tex tex="p" />                        → inline  \( p \)
+//   <Tex block tex={String.raw`\frac{a}{b}`} />  → display \[ … \]
+// The self-hosted MathJax (loaded by Post.astro) typesets the delimiters.
+interface Props {
+	tex: string;
+	block?: boolean;
+}
+
+const { tex, block = false } = Astro.props;
+---
+
+{block ? <div class="tex-block">{`\\[${tex}\\]`}</div> : <span class="tex">{`\\(${tex}\\)`}</span>}

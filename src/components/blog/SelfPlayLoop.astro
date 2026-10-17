@@ -1,0 +1,111 @@
+---
+// Diagram: the Absolute Zero Reasoner self-play loop (Zhao et al., 2025).
+// One LLM plays proposer and solver; Python supplies the ground truth.
+// Role colors match the post's charts: proposer = iris, solver = rose.
+// Two layouts from the same nodes: a 2×2 loop for wide screens and a
+// vertical stack for phones (CSS shows one), so text never shrinks below
+// readable size.
+import { chartId } from '../../lib/charts';
+
+interface Props {
+	caption?: string;
+}
+
+const { caption } = Astro.props;
+const id = chartId('loop');
+
+// Keep each line to ~22 characters so it fits the box at 11px monospace
+const nodes = [
+	{ role: 'iris', title: 'PROPOSER', lines: ['writes a program p', 'and an input i'] },
+	{ role: 'gray', title: 'PYTHON EXECUTOR', lines: ['runs p(i): gold output o', 'rejects invalid tasks'] },
+	{ role: 'rose', title: 'SOLVER', lines: ['predicts o, finds i,', 'or writes p'] },
+	{ role: 'gold', title: 'REWARDS + UPDATE', lines: ['solver: 1 if correct', 'proposer: 1 − solve rate'] }
+];
+
+const wide = {
+	W: 420,
+	H: 300,
+	w: 186,
+	h: 74,
+	at: [[6, 30], [228, 30], [228, 196], [6, 196]]
+};
+const tall = {
+	W: 300,
+	H: 420,
+	w: 252,
+	h: 64,
+	at: [[38, 30], [38, 130], [38, 230], [38, 330]]
+};
+const layouts = [
+	{ name: 'wide', ...wide },
+	{ name: 'tall', ...tall }
+];
+---
+
+<figure class="chart diagram">
+	<p class="visually-hidden" id={`${id}-desc`}>
+		The proposer writes a program and an input. A Python executor runs it to produce a gold output and
+		rejects invalid tasks. The solver attempts the task with the answer hidden. The solver is rewarded for
+		correct answers and the proposer for tasks of intermediate difficulty, and one update trains the shared model.
+		Valid tasks also go into a buffer the proposer samples as examples.
+	</p>
+	{layouts.map((L) => {
+		const arrow = `${id}-${L.name}-arrow`;
+		return (
+			<svg class={`chart-svg dia-${L.name}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-label="The Absolute Zero Reasoner self-play loop" aria-describedby={`${id}-desc`}>
+				<defs>
+					<marker id={arrow} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+						<path class="dia-arrowhead" d="M0 0L10 5L0 10Z" />
+					</marker>
+				</defs>
+				<text class="dia-banner" x={L.W / 2} y="14" text-anchor="middle">
+					{L.name === 'wide' ? 'one LLM, two roles, zero human-written tasks' : 'one LLM · two roles · no human tasks'}
+				</text>
+				{nodes.map((n, i) => {
+					const [x, y] = L.at[i];
+					return (
+						<g>
+							<rect class="dia-node" x={x} y={y} width={L.w} height={L.h} rx="3" />
+							<rect class={`dia-accent c-${n.role}`} x={x} y={y} width="4" height={L.h} rx="2" />
+							<text class="dia-title" x={x + 14} y={y + 20}>{n.title}</text>
+							{n.lines.map((line, j) => (
+								<text class="dia-text" x={x + 14} y={y + 38 + j * 15}>{line}</text>
+							))}
+						</g>
+					);
+				})}
+				{L.name === 'wide' ? (
+					<>
+						<line class="dia-edge" x1="194" y1="67" x2="226" y2="67" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="210" y="60" text-anchor="middle">task</text>
+						<line class="dia-edge" x1="321" y1="106" x2="321" y2="194" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="329" y="146">valid task,</text>
+						<text class="dia-edge-label" x="329" y="160">answer hidden</text>
+						<line class="dia-edge" x1="226" y1="233" x2="194" y2="233" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="210" y="226" text-anchor="middle">tries</text>
+						<line class="dia-edge" x1="99" y1="194" x2="99" y2="106" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="107" y="146">one RL step</text>
+						<text class="dia-edge-label" x="107" y="160">for both roles</text>
+						<text class="dia-foot" x="210" y="292" text-anchor="middle">valid tasks also go into a buffer the proposer samples as examples</text>
+					</>
+				) : (
+					<>
+						<line class="dia-edge" x1="164" y1="96" x2="164" y2="128" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="172" y="116">task</text>
+						<line class="dia-edge" x1="164" y1="196" x2="164" y2="228" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="172" y="209">valid task,</text>
+						<text class="dia-edge-label" x="172" y="222">answer hidden</text>
+						<line class="dia-edge" x1="164" y1="296" x2="164" y2="328" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="172" y="316">tries</text>
+						<path class="dia-edge dia-loop" d="M36 362H22V62H36" marker-end={`url(#${arrow})`} />
+						<text class="dia-edge-label" x="12" y="212" text-anchor="middle" transform="rotate(-90 12 212)">one RL step for both roles</text>
+						<text class="dia-foot" x="150" y="412" text-anchor="middle">valid tasks also go into an example buffer</text>
+					</>
+				)}
+			</svg>
+		);
+	})}
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

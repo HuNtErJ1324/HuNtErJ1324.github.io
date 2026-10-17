@@ -1,0 +1,21 @@
+---
+// A collapsible section for optional background (e.g. prerequisites).
+// Plain <details>: works without JS, and vim search (n/N) opens it on a hit.
+interface Props {
+	summary: string;
+	hint?: string;
+	open?: boolean;
+}
+
+const { summary, hint, open = false } = Astro.props;
+---
+
+<details class="fold" open={open}>
+	<summary>
+		<span class="fold-title">{summary}</span>
+		{hint && <span class="fold-hint">{hint}</span>}
+	</summary>
+	<div class="fold-body">
+		<slot />
+	</div>
+</details>

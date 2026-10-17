@@ -7,7 +7,8 @@
 // reads _…_ / *…* inside it as emphasis.
 //
 // Posts that contain math get remarkPluginFrontmatter.hasMath, so only those
-// pages download MathJax.
+// pages download MathJax. In .mdx that includes <Tex> (src/components/blog/
+// Tex.astro), which emits the same \(…\) / \[…\] text for MathJax.
 const inline = (value) => ({
 	hName: 'span',
 	hProperties: { className: ['math', 'math-inline'] },
@@ -30,6 +31,9 @@ export function remarkMathJax() {
 			if (!node.children) return;
 			for (let i = 0; i < node.children.length; i += 1) {
 				const child = node.children[i];
+				if ((child.type === 'mdxJsxFlowElement' || child.type === 'mdxJsxTextElement') && child.name === 'Tex') {
+					hasMath = true;
+				}
 				if (child.type === 'math') {
 					child.data = display(child.value);
 					hasMath = true;

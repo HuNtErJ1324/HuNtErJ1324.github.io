@@ -160,7 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             postScope.querySelectorAll('a[href]').forEach((link) => {
                 try {
-                    if (link.closest('.x-container')) return;
+                    // Keep plain: links in static post cards (Tweet.astro) and in footnotes,
+                    // where an X post is cited as a reference rather than embedded
+                    if (link.closest('.x-container, .tweet-card, section[data-footnotes]')) return;
                     const tweetId = tweetIdOf(link);
                     const paragraph = tweetId ? ownParagraph(link) : null;
                     if (!paragraph) return;
@@ -1115,6 +1117,251 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             errPath.textContent = requested;
         }
+
+        // 11. Blog charts: crosshair + tooltip over the static SVG line charts
+        //     (src/components/blog/LineChart.astro). Each SVG's data-chart
+        //     payload already holds pixel positions and formatted values, so this
+        //     only finds the nearest point and writes text (textContent, never
+        //     markup). Full-width charts carry two SVGs (wide + compact, CSS shows
+        //     one); each binds its own handlers. Focus a chart and use ←/→ to step
+        //     through points; Esc hides the readout. Without JS the static chart remains.
+        document.querySelectorAll('.post-content .chart .chart-svg[data-chart]').forEach((svg) => {
+            const figure = svg.closest('.chart');
+            const hover = svg.querySelector('.chart-hover');
+            let spec;
+            try {
+                spec = JSON.parse(svg.dataset.chart);
+            } catch (error) {
+                return;
+            }
+            if (!hover || !spec.series || !spec.series.length) return;
+
+            const cross = hover.querySelector('.chart-cross');
+            const dots = [...hover.querySelectorAll('.chart-dot')];
+            const xs = [...new Set(spec.series.flatMap((s) => s.pts.map((p) => p[0])))].sort((a, b) => a - b);
+            const tip = document.createElement('div');
+            tip.className = 'chart-tip';
+            tip.hidden = true;
+            figure.appendChild(tip);
+            let index = -1;
+
+            const nearestPoint = (pts, x) => pts.reduce((best, p) => (
+                !best || Math.abs(p[0] - x) < Math.abs(best[0] - x) ? p : best
+            ), null);
+
+            const show = (i) => {
+                index = Math.max(0, Math.min(xs.length - 1, i));
+                const x = xs[index];
+                // A series only reports a value if it has a point at this x
+                // (charts can mix series sampled on different grids)
+                const tolerance = 0.6;
+                cross.setAttribute('x1', x);
+                cross.setAttribute('x2', x);
+                const rows = [];
+                let xText = '';
+                spec.series.forEach((s, si) => {
+                    const p = nearestPoint(s.pts, x);
+                    const hit = p && Math.abs(p[0] - x) <= tolerance;
+                    const dot = dots[si];
+                    if (dot) {
+                        dot.setAttribute('cx', hit ? p[0] : -10);
+                        dot.setAttribute('cy', hit ? p[1] : -10);
+                    }
+                    if (!hit) return;
+                    xText = p[2];
+                    const row = document.createElement('div');
+                    row.className = 'chart-tip-row';
+                    const key = document.createElement('span');
+                    key.className = `chart-key key-line c-${s.color}`;
+                    const value = document.createElement('strong');
+                    value.textContent = p[3];
+                    const name = document.createElement('span');
+                    name.textContent = s.name;
+                    row.append(key, value, name);
+                    rows.push(row);
+                });
+                const head = document.createElement('div');
+                head.className = 'chart-tip-x';
+                head.textContent = `${spec.x} ${xText}`.trim();
+                tip.replaceChildren(head, ...rows);
+                tip.hidden = false;
+                figure.classList.add('is-active');
+
+                // Place the readout beside the crosshair, flipping left near the edge
+                const svgBox = svg.getBoundingClientRect();
+                const figureBox = figure.getBoundingClientRect();
+                const px = svgBox.left - figureBox.left + (x / svg.viewBox.baseVal.width) * svgBox.width;
+                const tipWidth = tip.offsetWidth;
+                const right = px + 14;
+                tip.style.left = `${right + tipWidth > figureBox.width ? Math.max(0, px - 14 - tipWidth) : right}px`;
+                tip.style.top = `${svgBox.top - figureBox.top + 6}px`;
+            };
+
+            const hide = () => {
+                tip.hidden = true;
+                figure.classList.remove('is-active');
+            };
+
+            const indexAt = (clientX) => {
+                const local = new DOMPoint(clientX, 0).matrixTransform(svg.getScreenCTM().inverse());
+                let best = 0;
+                xs.forEach((x, i) => {
+                    if (Math.abs(x - local.x) < Math.abs(xs[best] - local.x)) best = i;
+                });
+                return best;
+            };
+
+            svg.setAttribute('tabindex', '0');
+            svg.addEventListener('pointermove', (event) => show(indexAt(event.clientX)));
+            svg.addEventListener('pointerdown', (event) => show(indexAt(event.clientX)));
+            svg.addEventListener('pointerleave', hide);
+            svg.addEventListener('focus', () => show(index < 0 ? xs.length - 1 : index));
+            svg.addEventListener('blur', hide);
+            svg.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    show(index + (event.key === 'ArrowRight' ? 1 : -1));
+                } else if (event.key === 'Escape') {
+                    hide();
+                }
+            });
+        });
+
+        // 12. Animated self-play diagram (src/components/blog/SelfPlayAnimation.astro).
+        //     The markup already draws the whole round, so without JS or under
+        //     prefers-reduced-motion nothing runs. Otherwise one clock loops over
+        //     data-cycle seconds and every element follows its own times:
+        //     data-on/data-off (shown), data-active="start end" (highlighted) and
+        //     data-travel + data-route (a packet moving along an edge's points).
+        //     Pause and restart only move the clock. Plays while on screen.
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        document.querySelectorAll('.post-content .sp-anim').forEach((figure) => {
+            if (reduceMotion.matches) return;
+            const controls = figure.querySelector('.sp-controls');
+            if (!controls) return;
+            const toggle = controls.querySelector('[data-sp="toggle"]');
+            const restart = controls.querySelector('[data-sp="restart"]');
+            const fill = controls.querySelector('.sp-progress-fill');
+            const cycle = parseFloat(figure.dataset.cycle) || 18;
+            const span = (value) => value.split(' ').map(Number);
+
+            const shown = [...figure.querySelectorAll('[data-on]')].map((el) => ({
+                el,
+                on: Number(el.dataset.on),
+                off: el.dataset.off ? Number(el.dataset.off) : cycle
+            }));
+            const active = [...figure.querySelectorAll('[data-active]')].map((el) => {
+                const [start, end] = span(el.dataset.active);
+                return { el, start, end };
+            });
+            const packets = [...figure.querySelectorAll('[data-travel]')].map((el) => {
+                const [start, end] = span(el.dataset.travel);
+                const coords = span(el.dataset.route);
+                const points = [];
+                for (let i = 0; i + 1 < coords.length; i += 2) points.push([coords[i], coords[i + 1]]);
+                const lengths = points.slice(1).map((p, i) => Math.hypot(p[0] - points[i][0], p[1] - points[i][1]));
+                const total = lengths.reduce((a, b) => a + b, 0);
+                return { el, start, end, points, lengths, total };
+            });
+
+            const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - ((-2 * p + 2) ** 2) / 2);
+            const pointAt = (packet, progress) => {
+                let distance = progress * packet.total;
+                for (let i = 0; i < packet.lengths.length; i += 1) {
+                    const length = packet.lengths[i];
+                    if (distance <= length || i === packet.lengths.length - 1) {
+                        const fraction = length ? Math.min(1, distance / length) : 0;
+                        const [x0, y0] = packet.points[i];
+                        const [x1, y1] = packet.points[i + 1];
+                        return [x0 + (x1 - x0) * fraction, y0 + (y1 - y0) * fraction];
+                    }
+                    distance -= length;
+                }
+                return packet.points[0];
+            };
+
+            let t = 0;
+            let playing = false;
+            let userPaused = false;
+            let last = 0;
+            let frame = 0;
+
+            const render = () => {
+                shown.forEach(({ el, on, off }) => el.classList.toggle('is-shown', t >= on && t < off));
+                active.forEach(({ el, start, end }) => el.classList.toggle('is-active', t >= start && t < end));
+                packets.forEach((packet) => {
+                    const live = t >= packet.start && t < packet.end;
+                    packet.el.classList.toggle('is-shown', live);
+                    if (!live) return;
+                    const [x, y] = pointAt(packet, easeInOut((t - packet.start) / (packet.end - packet.start)));
+                    packet.el.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+                });
+                fill.style.transform = `scaleX(${(t / cycle).toFixed(4)})`;
+            };
+
+            const tick = (now) => {
+                // Cap the step so a backgrounded tab resumes where it left off
+                t = (t + Math.min(0.1, (now - last) / 1000)) % cycle;
+                last = now;
+                render();
+                frame = requestAnimationFrame(tick);
+            };
+
+            const setLabel = () => {
+                toggle.textContent = playing ? '[pause]' : '[play]';
+                toggle.setAttribute('aria-label', playing ? 'Pause animation' : 'Play animation');
+            };
+            const play = () => {
+                if (playing) return;
+                playing = true;
+                last = performance.now();
+                frame = requestAnimationFrame(tick);
+                setLabel();
+            };
+            const pause = () => {
+                playing = false;
+                cancelAnimationFrame(frame);
+                setLabel();
+            };
+
+            toggle.addEventListener('click', () => {
+                userPaused = playing;
+                if (playing) pause();
+                else play();
+            });
+            restart.addEventListener('click', () => {
+                t = 0;
+                render();
+                userPaused = false;
+                play();
+            });
+
+            figure.classList.add('sp-live');
+            controls.hidden = false;
+            render();
+            setLabel();
+
+            if ('IntersectionObserver' in window) {
+                // Play once a third of the figure is on screen; pause below that
+                new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        const visible = entry.isIntersecting && entry.intersectionRatio >= 0.35;
+                        if (visible && !userPaused) play();
+                        else if (!visible) pause();
+                    });
+                }, { threshold: [0, 0.35] }).observe(figure);
+            } else {
+                play();
+            }
+
+            // Turning on reduced motion mid-read drops back to the static diagram
+            reduceMotion.addEventListener('change', (event) => {
+                if (!event.matches) return;
+                pause();
+                figure.classList.remove('sp-live');
+                controls.hidden = true;
+            });
+        });
     } catch (error) {
         console.error('Error initializing site scripts:', error);
     }

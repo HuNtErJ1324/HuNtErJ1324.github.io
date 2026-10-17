@@ -1,0 +1,47 @@
+---
+// One message from an agent trace, styled like a chat app: an assistant
+// message gets an avatar (the name's first letter on a chart hue, so it
+// matches that model's bars elsewhere in the post), a name line and a bubble;
+// a user message is a right-aligned bubble; a tool message is a compact
+// call/result row aligned under the assistant's bubble. The body goes in the
+// slot as ordinary markdown. Wrap consecutive messages in <Chat> to stack
+// them as one exchange with a single caption.
+interface Props {
+	role?: 'assistant' | 'user' | 'tool';
+	name?: string;
+	meta?: string;
+	color?: 'love' | 'blue' | 'gold' | 'iris' | 'rose' | 'gray';
+	tool?: string;
+}
+
+const { role = 'assistant', name = '', meta, color = 'iris', tool } = Astro.props;
+const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : '';
+---
+
+{role === 'assistant' && (
+	<div class="chat-msg chat-assistant">
+		<span class={`chat-avatar c-${color}`} aria-hidden="true">{name.charAt(0)}</span>
+		<div class="chat-col">
+			{name && (
+				<p class="chat-who">
+					<span class="chat-name">{name}</span>
+					{meta && <span class="chat-meta">{meta}</span>}
+				</p>
+			)}
+			<div class="chat-bubble"><Fragment set:html={body} /></div>
+		</div>
+	</div>
+)}
+{role === 'user' && (
+	<div class="chat-msg chat-user">
+		<div class="chat-bubble"><Fragment set:html={body} /></div>
+	</div>
+)}
+{role === 'tool' && (
+	<div class="chat-msg chat-tool">
+		<div class="chat-call">
+			{tool && <span class="chat-tool-name">{tool}</span>}
+			<div class="chat-call-body"><Fragment set:html={body} /></div>
+		</div>
+	</div>
+)}

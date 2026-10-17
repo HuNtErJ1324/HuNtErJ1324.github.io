@@ -1,0 +1,269 @@
+---
+// Animated diagram: one round of Absolute Zero Reasoner self-play (Zhao et
+// al., 2025) on a deduction task. The same LLM proposes a task, Python runs
+// it to get the answer, the LLM solves it blind, and both roles are rewarded
+// and updated together.
+//
+// Everything is drawn in the markup, so without JS (or with
+// prefers-reduced-motion) readers get the complete static diagram.
+// public/script.js §12 adds .sp-live and runs a clock over one CYCLE-second
+// loop: data-on/data-off show an element, data-active highlights it, and
+// data-travel + data-route move a packet along an edge (all in seconds), so
+// pause and restart only move the clock. Role colors match the post:
+// proposer = iris, solver = rose. Like SelfPlayLoop, it ships a 2×2 layout
+// and a vertical one for phones (CSS shows one).
+import { chartId } from '../../lib/charts';
+
+interface Props {
+	caption?: string;
+}
+
+const { caption } = Astro.props;
+const id = chartId('selfplay');
+
+const CYCLE = 18;
+// Node contents fade out here, before the loop starts over
+const CLEAR = 17.2;
+
+type Item = { dx?: number; dy: number; text: string; cls?: string; on: number };
+
+const tries = [
+	{ answer: '[3, 2, 1]', ok: true },
+	{ answer: '[1, 2, 3]', ok: false },
+	{ answer: '[3, 2, 1]', ok: true },
+	{ answer: '[3, 2, 1]', ok: true }
+];
+
+const nodes: { key: string; role: string; title: string; active: string; items: Item[] }[] = [
+	{
+		key: 'proposer',
+		role: 'iris',
+		title: 'PROPOSER',
+		active: '0.6 3.6',
+		items: [
+			{ dy: 40, text: 'def p(x):', cls: 'sp-code', on: 1.0 },
+			{ dx: 13, dy: 55, text: 'return sorted(x)[::-1]', cls: 'sp-code', on: 1.6 },
+			{ dy: 74, text: 'input i = [3, 1, 2]', cls: 'sp-code', on: 2.4 }
+		]
+	},
+	{
+		key: 'executor',
+		role: 'gray',
+		title: 'PYTHON EXECUTOR',
+		active: '4.4 6.8',
+		items: [
+			{ dy: 40, text: 'p(i) → [3, 2, 1]', cls: 'sp-code', on: 4.8 },
+			{ dy: 56, text: 'no errors, deterministic', on: 5.4 },
+			{ dy: 74, text: 'gold answer o = [3, 2, 1]', cls: 'sp-code', on: 6.0 }
+		]
+	},
+	{
+		key: 'solver',
+		role: 'rose',
+		title: 'SOLVER',
+		active: '7.6 11.2',
+		items: [
+			{ dy: 40, text: 'sees p and i, not o', on: 7.9 },
+			...tries.flatMap((t, k) => {
+				const dy = 58 + k * 15;
+				const miss = t.ok ? '' : ' sp-miss';
+				return [
+					{ dy, text: `try ${k + 1}`, on: 8.3 + k * 0.5 },
+					{ dx: 48, dy, text: t.answer, cls: `sp-code${miss}`, on: 8.3 + k * 0.5 },
+					{ dx: 128, dy, text: t.ok ? '✓' : '✗', cls: `sp-mark${miss}`, on: 10.2 + k * 0.2 }
+				];
+			})
+		]
+	},
+	{
+		key: 'rewards',
+		role: 'gold',
+		title: 'REWARDS',
+		active: '12 15',
+		items: [
+			{ dy: 44, text: 'solver', on: 12.4 },
+			{ dx: 76, dy: 44, text: '1 0 1 1', cls: 'sp-code', on: 12.4 },
+			{ dy: 64, text: 'solve rate', on: 13.0 },
+			{ dx: 76, dy: 64, text: '3/4', cls: 'sp-code', on: 13.0 },
+			{ dy: 84, text: 'proposer', on: 13.6 },
+			{ dx: 76, dy: 84, text: '1 − 3/4 = 0.25', cls: 'sp-code', on: 13.6 },
+			{ dy: 106, text: '0 if solve rate is 0 or 1', on: 14.2 }
+		]
+	}
+];
+
+// Edges in loop order: when each one carries its packet, and in which color
+const flows = [
+	{ travel: '3.6 4.4', role: 'iris' },
+	{ travel: '6.8 7.6', role: 'gray' },
+	{ travel: '11.2 12', role: 'rose' },
+	{ travel: '15 15.9', role: 'gold' }
+];
+
+// Which role the shared model is playing, and when
+const phases = [
+	{ active: '0.6 3.6', role: 'iris', label: 'proposing' },
+	{ active: '7.6 11.2', role: 'rose', label: 'solving' },
+	{ active: `15 ${CLEAR}`, role: 'gold', label: 'updating' }
+];
+
+const steps = [
+	{ active: '0.6 4.4', name: 'Propose.', text: 'Acting as proposer, the model writes a program p and an input i, using earlier valid tasks as examples.' },
+	{ active: '4.4 7.6', name: 'Verify.', text: 'Python runs p on i. A task that crashes, or gives a different answer on a second run, is thrown out. Otherwise its output o becomes the gold answer.' },
+	{ active: '7.6 12', name: 'Solve.', text: 'Acting as solver, the same model sees p and i but not o, and answers several times.' },
+	{ active: '12 15', name: 'Reward.', text: 'Each correct answer earns the solver 1. The proposer earns 1 minus the solve rate, or 0 if the task was solved every time or never.' },
+	{ active: `15 ${CYCLE}`, name: 'Update.', text: 'One RL step updates the shared weights for both roles, and the next round starts with a new task.' }
+];
+
+type Box = { x: number; y: number; w: number; h: number };
+type Edge = { route: number[]; label: string; lx: number; ly: number; anchor?: string; rotate?: boolean };
+
+const layouts: {
+	name: string;
+	W: number;
+	H: number;
+	banner: string;
+	foot: string;
+	box: Record<string, Box>;
+	core: { circle?: { cx: number; cy: number; r: number }; chip?: Box; phaseX: number; phaseY: number; anchor: string; still: string };
+	edges: Edge[];
+}[] = [
+	{
+		name: 'wide',
+		W: 480,
+		H: 352,
+		banner: 'one LLM, two roles, zero human-written tasks',
+		foot: 'valid tasks also go into a buffer the proposer samples as examples',
+		box: {
+			proposer: { x: 6, y: 34, w: 196, h: 92 },
+			executor: { x: 278, y: 34, w: 196, h: 92 },
+			solver: { x: 278, y: 206, w: 196, h: 120 },
+			rewards: { x: 6, y: 206, w: 196, h: 120 }
+		},
+		core: { circle: { cx: 240, cy: 166, r: 22 }, phaseX: 240, phaseY: 200, anchor: 'middle', still: 'both roles' },
+		edges: [
+			{ route: [204, 80, 276, 80], label: 'p, i', lx: 240, ly: 72, anchor: 'middle' },
+			{ route: [376, 128, 376, 204], label: 'o hidden', lx: 384, ly: 170 },
+			{ route: [276, 266, 204, 266], label: '4 tries', lx: 240, ly: 258, anchor: 'middle' },
+			{ route: [104, 204, 104, 128], label: 'one RL step', lx: 112, ly: 170 }
+		]
+	},
+	{
+		name: 'tall',
+		W: 330,
+		H: 628,
+		banner: 'one LLM · two roles · no human tasks',
+		foot: 'valid tasks also go into an example buffer',
+		box: {
+			proposer: { x: 80, y: 88, w: 242, h: 92 },
+			executor: { x: 80, y: 208, w: 242, h: 92 },
+			solver: { x: 80, y: 328, w: 242, h: 120 },
+			rewards: { x: 80, y: 476, w: 242, h: 120 }
+		},
+		core: { chip: { x: 80, y: 26, w: 242, h: 36 }, phaseX: 310, phaseY: 49, anchor: 'end', still: 'proposer + solver' },
+		edges: [
+			{ route: [201, 182, 201, 206], label: 'p, i', lx: 209, ly: 198 },
+			{ route: [201, 302, 201, 326], label: 'o hidden', lx: 209, ly: 318 },
+			{ route: [201, 450, 201, 474], label: '4 tries', lx: 209, ly: 466 },
+			{ route: [78, 536, 24, 536, 24, 44, 78, 44], label: 'one RL step for both roles', lx: 16, ly: 290, rotate: true }
+		]
+	}
+];
+
+const pathOf = (r: number[]) => r.reduce((d, v, i) => d + (i % 2 ? ` ${v}` : `${i ? 'L' : 'M'}${v}`), '');
+---
+
+<figure class="chart diagram sp-anim" data-cycle={CYCLE}>
+	<p class="visually-hidden" id={`${id}-desc`}>
+		An animation of one round of self-play. The model, acting as proposer, writes a program p and an input i. A
+		Python executor runs p on i, checks the task is valid, and keeps the output o as the gold answer. The same
+		model, acting as solver, sees p and i but not o and answers four times; three answers are right. The solver
+		earns 1 for each correct answer, the proposer earns 1 minus the solve rate of 3/4, so 0.25, and one RL step
+		updates the shared model for both roles.
+	</p>
+	{layouts.map((L) => {
+		const arrow = `${id}-${L.name}-arrow`;
+		return (
+			<svg class={`chart-svg dia-${L.name}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-label="One round of proposer–solver self-play" aria-describedby={`${id}-desc`}>
+				<defs>
+					<marker id={arrow} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+						<path class="dia-arrowhead" d="M0 0L10 5L0 10Z" />
+					</marker>
+				</defs>
+				<text class="dia-banner" x={L.W / 2} y="14" text-anchor="middle">{L.banner}</text>
+
+				{L.edges.map((e, i) => (
+					<g>
+						<path class="dia-edge sp-edge" d={pathOf(e.route)} marker-end={`url(#${arrow})`} data-active={flows[i].travel} />
+						<text
+							class="dia-edge-label"
+							x={e.lx}
+							y={e.ly}
+							text-anchor={e.anchor ?? 'start'}
+							transform={e.rotate ? `rotate(-90 ${e.lx} ${e.ly})` : undefined}
+						>
+							{e.label}
+						</text>
+					</g>
+				))}
+
+				{L.core.circle ? (
+					<g class="sp-core">
+						<circle class="dia-node" cx={L.core.circle.cx} cy={L.core.circle.cy} r={L.core.circle.r} />
+						{phases.map((p) => (
+							<circle class={`sp-ring c-${p.role}`} cx={L.core.circle!.cx} cy={L.core.circle!.cy} r={L.core.circle!.r} data-active={p.active} />
+						))}
+						<text class="dia-title" x={L.core.circle.cx} y={L.core.circle.cy + 4} text-anchor="middle">LLM</text>
+					</g>
+				) : (
+					<g class="sp-core">
+						<rect class="dia-node" x={L.core.chip!.x} y={L.core.chip!.y} width={L.core.chip!.w} height={L.core.chip!.h} rx="3" />
+						{phases.map((p) => (
+							<rect class={`sp-ring c-${p.role}`} x={L.core.chip!.x} y={L.core.chip!.y} width={L.core.chip!.w} height={L.core.chip!.h} rx="3" data-active={p.active} />
+						))}
+						<text class="dia-title" x={L.core.chip!.x + 14} y={L.core.chip!.y + 23}>ONE LLM</text>
+					</g>
+				)}
+				<text class="sp-phase sp-phase-still" x={L.core.phaseX} y={L.core.phaseY} text-anchor={L.core.anchor}>{L.core.still}</text>
+				{phases.map((p) => (
+					<text class="sp-phase sp-phase-live" x={L.core.phaseX} y={L.core.phaseY} text-anchor={L.core.anchor} data-active={p.active}>{p.label}</text>
+				))}
+
+				{nodes.map((n) => {
+					const b = L.box[n.key];
+					return (
+						<g class={`sp-node c-${n.role}`} data-active={n.active}>
+							<rect class="dia-node" x={b.x} y={b.y} width={b.w} height={b.h} rx="3" />
+							<rect class="dia-accent" x={b.x} y={b.y} width="4" height={b.h} rx="2" />
+							<text class="dia-title" x={b.x + 14} y={b.y + 20}>{n.title}</text>
+							{n.items.map((it) => (
+								<text class={it.cls} x={b.x + 14 + (it.dx ?? 0)} y={b.y + it.dy} data-on={it.on} data-off={CLEAR}>{it.text}</text>
+							))}
+						</g>
+					);
+				})}
+
+				{L.edges.map((e, i) => (
+					<g class={`sp-packet c-${flows[i].role}`} transform={`translate(${e.route[0]} ${e.route[1]})`} data-travel={flows[i].travel} data-route={e.route.join(' ')}>
+						<circle r="4.5" />
+					</g>
+				))}
+
+				<text class="dia-foot" x={L.W / 2} y={L.H - 6} text-anchor="middle">{L.foot}</text>
+			</svg>
+		);
+	})}
+	<div class="sp-controls" hidden>
+		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
+		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+		<span class="sp-progress" aria-hidden="true"><span class="sp-progress-fill"></span></span>
+	</div>
+	<ol class="sp-steps">
+		{steps.map((s) => (
+			<li data-active={s.active}><strong>{s.name}</strong> {s.text}</li>
+		))}
+	</ol>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

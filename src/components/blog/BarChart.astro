@@ -1,0 +1,71 @@
+---
+// Horizontal bar chart (static SVG). Each row's name sits above its bar so
+// long model names never get squeezed on a phone; every bar is value-labeled
+// at its tip, so the chart needs no separate table.
+import { type ChartColor, chartId, r1 } from '../../lib/charts';
+
+interface Row {
+	label: string;
+	// Muted second label, e.g. the training method
+	note?: string;
+	value: number;
+	color?: ChartColor;
+}
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	rows: Row[];
+	max: number;
+	unit?: string;
+	digits?: number;
+	caption?: string;
+	// Drawing width in SVG units: use ~300 inside <Grid> so text stays legible
+	width?: number;
+}
+
+const { title, subtitle, rows, max, unit = '', digits = 1, caption, width = 360 } = Astro.props;
+
+const W = width;
+const rowH = 42;
+const barH = 14;
+const left = 4;
+const right = 64;
+const H = rows.length * rowH + 6;
+const id = chartId('bars');
+const barWidth = (v: number) => Math.max(1, ((W - left - right) * v) / max);
+// Square at the baseline, 4px rounded data end
+const bar = (x: number, y: number, w: number, h: number) => {
+	const r = Math.min(4, w / 2, h / 2);
+	return `M${x} ${y}H${r1(x + w - r)}Q${r1(x + w)} ${y} ${r1(x + w)} ${y + r}V${y + h - r}Q${r1(x + w)} ${y + h} ${r1(x + w - r)} ${y + h}H${x}Z`;
+};
+---
+
+<figure class="chart chart-bars">
+	<div class="chart-head">
+		<p class="chart-title" id={`${id}-title`}>{title}</p>
+		{subtitle && <p class="chart-sub">{subtitle}</p>}
+	</div>
+	<svg class="chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`${id}-title`}>
+		{rows.map((row, i) => {
+			const y = i * rowH + 4;
+			const w = barWidth(row.value);
+			const value = `${row.value.toFixed(digits)}${unit}`;
+			return (
+				<g>
+					<title>{`${row.label}${row.note ? ` (${row.note})` : ''}: ${value}`}</title>
+					<text class="chart-bar-label" x={left} y={y + 11}>
+						{row.label}
+						{row.note && <tspan class="chart-bar-note" dx="8">{row.note}</tspan>}
+					</text>
+					<rect class="chart-track" x={left} y={y + 18} width={W - left - right} height={barH} rx="2" />
+					<path class={`chart-bar c-${row.color ?? 'gray'}`} d={bar(left, y + 18, w, barH)} />
+					<text class="chart-bar-value" x={r1(left + w + 7)} y={y + 30}>{value}</text>
+				</g>
+			);
+		})}
+	</svg>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

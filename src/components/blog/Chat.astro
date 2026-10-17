@@ -1,0 +1,16 @@
+---
+// A run of <ChatMessage>s shown as one chat exchange from an agent trace,
+// with an optional caption like a chart's.
+interface Props {
+	caption?: string;
+}
+
+const { caption } = Astro.props;
+---
+
+<figure class="chat">
+	<div class="chat-log">
+		<slot />
+	</div>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>

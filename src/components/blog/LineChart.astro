@@ -1,0 +1,153 @@
+---
+// Static SVG line chart for blog posts. Renders at build time (no client JS
+// needed to read it); public/script.js §11 adds a crosshair + tooltip on
+// hover/focus from each SVG's data-chart payload.
+//
+// `full` makes the chart span the whole post column. SVG text scales with
+// its drawing, so a full-width chart ships two drawings: a wide one for
+// desktop and the compact one for phones (CSS shows one of them).
+import { type Axis, type ChartColor, chartId, format, r1, scale } from '../../lib/charts';
+
+interface Series {
+	name: string;
+	color: ChartColor;
+	points: [number, number][];
+	markers?: boolean;
+	// A 10% wash under the line (use for reference curves)
+	area?: boolean;
+	// Direct label at the line's end, for series that separate at the right edge
+	endLabel?: string;
+}
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	series: Series[];
+	x: Axis;
+	y: Axis;
+	height?: number;
+	caption?: string;
+	// Extra right margin for end labels
+	labelRoom?: number;
+	// Drawing width in SVG units: use ~340 inside <Grid> so text stays legible
+	width?: number;
+	// Span the full post column on wide screens
+	full?: boolean;
+	// Height of the full-width drawing
+	fullHeight?: number;
+}
+
+const {
+	title,
+	subtitle,
+	series,
+	x,
+	y,
+	height = 250,
+	caption,
+	labelRoom = 0,
+	width = 360,
+	full = false,
+	fullHeight = 300
+} = Astro.props;
+
+const xf = x.format ?? 'int';
+const yf = y.format ?? 'dec2';
+const xvf = x.valueFormat ?? xf;
+const yvf = y.valueFormat ?? yf;
+const id = chartId('chart');
+
+const draw = (W: number, H: number, variant: string) => {
+	const m = { top: 14, right: 14 + labelRoom, bottom: 40, left: 46 };
+	const sx = scale(x, m.left, W - m.right);
+	const sy = scale(y, H - m.bottom, m.top);
+	const paths = series.map((s) =>
+		s.points.map(([px, py], i) => `${i ? 'L' : 'M'}${r1(sx(px))} ${r1(sy(py))}`).join('')
+	);
+	const areas = series.map((s, i) =>
+		s.area && s.points.length
+			? `${paths[i]}L${r1(sx(s.points[s.points.length - 1][0]))} ${r1(sy(y.min))}L${r1(sx(s.points[0][0]))} ${r1(sy(y.min))}Z`
+			: null
+	);
+	// Hover payload: pixel positions plus preformatted text, so script.js only
+	// does nearest-point lookup and writes text (never markup) into the tooltip.
+	const payload = JSON.stringify({
+		x: x.label ?? '',
+		series: series.map((s) => ({
+			name: s.name,
+			color: s.color,
+			pts: s.points.map(([px, py]) => [r1(sx(px)), r1(sy(py)), format(px, xvf), format(py, yvf)])
+		}))
+	});
+	return { W, H, m, sx, sy, paths, areas, payload, variant };
+};
+
+const drawings = full
+	? [draw(720, fullHeight, 'chart-svg-full'), draw(width, height, 'chart-svg-compact')]
+	: [draw(width, height, '')];
+---
+
+<figure class={`chart${full ? ' chart-full' : ''}`}>
+	<div class="chart-head">
+		<p class="chart-title" id={`${id}-title`}>{title}</p>
+		{subtitle && <p class="chart-sub">{subtitle}</p>}
+		{series.length > 1 && (
+			<ul class="chart-legend">
+				{series.map((s) => (
+					<li><span class={`chart-key key-line c-${s.color}`} aria-hidden="true"></span>{s.name}</li>
+				))}
+			</ul>
+		)}
+	</div>
+	{drawings.map(({ W, H, m, sx, sy, paths, areas, payload, variant }) => (
+		<svg class={`chart-svg${variant ? ` ${variant}` : ''}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`${id}-title`} data-chart={payload}>
+			<g class="chart-grid">
+				{y.ticks.map((t) => (
+					<line x1={m.left} x2={W - m.right} y1={r1(sy(t))} y2={r1(sy(t))} />
+				))}
+			</g>
+			<line class="chart-axis" x1={m.left} x2={W - m.right} y1={H - m.bottom} y2={H - m.bottom} />
+			<g class="chart-ticks">
+				{y.ticks.map((t) => (
+					<text x={m.left - 7} y={r1(sy(t)) + 4} text-anchor="end">{format(t, yf)}</text>
+				))}
+				{x.ticks.map((t) => (
+					<>
+						<line class="chart-tick" x1={r1(sx(t))} x2={r1(sx(t))} y1={H - m.bottom} y2={H - m.bottom + 4} />
+						<text x={r1(sx(t))} y={H - m.bottom + 17} text-anchor="middle">{format(t, xf)}</text>
+					</>
+				))}
+			</g>
+			{x.label && (
+				<text class="chart-axis-label" x={(m.left + W - m.right) / 2} y={H - 5} text-anchor="middle">{x.label}</text>
+			)}
+			{y.label && (
+				<text class="chart-axis-label" x={m.left - 40} y={m.top - 3}>{y.label}</text>
+			)}
+			{areas.map((d, i) => d && <path class={`chart-area c-${series[i].color}`} d={d} />)}
+			{paths.map((d, i) => <path class={`chart-line c-${series[i].color}`} d={d} />)}
+			{series.map((s) =>
+				s.markers &&
+				s.points.map(([px, py]) => (
+					<circle class={`chart-marker c-${s.color}`} cx={r1(sx(px))} cy={r1(sy(py))} r="4">
+						<title>{`${s.name} · ${x.label ?? 'x'} ${format(px, xvf)}: ${format(py, yvf)}`}</title>
+					</circle>
+				))
+			)}
+			{series.map((s) => {
+				if (!s.endLabel || !s.points.length) return null;
+				const [lx, ly] = s.points[s.points.length - 1];
+				return (
+					<text class="chart-end-label" x={r1(sx(lx)) + 8} y={r1(sy(ly)) + 4}>{s.endLabel}</text>
+				);
+			})}
+			<g class="chart-hover" aria-hidden="true">
+				<line class="chart-cross" x1="0" x2="0" y1={m.top} y2={H - m.bottom} />
+				{series.map((s) => <circle class={`chart-dot c-${s.color}`} r="4.5" cx="-10" cy="-10" />)}
+			</g>
+		</svg>
+	))}
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

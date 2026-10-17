@@ -1,0 +1,40 @@
+---
+// Static card for an X post: the full text in the site's own styling. The
+// source goes in a footnote like any other reference; `url` only fills the
+// quote's cite attribute. Unlike the click-to-load embed (script.js §3b), it
+// needs no JS, makes no third-party requests, and never truncates long posts
+// behind "Show more". The post text goes in the slot as ordinary markdown.
+// `avatar` is a local copy of the profile photo (public/assets/blog/), so
+// the page never loads images from X; `caption` renders like a chart caption.
+interface Props {
+	name: string;
+	handle: string;
+	date: string;
+	url: string;
+	avatar?: string;
+	caption?: string;
+}
+
+const { name, handle, date, url, avatar, caption } = Astro.props;
+// A slot holding only an MDX comment renders empty; show a placeholder then
+const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : '';
+---
+
+<figure class="tweet">
+	<div class="tweet-card">
+		<blockquote cite={url}>
+			<div class="tweet-head">
+				{avatar && <img class="tweet-avatar" src={avatar} alt="" width="40" height="40" loading="lazy" decoding="async" />}
+				<span class="tweet-who">
+					<span class="tweet-name">{name}</span>
+					<span class="tweet-handle">@{handle}</span>
+				</span>
+			</div>
+			<div class="tweet-body">
+				{body ? <Fragment set:html={body} /> : <p class="tweet-empty">(post text goes here)</p>}
+			</div>
+		</blockquote>
+		<p class="tweet-foot">𝕏 · {date}</p>
+	</div>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>

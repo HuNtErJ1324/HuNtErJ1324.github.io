@@ -1,5 +1,13 @@
 {
 	"extends": "astro/tsconfigs/base",
+	"compilerOptions": {
+		"baseUrl": ".",
+		// "@/..." resolves to src/ from anywhere, so a post's imports keep
+		// working when draft:publish moves it from drafts/ to src/content/blog/
+		"paths": {
+			"@/*": ["src/*"]
+		}
+	},
 	"include": [".astro/types.d.ts", "**/*"],
 	"exclude": ["dist", "_jekyll", "public/assets/mathjax"]
 }

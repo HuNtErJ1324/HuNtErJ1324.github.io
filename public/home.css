@@ -813,6 +813,196 @@ a:hover {
 	color: var(--bg);
 }
 
+/* Static X post card (src/components/blog/Tweet.astro): full text, no embed */
+.post-content .tweet {
+	max-width: 34rem;
+	margin: 1.6em auto;
+}
+
+.post-content .tweet-card {
+	padding: 0.9em 1.1em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+}
+
+.post-content .tweet-card blockquote {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	color: var(--text);
+	font-style: normal;
+}
+
+.post-content .tweet-head {
+	display: flex;
+	align-items: center;
+	gap: 0.7em;
+	margin: 0 0 0.7em;
+}
+
+.post-content .tweet-avatar {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	margin: 0;
+	border: 1px solid var(--border);
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.tweet-who {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.35;
+}
+
+.tweet-name {
+	font-family: var(--font-display);
+	letter-spacing: 0.03em;
+	color: var(--text);
+}
+
+.tweet-handle {
+	font-size: 0.85rem;
+	color: var(--muted);
+}
+
+.post-content .tweet-body p {
+	margin: 0 0 0.75em;
+}
+
+.post-content .tweet-body > :last-child {
+	margin-bottom: 0;
+}
+
+.post-content .tweet-empty {
+	color: var(--muted);
+}
+
+.post-content .tweet-foot {
+	margin: 0.8em 0 0;
+	padding-top: 0.6em;
+	border-top: 1px solid var(--border);
+	font-size: 0.8rem;
+	font-style: normal;
+	color: var(--muted);
+}
+
+/* Agent-trace excerpt as a chat exchange (src/components/blog/Chat.astro, ChatMessage.astro) */
+.post-content .chat {
+	max-width: 40rem;
+	margin: 1.6em auto;
+}
+
+.chat-log {
+	display: flex;
+	flex-direction: column;
+	gap: 0.8em;
+}
+
+.chat-msg {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.7em;
+}
+
+.chat-avatar {
+	flex-shrink: 0;
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: var(--c);
+	color: var(--bg);
+	font-family: var(--font-display);
+	font-size: 0.95rem;
+	line-height: 1;
+}
+
+.chat-col {
+	flex: 1;
+	min-width: 0;
+}
+
+.post-content .chat-who {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.6em;
+	margin: 0.25em 0 0.35em;
+	line-height: 1.3;
+}
+
+.chat-name {
+	font-family: var(--font-display);
+	font-size: 0.9rem;
+	letter-spacing: 0.03em;
+	color: var(--text);
+}
+
+.chat-meta {
+	font-size: 0.78rem;
+	color: var(--muted);
+}
+
+.chat-bubble {
+	padding: 0.7em 0.95em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+	border-radius: 2px 12px 12px 12px;
+	font-size: 0.92rem;
+	color: var(--text);
+}
+
+.post-content .chat-bubble p {
+	margin: 0 0 0.6em;
+}
+
+.post-content .chat-bubble > :last-child {
+	margin-bottom: 0;
+}
+
+.chat-user {
+	justify-content: flex-end;
+}
+
+.chat-user .chat-bubble {
+	max-width: 80%;
+	background: var(--bg-inset);
+	border-radius: 12px 2px 12px 12px;
+}
+
+/* Indented to line up with the assistant bubbles above and below */
+.chat-tool {
+	padding-left: calc(30px + 0.7em);
+}
+
+.chat-call {
+	display: flex;
+	align-items: baseline;
+	gap: 0.7em;
+	padding: 0.4em 0.75em;
+	border: 1px dashed var(--border-bright);
+	border-radius: 8px;
+	font-size: 0.82rem;
+	color: var(--subtle);
+}
+
+.chat-tool-name {
+	font-family: var(--font-display);
+	letter-spacing: 0.03em;
+	color: var(--gold);
+}
+
+.chat-call-body {
+	min-width: 0;
+}
+
+.post-content .chat-call-body p {
+	margin: 0;
+}
+
 .x-embed {
 	width: 100%;
 	height: 32rem;
@@ -961,6 +1151,11 @@ a:hover {
 	font-style: italic;
 }
 
+/* Paragraph margins inside a quote would stretch the bar past the text */
+.post-content blockquote > :last-child {
+	margin-bottom: 0;
+}
+
 .post-content hr {
 	border: 0;
 	border-top: 1px dashed var(--border-bright);
@@ -984,6 +1179,14 @@ a:hover {
 .post-content th {
 	background: var(--bg-raised);
 	color: var(--text);
+}
+
+/* Wide tables scroll inside their own box on phones instead of widening the page */
+@media (max-width: 600px) {
+	.post-content table {
+		display: block;
+		overflow-x: auto;
+	}
 }
 
 /* MathJax (SVG output): glyphs inherit currentColor → theme text color.
@@ -1265,6 +1468,621 @@ pre code {
 	font-size: 0.85rem;
 	font-style: italic;
 	color: var(--subtle);
+}
+
+/* --------------------------------------------------------------------------
+   Blog: charts, diagrams, folds (src/components/blog/)
+   Chart hues are the Rosé Pine accents stepped into the dark-mode chart band
+   (OKLCH L 0.48–0.67, chroma ≥ 0.10) — the raw accents are too light and too
+   gray to tell apart as data marks. Validated as sets against --bg (CVD and
+   normal-vision separation, ≥ 3:1 contrast). Text never wears a chart hue.
+   -------------------------------------------------------------------------- */
+:root {
+	--chart-love: #c24a6f;           /* self-play / RL-trained model */
+	--chart-blue: #23a0cb;           /* base model */
+	--chart-gold: #c08934;           /* second model size */
+	--chart-iris: #a681d0;           /* proposer-side variants */
+	--chart-rose: #b05455;           /* solver role */
+	--chart-gray: #6e6a86;           /* de-emphasized / reference */
+}
+
+.c-love { --c: var(--chart-love); }
+.c-blue { --c: var(--chart-blue); }
+.c-gold { --c: var(--chart-gold); }
+.c-iris { --c: var(--chart-iris); }
+.c-rose { --c: var(--chart-rose); }
+.c-gray { --c: var(--chart-gray); }
+
+.post-content .chart {
+	position: relative;
+	margin: 1.8em 0;
+}
+
+.post-content .chart-head {
+	margin-bottom: 0.5em;
+}
+
+.post-content .chart-title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 0.95rem;
+	letter-spacing: 0.04em;
+	color: var(--text);
+}
+
+.post-content .chart-sub {
+	margin: 0.1em 0 0;
+	font-size: 0.8rem;
+	line-height: 1.5;
+	color: var(--subtle);
+}
+
+.post-content .chart-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2em 1.2em;
+	margin: 0.45em 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.8rem;
+	color: var(--subtle);
+}
+
+.post-content .chart-legend li {
+	margin: 0;
+	padding: 0;
+}
+
+.post-content .chart-legend li::before {
+	content: none;
+}
+
+.chart-key.key-line {
+	display: inline-block;
+	width: 1.1em;
+	margin-right: 0.45em;
+	vertical-align: middle;
+	border-top: 2px solid var(--c);
+	border-radius: 1px;
+}
+
+.chart-svg {
+	display: block;
+	width: 100%;
+	max-width: 480px;
+	height: auto;
+	overflow: visible;
+	font-family: var(--font-body);
+}
+
+/* <LineChart full>: a 720-unit drawing spans the column on wide screens;
+   below 760px (where its text would drop under ~11px) the compact one shows */
+.chart-svg.chart-svg-full {
+	max-width: none;
+}
+
+.chart-svg.chart-svg-compact {
+	display: none;
+}
+
+@media (max-width: 760px) {
+	.chart-svg.chart-svg-full {
+		display: none;
+	}
+
+	.chart-svg.chart-svg-compact {
+		display: block;
+	}
+}
+
+.chart-svg:focus-visible {
+	outline: 1px solid var(--rose);
+	outline-offset: 4px;
+}
+
+.chart-svg text {
+	fill: var(--subtle);
+	font-size: 11px;
+}
+
+.chart-svg .chart-ticks text {
+	fill: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.chart-grid line {
+	stroke: var(--border);
+	stroke-width: 1;
+	opacity: 0.6;
+}
+
+.chart-axis,
+.chart-tick {
+	stroke: var(--border-bright);
+	stroke-width: 1;
+}
+
+.chart-line {
+	fill: none;
+	stroke: var(--c);
+	stroke-width: 2;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.chart-area {
+	fill: var(--c);
+	fill-opacity: 0.12;
+	stroke: none;
+}
+
+.chart-marker,
+.chart-dot {
+	fill: var(--c);
+	stroke: var(--bg);
+	stroke-width: 2;
+}
+
+.chart-svg .chart-end-label {
+	fill: var(--text);
+}
+
+.chart-hover {
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.chart.is-active .chart-hover {
+	visibility: visible;
+}
+
+.chart-cross {
+	stroke: var(--subtle);
+	stroke-width: 1;
+}
+
+.chart-tip {
+	position: absolute;
+	z-index: 5;
+	min-width: 10em;
+	padding: 0.45em 0.7em;
+	background: var(--bg-inset);
+	border: 1px solid var(--border-bright);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+	font-size: 0.78rem;
+	line-height: 1.5;
+	pointer-events: none;
+}
+
+.chart-tip-x {
+	margin-bottom: 0.2em;
+	color: var(--subtle);
+}
+
+.chart-tip-row {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5em;
+	white-space: nowrap;
+}
+
+.chart-tip-row strong {
+	color: var(--text);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.chart-tip-row span:last-child {
+	color: var(--subtle);
+}
+
+/* Bars and columns */
+.chart-track {
+	fill: var(--bg-raised);
+}
+
+.chart-bar {
+	fill: var(--c);
+}
+
+.chart-svg .chart-bar-label {
+	fill: var(--text);
+	font-size: 12px;
+}
+
+.chart-svg .chart-bar-note {
+	fill: var(--muted);
+}
+
+.chart-svg .chart-bar-value {
+	fill: var(--text);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+}
+
+.chart-panels {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 1.2rem;
+	max-width: 400px;
+}
+
+.post-content .chart-panel-title {
+	margin: 0;
+	font-size: 0.82rem;
+	color: var(--text);
+}
+
+.post-content .chart-panel-note {
+	margin: 0 0 0.3em;
+	font-size: 0.78rem;
+	line-height: 1.4;
+	color: var(--subtle);
+}
+
+.chart-svg .chart-col-label {
+	fill: var(--muted);
+}
+
+.chart-svg .chart-col-check {
+	fill: var(--text);
+}
+
+.chart-empty {
+	fill: none;
+	stroke: var(--muted);
+	stroke-dasharray: 2 2;
+}
+
+.chart-hit {
+	fill: transparent;
+}
+
+/* Diagrams */
+.dia-node {
+	fill: var(--bg-raised);
+	stroke: var(--border);
+}
+
+.dia-accent {
+	fill: var(--c);
+}
+
+.chart-svg .dia-title {
+	fill: var(--text);
+	font-family: var(--font-display);
+	font-size: 12px;
+	letter-spacing: 0.06em;
+}
+
+.dia-edge {
+	fill: none;
+	stroke: var(--muted);
+	stroke-width: 1.5;
+}
+
+/* The loop diagram ships a wide 2×2 layout and a vertical one for phones */
+.dia-tall {
+	display: none;
+}
+
+@media (max-width: 480px) {
+	.chart-svg.dia-wide {
+		display: none;
+	}
+
+	.chart-svg.dia-tall {
+		display: block;
+		max-width: 340px;
+	}
+}
+
+.dia-arrowhead {
+	fill: var(--muted);
+}
+
+/* Dashed outline grouping related nodes into a labeled panel */
+.dia-frame {
+	fill: none;
+	stroke: var(--border);
+	stroke-dasharray: 4 3;
+}
+
+.chart-svg .dia-edge-label,
+.chart-svg .dia-foot {
+	fill: var(--muted);
+	font-size: 10.5px;
+}
+
+.chart-svg .dia-banner {
+	fill: var(--gold);
+	font-family: var(--font-display);
+	letter-spacing: 0.05em;
+}
+
+/* Animated self-play round (SelfPlayAnimation.astro). The markup is the full
+   static diagram; script.js §12 adds .sp-live and toggles .is-shown /
+   .is-active from its clock, so everything below .sp-live is the animation. */
+.chart-svg .sp-code {
+	fill: var(--text);
+}
+
+.chart-svg .sp-miss {
+	fill: var(--muted);
+}
+
+.chart-svg .sp-mark {
+	fill: var(--text);
+}
+
+.chart-svg .sp-mark.sp-miss {
+	fill: var(--muted);
+}
+
+.chart-svg .sp-phase {
+	fill: var(--subtle);
+	font-size: 10.5px;
+}
+
+.sp-ring {
+	fill: none;
+	stroke: var(--c);
+	stroke-width: 2.5;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.sp-phase-live,
+.sp-packet {
+	display: none;
+}
+
+.sp-packet circle {
+	fill: var(--c);
+	stroke: var(--bg);
+	stroke-width: 2;
+}
+
+.sp-live [data-on] {
+	opacity: 0;
+	transition: opacity 0.35s ease;
+}
+
+.sp-live [data-on].is-shown {
+	opacity: 1;
+}
+
+.sp-live .sp-phase-still {
+	display: none;
+}
+
+.sp-live .sp-phase-live {
+	display: inline;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.sp-live .sp-phase-live.is-active,
+.sp-live .sp-ring.is-active {
+	opacity: 1;
+}
+
+.sp-live .sp-packet.is-shown {
+	display: inline;
+}
+
+.sp-node .dia-node {
+	transition: stroke 0.3s ease, fill 0.3s ease;
+}
+
+.sp-live .sp-node.is-active .dia-node {
+	fill: var(--bg-inset);
+	stroke: var(--c);
+}
+
+.sp-live .sp-node.c-gray.is-active .dia-node {
+	stroke: var(--subtle);
+}
+
+.sp-live .sp-edge.is-active {
+	stroke: var(--subtle);
+	stroke-dasharray: 4 4;
+	animation: sp-flow 0.5s linear infinite;
+}
+
+@keyframes sp-flow {
+	to {
+		stroke-dashoffset: -8;
+	}
+}
+
+.sp-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.9em;
+	max-width: 480px;
+	margin-top: 0.5em;
+}
+
+.sp-controls[hidden] {
+	display: none;
+}
+
+.sp-btn {
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--subtle);
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	letter-spacing: 0.05em;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.sp-btn:hover,
+.sp-btn:focus-visible {
+	color: var(--rose);
+}
+
+.sp-progress {
+	flex: 1;
+	height: 2px;
+	background: var(--border);
+}
+
+.sp-progress-fill {
+	display: block;
+	height: 100%;
+	background: var(--subtle);
+	transform: scaleX(0);
+	transform-origin: left;
+}
+
+.post-content .sp-steps {
+	max-width: 480px;
+	margin: 0.9em 0 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: sp-step;
+	font-size: 0.82rem;
+	line-height: 1.5;
+	color: var(--subtle);
+}
+
+.post-content .sp-steps li {
+	position: relative;
+	margin: 0 0 0.35em;
+	padding-left: 1.7em;
+	counter-increment: sp-step;
+	transition: color 0.3s ease;
+}
+
+.post-content .sp-steps li::before {
+	content: counter(sp-step) '.';
+	position: absolute;
+	left: 0;
+	color: var(--muted);
+}
+
+.post-content .sp-steps strong {
+	color: var(--text);
+	font-weight: 700;
+	transition: color 0.3s ease;
+}
+
+.post-content .sp-live .sp-steps li {
+	color: var(--muted);
+}
+
+.post-content .sp-live .sp-steps strong {
+	color: var(--subtle);
+}
+
+.post-content .sp-live .sp-steps li.is-active {
+	color: var(--text);
+}
+
+.post-content .sp-live .sp-steps li.is-active strong {
+	color: var(--rose);
+}
+
+/* Two-up small multiples */
+.chart-grid-2 {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 1.6rem;
+	margin: 1.8em 0;
+}
+
+.post-content .chart-grid-2 > .chart {
+	margin: 0 0 1.4em;
+}
+
+@media (max-width: 640px) {
+	.chart-grid-2 {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Display math from <Tex block> */
+.post-content .tex-block {
+	margin: 0 0 1.15em;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+/* Fold: optional background a reader can skip (<Fold> component) */
+.fold {
+	margin: 0 0 1.4em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+}
+
+.fold > summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.2em 0.8em;
+	padding: 0.6em 1em;
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+	border-left: 3px solid var(--iris);
+	font-family: var(--font-display);
+	letter-spacing: 0.05em;
+	transition: background-color 0.15s ease;
+}
+
+.fold > summary::-webkit-details-marker {
+	display: none;
+}
+
+.fold > summary::before {
+	content: '[+]';
+	color: var(--gold);
+}
+
+.fold[open] > summary::before {
+	content: '[-]';
+}
+
+.fold > summary:hover {
+	background: var(--bg-inset);
+}
+
+.fold-title {
+	color: var(--text);
+}
+
+.fold-hint {
+	font-family: var(--font-body);
+	font-size: 0.8rem;
+	letter-spacing: 0;
+	color: var(--muted);
+}
+
+.fold-body {
+	padding: 0.2em 1.1em 0.4em;
+	border-top: 1px solid var(--border);
+}
+
+@media (max-width: 480px) {
+	.fold-body {
+		padding: 0.2em 0.6em 0.4em;
+	}
+}
+
+@supports (interpolate-size: allow-keywords) {
+	.fold::details-content {
+		block-size: 0;
+		overflow: clip;
+		transition: block-size 0.3s ease, content-visibility 0.3s ease allow-discrete;
+	}
+
+	.fold[open]::details-content {
+		block-size: auto;
+	}
 }
 
 /* Related posts appended by the post layout */
@@ -1849,8 +2667,28 @@ mark.search-hit.current {
 		transition: none;
 	}
 
-	details.abstract::details-content {
+	details.abstract::details-content,
+	.fold::details-content {
 		transition: none;
+	}
+
+	.fold > summary {
+		transition: none;
+	}
+
+	/* script.js §12 also skips the self-play animation entirely here */
+	.sp-live [data-on],
+	.sp-ring,
+	.sp-live .sp-phase-live,
+	.sp-node .dia-node,
+	.sp-btn,
+	.post-content .sp-steps li,
+	.post-content .sp-steps strong {
+		transition: none;
+	}
+
+	.sp-live .sp-edge.is-active {
+		animation: none;
 	}
 }
 
