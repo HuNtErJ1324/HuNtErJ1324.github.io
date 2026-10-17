@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex">
+	<title>Drafts editor</title>
+	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+	<link rel="stylesheet" href="/edit/editor.css">
+	<script type="module" src="/scripts/drafts-editor/client.js"></script>
+</head>
+
+<body>
+	<header class="bar">
+		<div class="bar-group">
+			<span class="brand">~/drafts</span>
+			<label class="visually-hidden" for="draft-select">Draft</label>
+			<select id="draft-select"></select>
+			<button type="button" id="new-draft" class="btn" title="Start a new draft">+ new</button>
+		</div>
+
+		<div class="bar-group toolbar" role="toolbar" aria-label="Formatting">
+			<button type="button" class="btn icon" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+			<button type="button" class="btn icon" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+			<button type="button" class="btn icon" data-cmd="code" title="Inline code (Ctrl+E)">&lt;&gt;</button>
+			<button type="button" class="btn" data-cmd="link" title="Link (Ctrl+K)">link</button>
+			<button type="button" class="btn" data-cmd="footnote" title="Footnote (Ctrl+Shift+F)">fn</button>
+			<button type="button" class="btn" data-cmd="image" title="Insert an image (or paste / drop one)">img</button>
+			<div class="menu">
+				<button type="button" id="insert-button" class="btn" aria-haspopup="menu" aria-expanded="false" aria-controls="insert-menu">insert ▾</button>
+				<div id="insert-menu" class="menu-list" role="menu" hidden></div>
+			</div>
+		</div>
+
+		<div class="bar-group bar-end">
+			<span id="save-status" class="save-status" aria-live="polite"></span>
+			<div class="segmented" role="group" aria-label="Layout">
+				<button type="button" class="btn" data-view="source" title="Source only">source</button>
+				<button type="button" class="btn" data-view="split" title="Source and preview side by side">split</button>
+				<button type="button" class="btn" data-view="preview" title="Preview only">preview</button>
+			</div>
+			<label class="check" title="Keep the preview scrolled to the same place as the source">
+				<input type="checkbox" id="sync-scroll" checked> sync
+			</label>
+			<a id="open-post" class="btn" target="_blank" rel="noopener" title="Open the post in a new tab">open ↗</a>
+		</div>
+	</header>
+
+	<div id="banner" class="banner" role="alert" hidden></div>
+
+	<main id="panes" class="panes" data-view="split">
+		<section class="pane pane-source" aria-label="Source">
+			<div id="editor" class="editor"></div>
+		</section>
+		<div id="divider" class="divider" role="separator" aria-orientation="vertical" aria-label="Resize the panes" tabindex="0"></div>
+		<section class="pane pane-preview" aria-label="Preview">
+			<div class="frames">
+				<iframe class="frame is-front" title="Preview"></iframe>
+				<iframe class="frame" title="Preview, loading" tabindex="-1" aria-hidden="true"></iframe>
+			</div>
+			<div id="preview-error" class="preview-error" hidden>
+				<div class="preview-error-head">
+					<span id="preview-error-title">Preview paused: this version doesn't render.</span>
+					<button type="button" id="preview-error-jump" class="btn" hidden>go to line</button>
+				</div>
+				<pre id="preview-error-text"></pre>
+			</div>
+			<div id="preview-busy" class="preview-busy" hidden>rendering…</div>
+		</section>
+	</main>
+
+	<footer class="statusline">
+		<span id="cursor-pos"></span>
+		<span id="word-count"></span>
+		<button type="button" id="problem-count" class="linkish" hidden></button>
+		<span id="file-path" class="file-path"></span>
+		<span class="hint">double-click the preview to jump to its source</span>
+	</footer>
+
+	<dialog id="new-dialog" class="dialog">
+		<form id="new-form" method="dialog">
+			<h2>New draft</h2>
+			<label>Title
+				<input id="new-title" name="title" required autocomplete="off" placeholder="My post title">
+			</label>
+			<label>Slug <small>(the URL: /blog/<span id="new-slug-preview">my-post-title</span>/)</small>
+				<input id="new-slug" name="slug" required autocomplete="off" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="my-post-title">
+			</label>
+			<fieldset>
+				<legend>Format</legend>
+				<label class="check"><input type="radio" name="format" value="mdx" checked> MDX (components, charts)</label>
+				<label class="check"><input type="radio" name="format" value="md"> Markdown</label>
+			</fieldset>
+			<p id="new-error" class="form-error" hidden></p>
+			<div class="dialog-actions">
+				<button type="button" class="btn" value="cancel" id="new-cancel">cancel</button>
+				<button type="submit" class="btn primary" value="create">create</button>
+			</div>
+		</form>
+	</dialog>
+
+	<input type="file" id="image-input" accept="image/*" multiple hidden>
+</body>
+
+</html>

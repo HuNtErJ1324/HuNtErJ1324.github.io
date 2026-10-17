@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
 import { remarkTraceDirectives } from './src/plugins/remark-trace-directives.js';
+import draftsEditor from './scripts/drafts-editor/integration.mjs';
 
 // Drafts (./drafts) may only ever render under `astro dev`. Gate on the CLI
 // command, not import.meta.env.DEV: DEV just means NODE_ENV !== 'production',
@@ -28,7 +29,10 @@ const draftsGate = {
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://justin-chae.org',
-	integrations: [draftsGate, mdx()],
+	// draftsEditor serves the browser editor at /edit/ under `astro dev` only
+	// (scripts/drafts-editor/); it must come before mdx() so its dev-only
+	// remark plugin reaches MDX too.
+	integrations: [draftsGate, draftsEditor(), mdx()],
 	markdown: {
 		// Math stays literal ($$…$$) and is rendered client-side by the
 		// self-hosted MathJax bundle, exactly as on the Jekyll site.
