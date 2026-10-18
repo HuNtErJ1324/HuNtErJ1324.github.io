@@ -48,6 +48,7 @@ The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages
 - The page looks like a post with a **draft** chip. It isn't on the blog index, tag pages, sitemap, or related posts, it's `noindex`, and it has no comments.
 - The text never enters this public repo: the deploy pulls it from the private drafts repo. The tokens are masked in the public Actions logs.
 - It's unlisted, not password-protected: anyone with the link can read it.
+- The deploy builds from GitHub, so first commit and push anything the draft uses from this repo (`src/data/<slug>.json`, components, images). `draft:share` warns you about any of these that are missing.
 - `npm run draft:share` lists shared drafts. `-- some-slug --rotate` issues a new link, and `-- some-slug --revoke` stops sharing. Both take effect on the next deploy. Publishing removes the token, and the draft link stops working.
 
 **One-time setup** (so the deploy can read the private drafts repo):

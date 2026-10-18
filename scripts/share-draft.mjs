@@ -9,6 +9,7 @@
 //   npm run draft:share -- <slug>             # share it (or print its link)
 //   npm run draft:share -- <slug> --rotate    # new link; the old one stops working
 //   npm run draft:share -- <slug> --revoke    # stop sharing
+import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +27,26 @@ const deploySteps = [
     '  npm run drafts:sync          # pushes the draft to the private repo',
     '  gh workflow run deploy.yml   # or GitHub → Actions → Deploy to GitHub Pages → Run workflow (a push to main works too)'
 ];
+
+// Site files the draft uses (@/ imports, /assets/ paths) that aren't committed
+// to this repo. The deploy builds from GitHub, so it can't see them and fails.
+const uncommittedFiles = (source) => {
+    const paths = [...new Set([
+        ...[...source.matchAll(/from\s+['"]@\/([^'"]+)['"]/g)].map((m) => `src/${m[1]}`),
+        ...[...source.matchAll(/["'(](\/assets\/[^"')\s?#]+)/g)].map((m) => `public${m[1]}`)
+    ])];
+    if (paths.length === 0) return [];
+    const tracked = execFileSync('git', ['ls-files', '-z', '--', ...paths], { encoding: 'utf8' }).split('\0');
+    return paths.filter((path) => !tracked.includes(path));
+};
+
+const warnUncommitted = (source) => {
+    const missing = uncommittedFiles(source);
+    if (missing.length === 0) return;
+    console.warn('Warning: this draft uses files that aren\'t committed to this repo, so the deploy');
+    console.warn('would fail. Commit and push them to main before deploying:');
+    missing.forEach((path) => console.warn(`  ${path}`));
+};
 
 if (!slug) {
     if (rotate || revoke) {
@@ -70,6 +91,7 @@ if (revoke) {
 if (current && !rotate) {
     console.log(`${slug} is shared at ${link(current)}`);
     console.log(`(--rotate gives it a new link, --revoke stops sharing it)`);
+    warnUncommitted(source);
     process.exit(0);
 }
 
@@ -86,3 +108,4 @@ if (current) {
 console.log(`Local preview: npm run dev, then http://localhost:4321/drafts/${token}/`);
 deploySteps.forEach((step) => console.log(step));
 console.log('Anyone with the link can read the draft: it is unlisted, not password-protected.');
+warnUncommitted(source);
