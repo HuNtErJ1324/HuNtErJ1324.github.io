@@ -52,7 +52,7 @@ The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages
 
 **One-time setup** (so the deploy can read the private drafts repo):
 
-1. `ssh-keygen -t ed25519 -N "" -C "site deploy: read blog-drafts" -f drafts_deploy_key`
+1. `ssh-keygen -t ed25519 -C "site deploy: read blog-drafts" -f drafts_deploy_key` and press Enter twice at the passphrase prompts (Actions can't type a passphrase). Don't pass `-N ""`: PowerShell drops the empty argument and ssh-keygen fails with "Too many arguments".
 2. In **blog-drafts → Settings → Deploy keys → Add deploy key**, paste `drafts_deploy_key.pub` and leave *Allow write access* unchecked.
 3. In **this repo → Settings → Secrets and variables → Actions → New repository secret**, name it `DRAFTS_DEPLOY_KEY` and paste the contents of `drafts_deploy_key` (the private key). Then delete both local key files.
 
