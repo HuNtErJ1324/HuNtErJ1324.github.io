@@ -8,9 +8,11 @@ import { remarkMathJax } from './src/plugins/remark-mathjax.js';
 import { remarkTraceDirectives } from './src/plugins/remark-trace-directives.js';
 import draftsEditor from './scripts/drafts-editor/integration.mjs';
 
-// Drafts (./drafts) may only ever render under `astro dev`. Gate on the CLI
-// command, not import.meta.env.DEV: DEV just means NODE_ENV !== 'production',
-// and `NODE_ENV=development astro build` or `--devOutput` would ship every draft.
+// Drafts (./drafts) may only ever render under `astro dev`, except drafts
+// shared by link (npm run draft:share), which builds render at /drafts/<token>/
+// only. Gate on the CLI command, not import.meta.env.DEV: DEV just means
+// NODE_ENV !== 'production', and `NODE_ENV=development astro build` or
+// `--devOutput` would ship every draft.
 // content.config.ts and src/lib/posts.ts read import.meta.env.ASTRO_SHOW_DRAFTS,
 // which this defines at compile time.
 const draftsGate = {

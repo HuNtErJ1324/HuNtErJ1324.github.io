@@ -1,7 +1,8 @@
 ---
 // Post layout — ported from the Jekyll post layout, plus the related-posts
 // aside the general post anatomy calls for and giscus comments. MathJax loads
-// only on posts that contain math (hasMath, set by remark-mathjax).
+// only on posts that contain math (hasMath, set by remark-mathjax). `shared`
+// renders a draft at its /drafts/<token>/ link: noindex, no canonical URL.
 import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
 import { giscus } from '../lib/giscus';
@@ -15,13 +16,15 @@ interface Props {
 	previous: Post | null;
 	next: Post | null;
 	related: Post[];
+	shared?: boolean;
 }
 
-const { post, minutes, hasMath, previous, next, related } = Astro.props;
+const { post, minutes, hasMath, previous, next, related, shared = false } = Astro.props;
 const { date, title, description } = post.data;
 const dateIso = date.toISOString();
 const draft = isDraft(post);
 const showComments = !draft && post.data.comments;
+const shareToken = post.collection === 'drafts' ? post.data.share : undefined;
 // giscus loads the theme from inside its iframe, so it gets the absolute
 // production URL (also in dev), versioned like home.css to beat Cloudflare's cache
 const giscusTheme = new URL(`/assets/giscus-rose-pine.css${assetVersion}`, Astro.site).href;
@@ -36,12 +39,13 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 <Base
 	title={`${title} | Justin Yang Chae`}
 	description={description}
-	canonical={`/blog/${post.id}/`}
+	canonical={shared ? undefined : `/blog/${post.id}/`}
+	noindex={shared}
 	statuslinePath="~/blog"
 	csp="post"
 	comments={showComments}
 	ogType="article"
-	publishedTime={dateIso}
+	publishedTime={shared ? undefined : dateIso}
 	activeNavLink="blog"
 >
 	<Fragment slot="head">
@@ -61,17 +65,22 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="post-meta">
-				<PostChips post={post} />
+				<PostChips post={post} linkTags={!shared} />
 				<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
 				<span class="meta-sep" aria-hidden="true">&middot;</span>
 				<span>{minutes} min read</span>
 			</p>
-			{draft && (
+			{draft && (shared ? (
+				<p class="draft-note">
+					Unpublished draft, shared by link. It isn't listed on this site yet.
+				</p>
+			) : (
 				<p class="draft-note">
 					Draft — only visible under <code>npm run dev</code>. Publish with
 					<code>npm run draft:publish -- {post.id}</code>.
+					{shareToken && <>Shared by link at <a href={`/drafts/${shareToken}/`}>/drafts/{shareToken}/</a>.</>}
 				</p>
-			)}
+			))}
 		</header>
 		<div class="post-content">
 			<slot />

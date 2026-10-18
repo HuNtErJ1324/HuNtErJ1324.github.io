@@ -1,17 +1,21 @@
 ---
 // Draft / category / tag chips, shared by the blog index, tag pages, and the
-// post header. Tag chips link to /blog/tag/<tag>/.
+// post header. Tag chips link to /blog/tag/<tag>/ unless linkTags is false
+// (shared drafts: no tag page may exist yet for a draft's tags).
 import { isDraft, type Post } from '../lib/posts';
 
 interface Props {
 	post: Post;
+	linkTags?: boolean;
 }
 
-const { post } = Astro.props;
+const { post, linkTags = true } = Astro.props;
 ---
 
 {isDraft(post) && <span class="chip chip-draft">draft</span>}
 {post.data.category && <span class="chip">{post.data.category}</span>}
 {post.data.tags.map((tag) => (
-	<>{' '}<a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a></>
+	<>{' '}{linkTags
+		? <a class="chip chip-tag" href={`/blog/tag/${tag}/`}>{tag}</a>
+		: <span class="chip chip-tag">{tag}</span>}</>
 ))}

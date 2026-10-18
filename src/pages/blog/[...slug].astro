@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Post from '../../layouts/Post.astro';
-import { getPosts, relatedPosts } from '../../lib/posts';
+import { getPosts, readingMinutes, relatedPosts } from '../../lib/posts';
 
 export async function getStaticPaths() {
 	const posts = await getPosts();
@@ -18,20 +18,11 @@ export async function getStaticPaths() {
 
 const { post, previous, next, related } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(post);
-// Count prose only: in .mdx posts, import/export lines, component props
-// (chart data), and code blocks would otherwise inflate the estimate
-const prose = (post.body ?? '')
-	.replace(/^(import|export)\s.*$/gm, '')
-	.replace(/```[\s\S]*?```/g, '')
-	.replace(/<[A-Z][\s\S]*?\/>/g, '')
-	.replace(/<\/?[A-Z][^>]*>/g, '');
-const words = prose.split(/\s+/).filter(Boolean).length;
-const minutes = Math.max(1, Math.round(words / 200));
 ---
 
 <Post
 	post={post}
-	minutes={minutes}
+	minutes={readingMinutes(post)}
 	hasMath={Boolean(remarkPluginFrontmatter?.hasMath)}
 	previous={previous}
 	next={next}

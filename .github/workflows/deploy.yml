@@ -23,9 +23,29 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Drafts shared by link (npm run draft:share) come from the PRIVATE
+      # blog-drafts repo through a read-only deploy key. Without the secret
+      # (forks, Dependabot, or before it's set up) the site builds without them.
+      HAS_DRAFTS_KEY: ${{ secrets.DRAFTS_DEPLOY_KEY != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Check out shared drafts
+        if: env.HAS_DRAFTS_KEY == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: HuNtErJ1324/blog-drafts
+          path: drafts
+          ssh-key: ${{ secrets.DRAFTS_DEPLOY_KEY }}
+          persist-credentials: false
+      # This repo's Actions logs are public, and the build log and the
+      # artifact upload list every page: mask the share tokens in them.
+      - name: Mask share tokens
+        if: env.HAS_DRAFTS_KEY == 'true'
+        run: >-
+          node --input-type=module -e "import { sharedDrafts } from './scripts/shared-drafts.mjs';
+          for (const { token } of sharedDrafts()) console.log('::add-mask::' + token);"
       - name: Install, build, and upload site
         uses: withastro/action@v6
         with:

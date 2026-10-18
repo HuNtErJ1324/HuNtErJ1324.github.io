@@ -2120,7 +2120,8 @@ pre code {
 	font-size: 0.9rem;
 }
 
-/* Drafts (from the private drafts/ repo) only render under `astro dev` */
+/* Drafts (from the private drafts/ repo) render under `astro dev`, and shared
+   drafts at their /drafts/<token>/ link */
 .chip-draft {
 	color: var(--love);
 	border-color: var(--love);

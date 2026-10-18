@@ -9,6 +9,7 @@
 		"preview": "astro preview",
 		"draft:new": "node scripts/new-draft.mjs",
 		"draft:publish": "node scripts/publish-draft.mjs",
+		"draft:share": "node scripts/share-draft.mjs",
 		"drafts:sync": "node scripts/sync-drafts.mjs"
 	},
 	"dependencies": {

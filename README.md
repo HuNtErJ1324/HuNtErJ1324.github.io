@@ -41,6 +41,23 @@ On a new machine, set it up once with `git clone git@github.com:HuNtErJ1324/blog
 
 The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages, and sitemap update automatically.
 
+### Sharing a draft before it's published
+
+`npm run draft:share -- some-slug` gives a draft a private link, `justin-chae.org/drafts/<random-token>/`, for sending to a few readers. Then run `npm run drafts:sync` and redeploy the site: `gh workflow run deploy.yml`, **Actions → Deploy to GitHub Pages → Run workflow**, or any push to `main`. Do the same after each edit you want readers to see.
+
+- The page looks like a post with a **draft** chip. It isn't on the blog index, tag pages, sitemap, or related posts, it's `noindex`, and it has no comments.
+- The text never enters this public repo: the deploy pulls it from the private drafts repo. The tokens are masked in the public Actions logs.
+- It's unlisted, not password-protected: anyone with the link can read it.
+- `npm run draft:share` lists shared drafts. `-- some-slug --rotate` issues a new link, and `-- some-slug --revoke` stops sharing. Both take effect on the next deploy. Publishing removes the token, and the draft link stops working.
+
+**One-time setup** (so the deploy can read the private drafts repo):
+
+1. `ssh-keygen -t ed25519 -N "" -C "site deploy: read blog-drafts" -f drafts_deploy_key`
+2. In **blog-drafts → Settings → Deploy keys → Add deploy key**, paste `drafts_deploy_key.pub` and leave *Allow write access* unchecked.
+3. In **this repo → Settings → Secrets and variables → Actions → New repository secret**, name it `DRAFTS_DEPLOY_KEY` and paste the contents of `drafts_deploy_key` (the private key). Then delete both local key files.
+
+Without the secret, the site still builds; it just has no shared drafts.
+
 **Comments:** every published post gets a giscus comment thread (stored in this repo's GitHub Discussions, *Announcements* category). Readers sign in with GitHub to comment, reply, and upvote with 👍. Moderate (hide, delete, lock) on GitHub.
 
 **Math:** wrap LaTeX in `$$…$$` (used for both inline and display). It renders with self-hosted MathJax — for example `$$E = mc^2$$` inline, or a `$$…$$` block on its own line for centered display math. Write plain LaTeX: escapes such as `\;`, `\{`, and `\\` work as-is. MathJax only loads on posts that contain math.
