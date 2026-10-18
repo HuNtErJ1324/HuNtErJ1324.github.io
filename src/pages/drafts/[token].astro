@@ -1,0 +1,28 @@
+---
+// A draft shared by link (npm run draft:share): unlisted, noindex, no
+// comments. Production builds load only these drafts (src/content.config.ts),
+// and no listing, tag page, sitemap, or related-posts aside links here.
+import { render } from 'astro:content';
+import Post from '../../layouts/Post.astro';
+import { getSharedDrafts, readingMinutes } from '../../lib/posts';
+
+export async function getStaticPaths() {
+	const drafts = await getSharedDrafts();
+	return drafts.map(({ post, token }) => ({ params: { token }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content, remarkPluginFrontmatter } = await render(post);
+---
+
+<Post
+	post={post}
+	minutes={readingMinutes(post)}
+	hasMath={Boolean(remarkPluginFrontmatter?.hasMath)}
+	previous={null}
+	next={null}
+	related={[]}
+	shared
+>
+	<Content />
+</Post>

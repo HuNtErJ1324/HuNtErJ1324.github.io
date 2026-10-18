@@ -14,6 +14,8 @@ dist/
 # Blog drafts: a separate PRIVATE repo (HuNtErJ1324/blog-drafts) cloned here.
 # Never commit drafts to this public repo.
 drafts/
+# ...but the shared-draft route (/drafts/<token>/) is site code, not a draft
+!/src/pages/drafts/
 
 # Archived Jekyll build artifacts (sources kept in _jekyll/)
 _site/
