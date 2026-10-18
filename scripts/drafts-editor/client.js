@@ -20,7 +20,7 @@ import {
 } from '@codemirror/language';
 import { lintGutter, lintKeymap, nextDiagnostic, setDiagnostics } from '@codemirror/lint';
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
-import { EditorSelection, EditorState, Transaction } from '@codemirror/state';
+import { Compartment, EditorSelection, EditorState, Transaction } from '@codemirror/state';
 import {
     Decoration,
     drawSelection,
@@ -35,6 +35,7 @@ import {
     ViewPlugin
 } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
+import { getCM, Vim, vim } from '@replit/codemirror-vim';
 
 const $ = (selector) => document.querySelector(selector);
 const els = {
@@ -44,6 +45,7 @@ const els = {
     insertMenu: $('#insert-menu'),
     saveStatus: $('#save-status'),
     sync: $('#sync-scroll'),
+    vim: $('#vim-mode'),
     openPost: $('#open-post'),
     banner: $('#banner'),
     panes: $('#panes'),
@@ -200,6 +202,25 @@ const theme = EditorView.theme({
     },
     '.cm-diagnostic-error': {
         borderLeftColor: 'var(--love)'
+    },
+    '.cm-fat-cursor': {
+        background: 'var(--rose) !important',
+        color: 'var(--bg) !important'
+    },
+    '&:not(.cm-focused) .cm-fat-cursor': {
+        background: 'none !important',
+        outline: '1px solid var(--rose)'
+    },
+    '.cm-vim-panel': {
+        padding: '0.15rem 0.75rem',
+        borderTop: '1px solid var(--border)',
+        backgroundColor: 'var(--bg-raised)',
+        color: 'var(--gold)',
+        fontFamily: 'var(--font-body)'
+    },
+    '.cm-vim-panel input': {
+        color: 'var(--text)',
+        fontFamily: 'var(--font-body)'
     },
     '.cm-mdx-esm': { color: 'var(--muted)' },
     '.cm-mdx-tag': { color: 'var(--foam)' },
@@ -507,6 +528,7 @@ function hideBanner() {
 // ---------------------------------------------------------------------------
 
 function toggleWrap(view, mark) {
+    if (view.state.selection.main.empty) enterInsertMode(view);
     const { state } = view;
     view.dispatch(state.changeByRange((range) => {
         const before = state.sliceDoc(Math.max(0, range.from - mark.length), range.from);
@@ -527,6 +549,7 @@ function toggleWrap(view, mark) {
 }
 
 function insertLink(view) {
+    enterInsertMode(view);
     const { state } = view;
     view.dispatch(state.changeByRange((range) => {
         const text = state.sliceDoc(range.from, range.to);
@@ -547,24 +570,34 @@ function insertLink(view) {
 }
 
 // Adds [^n] at the cursor and its definition at the end, then moves there.
-// Ctrl+U (undo selection) jumps back.
+// Ctrl+U (undo selection) jumps back; in vim mode, where insert-mode Ctrl+U
+// deletes the line, the jump goes on vim's jump list for Esc then Ctrl+O.
 function insertFootnote(view) {
+    enterInsertMode(view);
     const { state } = view;
     const text = state.doc.toString();
     const used = new Set([...text.matchAll(/\[\^([^\]\s]+)\]/g)].map((m) => m[1]));
     let n = 1;
     while (used.has(String(n))) n++;
     const ref = `[^${n}]`;
+    const at = state.selection.main.to;
     const end = state.doc.length;
     const definition = `${text.endsWith('\n') ? '' : '\n'}\n${ref}: `;
+    const cursor = end + ref.length + definition.length;
     view.dispatch({
-        changes: [{ from: state.selection.main.to, insert: ref }, { from: end, insert: definition }],
-        selection: EditorSelection.cursor(end + ref.length + definition.length),
+        changes: [{ from: at, insert: ref }, { from: end, insert: definition }],
+        selection: EditorSelection.cursor(cursor),
         scrollIntoView: true,
         userEvent: 'input.footnote'
     });
     view.focus();
-    flash('footnote added at the end · Ctrl+U jumps back');
+    const cm = getCM(view);
+    if (cm?.state.vim) {
+        Vim.getVimGlobalState_().jumpList.add(cm, cm.posFromIndex(at + ref.length), cm.posFromIndex(cursor));
+        flash('footnote added at the end · Esc then Ctrl+O jumps back');
+    } else {
+        flash('footnote added at the end · Ctrl+U jumps back');
+    }
     return true;
 }
 
@@ -613,6 +646,7 @@ function insertSnippet(view, item) {
         flash('components need an .mdx draft');
         return;
     }
+    enterInsertMode(view);
     ensureImports(view, item.imports);
     const { from, to } = view.state.selection.main;
     applyTemplate(view, item.template, from, to, { block: item.block });
@@ -749,6 +783,7 @@ async function uploadImages(files, pos) {
         urls.push(data.url);
     }
     if (!urls.length || slug !== draft.slug) return;
+    enterInsertMode(view);
     const at = clamp(pos, 0, view.state.doc.length);
     if (urls.length === 1) {
         applyTemplate(view, `![\${Describe the image}](${urls[0]})`, at, at, { block: true });
@@ -794,6 +829,28 @@ function onDrop(event, view) {
 
 let activePane = 'editor';
 
+// Vim keys, on unless the "vim" checkbox is cleared. vim() must come before
+// every other keymap, so it is the first extension. :w saves at once.
+const vimMode = new Compartment();
+const vimWanted = () => store.get('vim', true);
+const vimExtension = () => (vimWanted() ? vim({ status: true }) : []);
+Vim.defineEx('write', 'w', () => { flushSave(); });
+Vim.defineEx('wq', 'wq', () => { flushSave(); });
+Vim.defineEx('xit', 'x', () => { flushSave(); });
+
+// Snippets, footnotes and links leave the cursor where you type next, so in
+// vim mode they switch to insert mode first, keeping the selection (a
+// selection made outside insert mode would turn into visual mode instead).
+function enterInsertMode(view) {
+    const cm = getCM(view);
+    const state = cm?.state.vim;
+    if (!state || state.insertMode) return;
+    const selection = view.state.selection;
+    if (state.visualMode) Vim.exitVisualMode(cm, false);
+    Vim.handleKey(cm, 'i', 'mapping');
+    if (!view.state.selection.eq(selection)) view.dispatch({ selection });
+}
+
 const editorKeys = [
     { key: 'Mod-s', run: () => { flushSave(); return true; }, preventDefault: true },
     { key: 'Mod-b', run: (v) => toggleWrap(v, '**') },
@@ -805,6 +862,7 @@ const editorKeys = [
 ];
 
 const extensions = () => [
+    vimMode.of(vimExtension()),
     lineNumbers(),
     highlightActiveLineGutter(),
     highlightSpecialChars(),
@@ -841,11 +899,7 @@ const extensions = () => [
     EditorView.updateListener.of(onUpdate),
     EditorView.domEventHandlers({
         paste: onPaste,
-        drop: onDrop,
-        keydown: () => {
-            activePane = 'editor';
-            return false;
-        }
+        drop: onDrop
     })
 ];
 
@@ -854,8 +908,8 @@ const view = new EditorView({
     state: EditorState.create({ doc: '', extensions: extensions() })
 });
 
-for (const type of ['pointerenter', 'pointerdown', 'wheel', 'touchstart']) {
-    els.editor.addEventListener(type, () => { activePane = 'editor'; }, { passive: true });
+for (const type of ['pointerenter', 'pointerdown', 'wheel', 'touchstart', 'keydown']) {
+    els.editor.addEventListener(type, () => { activePane = 'editor'; }, { capture: true, passive: true });
 }
 
 // Top edge of the editor viewport, as a fractional 1-based line number
@@ -1670,6 +1724,13 @@ function setView(mode) {
 for (const button of document.querySelectorAll('[data-view]')) {
     button.addEventListener('click', () => setView(button.dataset.view));
 }
+
+els.vim.checked = vimWanted();
+els.vim.addEventListener('change', () => {
+    store.set('vim', els.vim.checked);
+    view.dispatch({ effects: vimMode.reconfigure(vimExtension()) });
+    view.focus();
+});
 
 els.sync.checked = store.get('sync', true);
 els.sync.addEventListener('change', () => {
