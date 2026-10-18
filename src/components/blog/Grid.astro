@@ -1,7 +1,13 @@
 ---
-// Two-up layout for small-multiple charts; collapses to one column on phones.
+// Small-multiple charts side by side (two-up by default, `cols={3}` for
+// three); collapses to one column on phones.
+interface Props {
+	cols?: 2 | 3;
+}
+
+const { cols = 2 } = Astro.props;
 ---
 
-<div class="chart-grid-2">
+<div class={`chart-grid-${cols}`}>
 	<slot />
 </div>

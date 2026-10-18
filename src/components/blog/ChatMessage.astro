@@ -1,7 +1,8 @@
 ---
 // One message from an agent trace, styled like a chat app: an assistant
-// message gets an avatar (the name's first letter on a chart hue, so it
-// matches that model's bars elsewhere in the post), a name line and a bubble;
+// message gets an avatar (`avatar`, a local copy of the lab's logo under
+// public/assets/blog/, ringed in the model's chart hue; without it, the
+// name's first letter on that hue), a name line and a bubble;
 // a user message is a right-aligned bubble; a tool message is a compact
 // call/result row aligned under the assistant's bubble. The body goes in the
 // slot as ordinary markdown. Wrap consecutive messages in <Chat> to stack
@@ -11,16 +12,21 @@ interface Props {
 	name?: string;
 	meta?: string;
 	color?: 'love' | 'blue' | 'gold' | 'iris' | 'rose' | 'gray';
+	avatar?: string;
 	tool?: string;
 }
 
-const { role = 'assistant', name = '', meta, color = 'iris', tool } = Astro.props;
+const { role = 'assistant', name = '', meta, color = 'iris', avatar, tool } = Astro.props;
 const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : '';
 ---
 
 {role === 'assistant' && (
 	<div class="chat-msg chat-assistant">
-		<span class={`chat-avatar c-${color}`} aria-hidden="true">{name.charAt(0)}</span>
+		{avatar ? (
+			<img class={`chat-avatar chat-avatar-img c-${color}`} src={avatar} alt="" width="30" height="30" loading="lazy" decoding="async" />
+		) : (
+			<span class={`chat-avatar c-${color}`} aria-hidden="true">{name.charAt(0)}</span>
+		)}
 		<div class="chat-col">
 			{name && (
 				<p class="chat-who">

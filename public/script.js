@@ -1227,21 +1227,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 12. Animated self-play diagram (src/components/blog/SelfPlayAnimation.astro).
+        // 12. Clock-driven blog animations: the self-play diagram
+        //     (src/components/blog/SelfPlayAnimation.astro), the PretrainGym
+        //     rollout diagram (PretrainGymLoop.astro) and agent replays
+        //     (AgentReplay.astro), all marked .sp-anim.
         //     The markup already draws the whole round, so without JS or under
         //     prefers-reduced-motion nothing runs. Otherwise one clock loops over
         //     data-cycle seconds and every element follows its own times:
         //     data-on/data-off (shown), data-active="start end" (highlighted) and
         //     data-travel + data-route (a packet moving along an edge's points).
         //     Pause and restart only move the clock. Plays while on screen.
+        //     A .sp-scrub range input (the replays) lets readers drag the clock;
+        //     with one, reduced motion still gets the figure, parked at its end
+        //     state and moved only by the reader, never autoplayed.
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         document.querySelectorAll('.post-content .sp-anim').forEach((figure) => {
-            if (reduceMotion.matches) return;
             const controls = figure.querySelector('.sp-controls');
             if (!controls) return;
+            const scrub = controls.querySelector('.sp-scrub');
+            if (reduceMotion.matches && !scrub) return;
             const toggle = controls.querySelector('[data-sp="toggle"]');
             const restart = controls.querySelector('[data-sp="restart"]');
             const fill = controls.querySelector('.sp-progress-fill');
+            const clock = controls.querySelector('.sp-time');
             const cycle = parseFloat(figure.dataset.cycle) || 18;
             const span = (value) => value.split(' ').map(Number);
 
@@ -1250,9 +1258,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 on: Number(el.dataset.on),
                 off: el.dataset.off ? Number(el.dataset.off) : cycle
             }));
+            // data-active may list several "start end" pairs
             const active = [...figure.querySelectorAll('[data-active]')].map((el) => {
-                const [start, end] = span(el.dataset.active);
-                return { el, start, end };
+                const times = span(el.dataset.active);
+                const ranges = [];
+                for (let i = 0; i + 1 < times.length; i += 2) ranges.push([times[i], times[i + 1]]);
+                return { el, ranges };
             });
             const packets = [...figure.querySelectorAll('[data-travel]')].map((el) => {
                 const [start, end] = span(el.dataset.travel);
@@ -1261,7 +1272,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 0; i + 1 < coords.length; i += 2) points.push([coords[i], coords[i + 1]]);
                 const lengths = points.slice(1).map((p, i) => Math.hypot(p[0] - points[i][0], p[1] - points[i][1]));
                 const total = lengths.reduce((a, b) => a + b, 0);
-                return { el, start, end, points, lengths, total };
+                // data-ease="linear" for a playhead that tracks a time axis
+                const linear = el.dataset.ease === 'linear';
+                return { el, start, end, points, lengths, total, linear };
             });
 
             const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - ((-2 * p + 2) ** 2) / 2);
@@ -1283,20 +1296,34 @@ document.addEventListener('DOMContentLoaded', () => {
             let t = 0;
             let playing = false;
             let userPaused = false;
+            let scrubbing = false;
+            let resumeAfterScrub = false;
             let last = 0;
             let frame = 0;
 
             const render = () => {
                 shown.forEach(({ el, on, off }) => el.classList.toggle('is-shown', t >= on && t < off));
-                active.forEach(({ el, start, end }) => el.classList.toggle('is-active', t >= start && t < end));
+                active.forEach(({ el, ranges }) => el.classList.toggle('is-active', ranges.some(([start, end]) => t >= start && t < end)));
                 packets.forEach((packet) => {
                     const live = t >= packet.start && t < packet.end;
                     packet.el.classList.toggle('is-shown', live);
                     if (!live) return;
-                    const [x, y] = pointAt(packet, easeInOut((t - packet.start) / (packet.end - packet.start)));
+                    const progress = (t - packet.start) / (packet.end - packet.start);
+                    const [x, y] = pointAt(packet, packet.linear ? progress : easeInOut(progress));
                     packet.el.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
                 });
-                fill.style.transform = `scaleX(${(t / cycle).toFixed(4)})`;
+                if (fill) fill.style.transform = `scaleX(${(t / cycle).toFixed(4)})`;
+                if (scrub) {
+                    if (!scrubbing) scrub.value = t.toFixed(2);
+                    scrub.style.setProperty('--p', (t / cycle).toFixed(4));
+                }
+                if (clock) {
+                    // Seconds back to the figure's own units, e.g. hours of a run
+                    const { offset, rate, max } = clock.dataset;
+                    const value = Math.min(Number(max), Math.max(0, (t - Number(offset)) / Number(rate)));
+                    clock.textContent = `hour ${value.toFixed(1)}`;
+                    if (scrub) scrub.setAttribute('aria-valuetext', clock.textContent);
+                }
             };
 
             const tick = (now) => {
@@ -1336,8 +1363,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 play();
             });
 
+            if (scrub) {
+                // Dragging pauses and moves the clock; letting go resumes only if
+                // it was playing. The input has step="any" so the thumb glides
+                // instead of snapping, which leaves keys to be handled here.
+                const beginScrub = () => {
+                    if (scrubbing) return;
+                    scrubbing = true;
+                    resumeAfterScrub = playing;
+                    pause();
+                    figure.classList.add('sp-scrubbing');
+                };
+                const seek = (value) => {
+                    t = Math.min(Math.max(0, value), cycle - 0.01);
+                    render();
+                };
+                const endScrub = () => {
+                    if (!scrubbing) return;
+                    scrubbing = false;
+                    figure.classList.remove('sp-scrubbing');
+                    render();
+                    // Dropped at the very end: stay on the finished state rather
+                    // than wrapping straight back to the start
+                    if (resumeAfterScrub && t < cycle - 0.5) play();
+                    else userPaused = true;
+                };
+                scrub.addEventListener('input', () => {
+                    beginScrub();
+                    seek(Number(scrub.value));
+                });
+                scrub.addEventListener('change', endScrub);
+                // Arrows step 2% of the loop, Page keys 10%, Home/End jump
+                const jumps = { ArrowLeft: -0.02, ArrowDown: -0.02, ArrowRight: 0.02, ArrowUp: 0.02, PageDown: -0.1, PageUp: 0.1 };
+                scrub.addEventListener('keydown', (event) => {
+                    let target;
+                    if (event.key in jumps) target = t + jumps[event.key] * cycle;
+                    else if (event.key === 'Home') target = 0;
+                    else if (event.key === 'End') target = cycle;
+                    else return;
+                    event.preventDefault();
+                    beginScrub();
+                    seek(target);
+                    endScrub();
+                });
+            }
+
             figure.classList.add('sp-live');
             controls.hidden = false;
+
+            if (reduceMotion.matches) {
+                // Scrubbable figure under reduced motion: show the end state
+                t = cycle - 0.01;
+                render();
+                setLabel();
+                return;
+            }
+
             render();
             setLabel();
 
@@ -1354,10 +1435,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 play();
             }
 
-            // Turning on reduced motion mid-read drops back to the static diagram
+            // Turning on reduced motion mid-read stops the clock; a figure without
+            // a scrubber drops back to its static diagram
             reduceMotion.addEventListener('change', (event) => {
                 if (!event.matches) return;
                 pause();
+                userPaused = true;
+                if (scrub) return;
                 figure.classList.remove('sp-live');
                 controls.hidden = true;
             });

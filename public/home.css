@@ -920,6 +920,17 @@ a:hover {
 	line-height: 1;
 }
 
+/* Lab logos sit on white (some are dark marks on transparency), ringed in
+   the model's chart hue so the color still ties it to its bars */
+.post-content .chat-avatar-img {
+	height: 30px;
+	margin: 0;
+	border: 0;
+	background: #fff;
+	box-shadow: 0 0 0 2px var(--c);
+	object-fit: cover;
+}
+
 .chat-col {
 	flex: 1;
 	min-width: 0;
@@ -1843,6 +1854,11 @@ pre code {
 	stroke-width: 2;
 }
 
+/* PretrainGymLoop: the dot crossing a box while the model trains in it */
+.sp-packet.gl-progress circle {
+	fill: var(--text);
+}
+
 .sp-live [data-on] {
 	opacity: 0;
 	transition: opacity 0.35s ease;
@@ -1987,6 +2003,321 @@ pre code {
 	color: var(--rose);
 }
 
+/* Agent run replay (AgentReplay.astro), on SelfPlayAnimation's clock. The
+   markup is the finished run; without .sp-live only the final frame and the
+   final best line show, so the static chart reads as the end state. */
+.chart-svg .ar-legend text,
+.chart-svg .ar-sub,
+.chart-svg .ar-running,
+.chart-svg .ar-best text,
+.chart-svg .ar-offscale {
+	fill: var(--muted);
+	font-size: 10.5px;
+}
+
+.ar-dot {
+	fill: var(--c);
+	stroke: var(--bg);
+	stroke-width: 1.5;
+}
+
+.ar-dot.ar-probe {
+	fill: var(--bg);
+	stroke: var(--c);
+	stroke-width: 1.6;
+}
+
+.ar-test {
+	fill: var(--text);
+	stroke: var(--bg);
+	stroke-width: 1.5;
+}
+
+.chart-svg .ar-test-label,
+.chart-svg .ar-label {
+	fill: var(--text);
+}
+
+/* A background halo keeps labels legible where they cross dots and lines */
+.chart-svg .ar-best text,
+.chart-svg .ar-test-label,
+.chart-svg .ar-offscale {
+	paint-order: stroke;
+	stroke: var(--bg);
+	stroke-width: 3px;
+	stroke-linejoin: round;
+}
+
+.ar-best line {
+	stroke: var(--c);
+	stroke-width: 1.2;
+	stroke-dasharray: 4 3;
+}
+
+.ar-playhead line {
+	stroke: var(--subtle);
+	stroke-width: 1;
+	opacity: 0.55;
+}
+
+.chart-svg .ar-head {
+	fill: var(--gold);
+	font-family: var(--font-display);
+	letter-spacing: 0.05em;
+}
+
+.ar-bar {
+	fill: var(--c);
+}
+
+.chart-svg .ar-pct {
+	fill: var(--subtle);
+	font-size: 10.5px;
+	font-variant-numeric: tabular-nums;
+}
+
+.chart-svg .ar-result {
+	fill: var(--text);
+	font-family: var(--font-display);
+	font-size: 12px;
+	letter-spacing: 0.03em;
+}
+
+.ar-anim:not(.sp-live) .ar-frame:not(.ar-final),
+.ar-anim:not(.sp-live) .ar-best:not(.ar-final),
+.ar-anim:not(.sp-live) .ar-running {
+	display: none;
+}
+
+/* Full-column animations (the replays, the gym diagram) stretch their
+   controls and step list to match */
+.sp-anim.chart-full .sp-controls,
+.post-content .sp-anim.chart-full .sp-steps {
+	max-width: none;
+}
+
+/* Scrubber: a native range input drawn as the progress line, filled up to
+   --p (set by script.js §12) with a rose thumb; the readout shows the hour */
+.sp-scrub {
+	flex: 1;
+	min-width: 0;
+	height: 18px;
+	margin: 0;
+	background: transparent;
+	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.sp-scrub::-webkit-slider-runnable-track {
+	height: 2px;
+	background: linear-gradient(to right, var(--subtle) calc(var(--p, 0) * 100%), var(--border) 0);
+}
+
+.sp-scrub::-moz-range-track {
+	height: 2px;
+	background: var(--border);
+}
+
+.sp-scrub::-moz-range-progress {
+	height: 2px;
+	background: var(--subtle);
+}
+
+.sp-scrub::-webkit-slider-thumb {
+	width: 12px;
+	height: 12px;
+	margin-top: -5px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--rose);
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.sp-scrub::-moz-range-thumb {
+	width: 12px;
+	height: 12px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--rose);
+}
+
+.sp-scrub:focus-visible {
+	outline: 1px solid var(--rose);
+	outline-offset: 4px;
+}
+
+.sp-time {
+	min-width: 6.5em;
+	color: var(--subtle);
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	letter-spacing: 0.05em;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+/* While dragging, a short fade keeps dots and frames from popping but still
+   tracks the thumb closely */
+.sp-scrubbing [data-on],
+.sp-live.sp-scrubbing .ar-frame[data-on] {
+	transition-duration: 0.12s;
+}
+
+/* Jobs can be seconds apart, so frames swap faster than other fades */
+.sp-live .ar-frame[data-on] {
+	transition-duration: 0.15s;
+}
+
+/* Results scoreboard (Scoreboard.astro): ranked cards, then a number line */
+.post-content .scoreboard {
+	margin: 1.8em 0;
+}
+
+.post-content .sb-cards {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.9rem;
+	margin: 0 0 1.2em;
+	padding: 0;
+	list-style: none;
+}
+
+.post-content .sb-card {
+	margin: 0;
+	padding: 0.85em 1em 0.9em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+	border-top: 3px solid var(--c);
+	border-radius: 4px;
+}
+
+.post-content .sb-card.sb-first {
+	border-color: var(--c);
+}
+
+.post-content .sb-head {
+	display: flex;
+	align-items: center;
+	gap: 0.55em;
+	margin: 0;
+	line-height: 1.25;
+}
+
+.sb-rank {
+	color: var(--gold);
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	letter-spacing: 0.05em;
+}
+
+.post-content .sb-avatar {
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	margin: 0;
+	border: 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 0 2px var(--c);
+	object-fit: cover;
+}
+
+.sb-who {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.sb-name {
+	color: var(--text);
+	font-family: var(--font-display);
+	font-size: 0.92rem;
+	letter-spacing: 0.03em;
+}
+
+.sb-harness {
+	color: var(--muted);
+	font-size: 0.75rem;
+}
+
+.post-content .sb-score {
+	display: flex;
+	align-items: baseline;
+	gap: 0.45em;
+	margin: 0.55em 0 0.6em;
+}
+
+.sb-value {
+	color: var(--text);
+	font-family: var(--font-display);
+	font-size: 1.9rem;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.sb-unit {
+	color: var(--subtle);
+	font-size: 0.78rem;
+}
+
+.post-content .sb-stats {
+	margin: 0;
+	padding-top: 0.55em;
+	border-top: 1px solid var(--border);
+	font-size: 0.78rem;
+}
+
+.post-content .sb-stats div {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.6em;
+	padding: 0.12em 0;
+}
+
+.post-content .sb-stats dt {
+	color: var(--muted);
+}
+
+.post-content .sb-stats dd {
+	margin: 0;
+	color: var(--text);
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.chart-svg.sb-line.chart-svg-full {
+	max-width: none;
+}
+
+.sb-dot {
+	fill: var(--c);
+	stroke: var(--bg);
+	stroke-width: 2;
+}
+
+.chart-svg .sb-dot-label {
+	fill: var(--text);
+}
+
+.sb-target line {
+	stroke: var(--subtle);
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+}
+
+.chart-svg .sb-target text {
+	fill: var(--muted);
+	font-size: 10.5px;
+}
+
+@media (max-width: 640px) {
+	.post-content .sb-cards {
+		grid-template-columns: 1fr;
+	}
+}
+
 /* Two-up small multiples */
 .chart-grid-2 {
 	display: grid;
@@ -1999,8 +2330,23 @@ pre code {
 	margin: 0 0 1.4em;
 }
 
+/* Three-up: pass width={220} so bar text stays ≥ ~10px in a ~200px column.
+   Stacked on phones, each chart is capped so that text doesn't balloon. */
+.chart-grid-3 {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0 1.2rem;
+	margin: 1.8em 0;
+}
+
+.post-content .chart-grid-3 > .chart {
+	max-width: 17rem;
+	margin: 0 0 1.4em;
+}
+
 @media (max-width: 640px) {
-	.chart-grid-2 {
+	.chart-grid-2,
+	.chart-grid-3 {
 		grid-template-columns: 1fr;
 	}
 }
@@ -2677,8 +3023,11 @@ mark.search-hit.current {
 		transition: none;
 	}
 
-	/* script.js §12 also skips the self-play animation entirely here */
+	/* script.js §12 also skips the self-play animation entirely here; the
+	   replays only move when the reader scrubs, and then without fades */
 	.sp-live [data-on],
+	.sp-live .ar-frame[data-on],
+	.sp-live.sp-scrubbing .ar-frame[data-on],
 	.sp-ring,
 	.sp-live .sp-phase-live,
 	.sp-node .dia-node,

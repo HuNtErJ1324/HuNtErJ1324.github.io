@@ -1,0 +1,262 @@
+---
+// Diagram: one PretrainGym episode (V2), as three runtimes read left to
+// right. Agent runtime: the agent and its workspace, with no GPU and no
+// network. Tool server runtime: the curator MCP server, which reaches
+// Hugging Face and runs self_score on a GPU. Final scoring: after the
+// episode, the manifest left on disk is screened, trained on and scored.
+// The agent is iris and the reward rose, colors this post's charts don't
+// use. Like <LineChart full>, it ships a full-column drawing and a compact
+// one for phones (CSS shows one), so text never shrinks below readable size.
+//
+// It animates one rollout on SelfPlayAnimation's clock (public/script.js
+// §12): boxes light up (data-active, possibly several windows), a packet
+// rides each edge (data-travel along the edge's own points), a dot crosses
+// self_score and TRAIN while they train, and the steps list below follows.
+// Without JS the markup is the complete static diagram; under reduced
+// motion it is parked at the end of the loop, where nothing is lit.
+import { chartId } from '../../lib/charts';
+
+interface Props {
+	caption?: string;
+}
+
+const { caption } = Astro.props;
+const id = chartId('gym');
+
+const CYCLE = 20;
+
+// When each box is lit: pairs of start and end, in seconds. A box stays lit
+// while its packet leaves, so each hand-off reads as one motion.
+const lit: Record<string, string> = {
+	agent: '0.4 1.8 3.4 5 10.2 11.2',
+	hub: '1.8 3.4',
+	work: '5 6.8 10.8 12',
+	self: '6.8 10.2',
+	screen: '12.8 14',
+	train: '14 15.8',
+	score: '15.8 17.3',
+	reward: '17.3 18.8'
+};
+
+// One per edge, in the layouts' edge order: when its packet travels, and
+// whose it is (the agent's own actions are iris, everything else gray)
+const flows = [
+	{ travel: '1 1.8', role: 'iris' },
+	{ travel: '2.6 3.4', role: 'gray' },
+	{ travel: '4.2 5', role: 'iris' },
+	{ travel: '6 6.8', role: 'iris' },
+	{ travel: '9 10.2', role: 'gray' },
+	{ travel: '11.2 12.8', role: 'iris' },
+	{ travel: '13.6 14', role: 'gray' },
+	{ travel: '15.4 15.8', role: 'gray' },
+	{ travel: '16.8 17.3', role: 'gray' },
+	{ travel: '16.4 17.3', role: 'gray' }
+];
+
+// A dot crossing a box while the model trains in it
+const training: Record<string, string> = { self: '6.9 8.9', train: '14.05 15.35' };
+
+const steps = [
+	{ active: '0.4 3.4', name: 'Explore.', text: 'The agent has no network of its own, so it searches, inspects and fetches Hugging Face datasets through the tool server.' },
+	{ active: '3.4 6', name: 'Build.', text: 'It filters and writes data shards in its workspace and drafts a manifest.json.' },
+	{ active: '6 10.8', name: 'Self-score.', text: 'self_score trains the fixed model on the draft on a GPU and returns the validation loss and leakage. The agent repeats these steps as often as its 500 turns allow.' },
+	{ active: '10.8 12.8', name: 'Submit.', text: 'When the episode ends, the manifest left on disk goes to final scoring.' },
+	{ active: '12.8 18.8', name: 'Score.', text: 'Documents matching the eval are dropped, the GPT trains on 400M tokens, and the reward is performance on the test split minus leakage.' }
+];
+
+// Edge paths use only M, H and V, so their points are the packet's route
+const routeOf = (d: string) => {
+	const points: number[] = [];
+	let x = 0;
+	let y = 0;
+	for (const [, cmd, a, b] of d.matchAll(/([MHV])\s*(-?[\d.]+)(?:\s+(-?[\d.]+))?/g)) {
+		if (cmd === 'M') [x, y] = [Number(a), Number(b)];
+		else if (cmd === 'H') x = Number(a);
+		else y = Number(a);
+		points.push(x, y);
+	}
+	return points;
+};
+
+// Lines stay under ~19 characters so they fit the narrowest boxes
+const nodes: Record<string, { title: string; role: string; lines: string[] }> = {
+	agent: { title: 'AGENT', role: 'iris', lines: ['an LLM in a', 'coding harness'] },
+	work: { title: 'WORKSPACE', role: 'gray', lines: ['data/ shards,', 'manifest.json'] },
+	hub: { title: 'HUGGING FACE', role: 'gray', lines: ['search, inspect,', 'fetch datasets'] },
+	self: { title: 'SELF_SCORE', role: 'gray', lines: ['trains the model', 'on a draft mix'] },
+	screen: { title: 'SCREEN', role: 'gray', lines: ['drop docs matching eval'] },
+	train: { title: 'TRAIN', role: 'gray', lines: ['fixed GPT, 400M tokens'] },
+	score: { title: 'SCORE', role: 'gray', lines: ['loss L on the test split'] },
+	reward: { title: 'REWARD', role: 'rose', lines: ['performance − leakage'] }
+};
+
+type Box = { x: number; y: number; w: number; h: number };
+// lx/sx move a panel's label and sub-label, e.g. clear of an arrow entering its top edge
+type Frame = Box & { label: string; lx?: number; sub: string; sx?: number; sy: number };
+type Edge = { d: string; label?: string | string[]; lx?: number; ly?: number; anchor?: string; rotate?: boolean };
+
+const layouts: { variant: string; W: number; H: number; frames: Frame[]; box: Record<string, Box>; edges: Edge[] }[] = [
+	{
+		variant: 'chart-svg-full',
+		W: 800,
+		H: 334,
+		frames: [
+			{ x: 4, y: 22, w: 204, h: 284, label: 'AGENT RUNTIME', sub: 'no GPU · no network', sy: 54 },
+			{ x: 248, y: 22, w: 256, h: 284, label: 'TOOL SERVER RUNTIME', sub: 'MCP server · GPU', sy: 54 },
+			{ x: 544, y: 22, w: 252, h: 284, label: 'FINAL SCORING', sub: 'GPU · after the episode', sy: 54 }
+		],
+		box: {
+			agent: { x: 16, y: 64, w: 180, h: 66 },
+			work: { x: 16, y: 200, w: 180, h: 66 },
+			hub: { x: 260, y: 64, w: 232, h: 66 },
+			self: { x: 260, y: 200, w: 232, h: 66 },
+			screen: { x: 576, y: 64, w: 180, h: 50 },
+			train: { x: 576, y: 126, w: 180, h: 50 },
+			score: { x: 576, y: 188, w: 180, h: 50 },
+			reward: { x: 576, y: 250, w: 180, h: 50 }
+		},
+		edges: [
+			{ d: 'M198 86H258', label: 'calls', lx: 228, ly: 80, anchor: 'middle' },
+			{ d: 'M258 108H198', label: 'data', lx: 228, ly: 122, anchor: 'middle' },
+			{ d: 'M106 132V198', label: 'builds', lx: 114, ly: 188 },
+			{ d: 'M198 222H258', label: 'draft', lx: 228, ly: 216, anchor: 'middle' },
+			{ d: 'M376 198V164H150V132', label: 'val loss + leakage', lx: 368, ly: 184, anchor: 'end' },
+			{ d: 'M106 268V322H564V89H574', label: 'manifest.json, when the episode ends', lx: 335, ly: 317, anchor: 'middle' },
+			{ d: 'M666 116V124' },
+			{ d: 'M666 178V186' },
+			{ d: 'M666 240V248' },
+			{ d: 'M758 89H772V275H758', label: 'leakage', lx: 788, ly: 182, anchor: 'middle', rotate: true }
+		]
+	},
+	{
+		variant: 'chart-svg-compact',
+		W: 330,
+		H: 586,
+		frames: [
+			{ x: 4, y: 22, w: 154, h: 260, label: 'AGENT RUNTIME', sub: 'no GPU, no network', sy: 54 },
+			{ x: 172, y: 22, w: 154, h: 260, label: 'TOOL SERVER', sub: 'MCP server · GPU', sy: 54 },
+			{ x: 4, y: 306, w: 322, h: 272, label: 'FINAL SCORING', lx: 72, sub: 'GPU · after the episode', sx: 72, sy: 338 }
+		],
+		box: {
+			agent: { x: 12, y: 66, w: 138, h: 66 },
+			work: { x: 12, y: 200, w: 138, h: 66 },
+			hub: { x: 180, y: 66, w: 138, h: 66 },
+			self: { x: 180, y: 200, w: 138, h: 66 },
+			screen: { x: 14, y: 348, w: 290, h: 46 },
+			train: { x: 14, y: 406, w: 290, h: 46 },
+			score: { x: 14, y: 464, w: 290, h: 46 },
+			reward: { x: 14, y: 522, w: 290, h: 46 }
+		},
+		edges: [
+			{ d: 'M152 88H178' },
+			{ d: 'M178 110H152' },
+			{ d: 'M60 134V198', label: 'builds', lx: 68, ly: 190 },
+			{ d: 'M152 233H178' },
+			{ d: 'M249 198V166H120V134', label: ['val loss', '+ leakage'], lx: 190, ly: 182 },
+			{ d: 'M60 268V346', label: 'manifest.json, when the episode ends', lx: 68, ly: 298 },
+			{ d: 'M159 396V404' },
+			{ d: 'M159 454V462' },
+			{ d: 'M159 512V520' },
+			{ d: 'M306 371H318V545H306', label: 'leakage', lx: 314, ly: 458, anchor: 'middle', rotate: true }
+		]
+	}
+];
+---
+
+<figure class="chart chart-full diagram sp-anim" data-cycle={CYCLE}>
+	<p class="visually-hidden" id={`${id}-desc`}>
+		One PretrainGym episode, in three runtimes. In the agent runtime, which has no GPU and no network, an LLM in a
+		coding harness builds data shards and a manifest in its workspace. It reaches everything else through the tool
+		server, an MCP server with a GPU: Hugging Face tools search, inspect and fetch datasets, and self_score trains the
+		fixed model on a draft mixture and reports the loss on the eval's validation split plus the leakage. When the
+		episode ends, final scoring takes the manifest left on disk, removes documents that match the held-out eval, trains
+		the fixed GPT on 400M tokens on a GPU, and measures the loss L on the eval's test split. The reward is the
+		performance from that loss minus the leakage the screen measured.
+	</p>
+	{layouts.map((L) => {
+		const arrow = `${id}-${L.variant}-arrow`;
+		return (
+			<svg class={`chart-svg ${L.variant}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-label="The PretrainGym agent loop and final scoring" aria-describedby={`${id}-desc`}>
+				<defs>
+					<marker id={arrow} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+						<path class="dia-arrowhead" d="M0 0L10 5L0 10Z" />
+					</marker>
+				</defs>
+
+				{L.frames.map((f) => (
+					<g>
+						<rect class="dia-frame" x={f.x} y={f.y} width={f.w} height={f.h} rx="4" />
+						<text class="dia-banner" x={f.lx ?? f.x + 10} y={f.y + 18}>{f.label}</text>
+						<text class="dia-edge-label" x={f.sx ?? f.x + 10} y={f.sy}>{f.sub}</text>
+					</g>
+				))}
+
+				{Object.entries(L.box).map(([key, b]) => {
+					const n = nodes[key];
+					return (
+						<g class={`sp-node c-${n.role}`} data-active={lit[key]}>
+							<rect class="dia-node" x={b.x} y={b.y} width={b.w} height={b.h} rx="3" />
+							<rect class="dia-accent" x={b.x} y={b.y} width="4" height={b.h} rx="2" />
+							<text class="dia-title" x={b.x + 14} y={b.y + 20}>{n.title}</text>
+							{n.lines.map((line, j) => (
+								<text class="dia-text" x={b.x + 14} y={b.y + 37 + j * 15}>{line}</text>
+							))}
+						</g>
+					);
+				})}
+
+				{L.edges.map((e, i) => (
+					<g>
+						<path class="dia-edge sp-edge" d={e.d} marker-end={`url(#${arrow})`} data-active={flows[i].travel} />
+						{e.label && (
+							<text
+								class="dia-edge-label"
+								x={e.lx}
+								y={e.ly}
+								text-anchor={e.anchor ?? 'start'}
+								transform={e.rotate ? `rotate(-90 ${e.lx} ${e.ly})` : undefined}
+							>
+								{Array.isArray(e.label)
+									? e.label.map((part, j) => <tspan x={e.lx} dy={j ? 12 : 0}>{part}</tspan>)
+									: e.label}
+							</text>
+						)}
+					</g>
+				))}
+
+				{L.edges.map((e, i) => {
+					const route = routeOf(e.d);
+					return (
+						<g class={`sp-packet c-${flows[i].role}`} transform={`translate(${route[0]} ${route[1]})`} data-travel={flows[i].travel} data-route={route.join(' ')}>
+							<circle r="4.5" />
+						</g>
+					);
+				})}
+
+				{Object.entries(training).map(([key, when]) => {
+					const b = L.box[key];
+					// Rides the box's bottom border, clear of its text
+					const y = b.y + b.h;
+					return (
+						<g class="sp-packet gl-progress" transform={`translate(${b.x + 14} ${y})`} data-travel={when} data-route={`${b.x + 14} ${y} ${b.x + b.w - 12} ${y}`} data-ease="linear">
+							<circle r="4" />
+						</g>
+					);
+				})}
+			</svg>
+		);
+	})}
+	<div class="sp-controls" hidden>
+		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
+		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+		<input type="range" class="sp-scrub" min="0" max={CYCLE} step="any" value="0" aria-label="Position in the rollout animation" />
+	</div>
+	<ol class="sp-steps">
+		{steps.map((s) => (
+			<li data-active={s.active}><strong>{s.name}</strong> {s.text}</li>
+		))}
+	</ol>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

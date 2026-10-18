@@ -1,0 +1,106 @@
+---
+// Final results as a scoreboard: one card per agent in rank order (lab logo,
+// model and harness, the score as a big number, then a few stats), and under
+// them a number line of the scores. Differences between agents are small next
+// to the scores themselves, so a dot plot on a zoomed axis shows them where a
+// zero-based bar chart would not. `target` draws a dashed reference line.
+// Static HTML and SVG; like <LineChart full>, the number line ships a wide
+// drawing and a compact one for phones.
+import { type ChartColor, chartId, r1 } from '../../lib/charts';
+
+interface Agent {
+	name: string;
+	harness: string;
+	color: ChartColor;
+	avatar?: string;
+	score: number;
+	stats: [string, string][];
+}
+
+interface Props {
+	agents: Agent[];
+	scoreLabel: string;
+	axis: { min: number; max: number; ticks: number[]; compactTicks?: number[] };
+	target?: { value: number; label: string };
+	digits?: number;
+	caption?: string;
+}
+
+const { agents, scoreLabel, axis, target, digits = 3, caption } = Astro.props;
+const id = chartId('scores');
+const ranked = [...agents].sort((a, b) => b.score - a.score);
+const ordinal = ['1st', '2nd', '3rd', '4th', '5th'];
+
+const lines = [
+	{ variant: 'chart-svg-full', W: 720, H: 78, l: 24, r: 696, ticks: axis.ticks },
+	{ variant: 'chart-svg-compact', W: 330, H: 84, l: 16, r: 314, ticks: axis.compactTicks ?? axis.ticks }
+];
+---
+
+<figure class="scoreboard">
+	<ol class="sb-cards">
+		{ranked.map((a, i) => (
+			<li class={`sb-card c-${a.color}${i === 0 ? ' sb-first' : ''}`}>
+				<p class="sb-head">
+					<span class="sb-rank">{ordinal[i]}</span>
+					{a.avatar && <img class="sb-avatar" src={a.avatar} alt="" width="26" height="26" loading="lazy" decoding="async" />}
+					<span class="sb-who">
+						<span class="sb-name">{a.name}</span>
+						<span class="sb-harness">{a.harness}</span>
+					</span>
+				</p>
+				<p class="sb-score">
+					<span class="sb-value">{a.score.toFixed(digits)}</span>
+					<span class="sb-unit">{scoreLabel}</span>
+				</p>
+				<dl class="sb-stats">
+					{a.stats.map(([k, v]) => (
+						<div>
+							<dt>{k}</dt>
+							<dd>{v}</dd>
+						</div>
+					))}
+				</dl>
+			</li>
+		))}
+	</ol>
+
+	<p class="visually-hidden" id={`${id}-desc`}>
+		{ranked.map((a) => `${a.name} ${a.score.toFixed(digits)}`).join(', ')}.
+		{target && ` The dashed line marks ${target.value} (${target.label}).`}
+	</p>
+	{lines.map((L) => {
+		const sx = (v: number) => L.l + ((v - axis.min) / (axis.max - axis.min)) * (L.r - L.l);
+		const y = 50;
+		return (
+			<svg class={`chart-svg sb-line ${L.variant}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-label={`${scoreLabel} by agent`} aria-describedby={`${id}-desc`}>
+				<line class="chart-axis" x1={L.l} x2={L.r} y1={y} y2={y} />
+				<g class="chart-ticks">
+					{L.ticks.map((t) => (
+						<>
+							<line class="chart-tick" x1={r1(sx(t))} x2={r1(sx(t))} y1={y} y2={y + 4} />
+							<text x={r1(sx(t))} y={y + 18} text-anchor="middle">{t.toFixed(2)}</text>
+						</>
+					))}
+				</g>
+				{target && (
+					<g class="sb-target">
+						<line x1={r1(sx(target.value))} x2={r1(sx(target.value))} y1="12" y2={y} />
+						<text x={r1(sx(target.value)) + 6} y="16">{target.label}</text>
+					</g>
+				)}
+				{ranked.map((a) => (
+					<g class={`c-${a.color}`}>
+						<circle class="sb-dot" cx={r1(sx(a.score))} cy={y} r="6">
+							<title>{`${a.name}: ${a.score.toFixed(digits)}`}</title>
+						</circle>
+						<text class="sb-dot-label" x={r1(sx(a.score))} y={y - 12} text-anchor="middle">{a.name}</text>
+					</g>
+				))}
+			</svg>
+		);
+	})}
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>
