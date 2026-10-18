@@ -210,7 +210,8 @@ export default function draftsEditor() {
                                 '@codemirror/search',
                                 '@codemirror/state',
                                 '@codemirror/view',
-                                '@lezer/highlight'
+                                '@lezer/highlight',
+                                '@replit/codemirror-vim'
                             ]
                         }
                     }
