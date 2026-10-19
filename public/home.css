@@ -1690,8 +1690,23 @@ pre code {
 	gap: 0.5em;
 }
 
+/* On the post: a callout under the date, so it doesn't read as more tags */
 .post-header .trace-switch {
+	gap: 0.5em;
 	margin-top: 0.9em;
+	padding: 0.55em 0.9em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--foam);
+}
+
+.trace-switch.ts-on-post .ts-label,
+.trace-switch.ts-on-post .ts-label:visited {
+	margin-right: 0.6em;
+	font-size: 0.95rem;
+	letter-spacing: 0.03em;
+	text-transform: none;
+	color: var(--text);
 }
 
 .tv-head .trace-switch {
@@ -1726,6 +1741,8 @@ pre code {
 
 .ts-label:hover,
 .ts-label:focus-visible,
+.trace-switch.ts-on-post .ts-label:hover,
+.trace-switch.ts-on-post .ts-label:focus-visible,
 .ts-label[aria-current='page'],
 .ts-back:hover,
 .ts-back:focus-visible {

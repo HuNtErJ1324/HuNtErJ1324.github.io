@@ -1,7 +1,8 @@
 ---
 // Switches between a post and its agent traces (src/lib/traces.ts): a row at
-// the top of the post and of each trace page with "traces" (the index) and a
-// pill per run, the current one marked; trace pages also get a link back.
+// the top of each trace page with "traces" (the index) and a pill per run, the
+// current one marked, plus a link back; on the post it's a callout box under
+// the date, "Read the agent traces →" and the same pills.
 // The post's URL is only known once it's published (or under `astro dev`).
 // Before that, the shared draft link must not go into these public pages, so
 // the link reads "← blog" (the index), the post marks its row with
@@ -24,7 +25,7 @@ const runs = traceRuns(post);
 ---
 
 <nav
-	class="trace-switch"
+	class={`trace-switch${onPost ? ' ts-on-post' : ''}`}
 	aria-label={`${TRACE_POSTS[post].title}: post and traces`}
 	data-trace-post={post}
 	data-trace-home={onPost ? '' : undefined}
@@ -32,7 +33,7 @@ const runs = traceRuns(post);
 	{!onPost && (
 		<a class="ts-back" href={postHref ?? '/blog/'} data-trace-back={postHref ? undefined : ''}>{postHref ? '← the post' : '← blog'}</a>
 	)}
-	<a class="ts-label" href={`/traces/${post}/`} aria-current={current === 'index' ? 'page' : undefined}>traces</a>
+	<a class="ts-label" href={`/traces/${post}/`} aria-current={current === 'index' ? 'page' : undefined}>{onPost ? 'Read the agent traces →' : 'traces'}</a>
 	{runs.map((run) => (
 		<a class={`tv-run c-${run.color}`} href={`/traces/${post}/${run.id}/`} aria-current={run.id === current ? 'page' : undefined}>
 			<img src={run.logo} alt="" width="20" height="20" />{run.name}
