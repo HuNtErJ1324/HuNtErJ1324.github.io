@@ -1,0 +1,106 @@
+---
+// Opening figure: Kimi K3's whole PretrainGym run, condensed into a terminal
+// log that fills half the screen. Lines appear on SelfPlayAnimation's clock
+// (public/script.js §12, data-on), each stamped with the agent's elapsed time
+// (hh:mm): its messages type out, each self_score call fills a training bar,
+// and results land as worse (✗) or a new best (★). New lines push old ones
+// up off the top, like a real terminal; the log loops with [pause]/[restart]
+// in the title bar. Without JS or under reduced motion every line is drawn
+// and the bottom of the log (the finish) shows.
+//
+// The quotes, mixtures, losses and times are Kimi K3's, from its trace; the
+// tool lines are shorthand for its self_score calls.
+
+const CYCLE = 52;
+
+type Entry =
+	| { kind: 'say'; at: string; text: string }
+	| { kind: 'tool'; at: string; mix: string; budget: string }
+	| { kind: 'res'; at: string; text: string; mark: 'ok' | 'worse' | 'best' }
+	| { kind: 'note'; at: string; text: string };
+
+const script: Entry[] = [
+	{ kind: 'say', at: '00:06', text: 'Schema validates. Now launching a full-budget self-score run in the background to get the baseline loss and learn the eval set’s per-source composition.' },
+	{ kind: 'tool', at: '00:07', mix: 'fineweb-edu 100%', budget: '400M' },
+	{ kind: 'res', at: '01:32', text: 'val_loss 3.4286 · reward 0.9608', mark: 'ok' },
+	{ kind: 'say', at: '01:32', text: 'Only aggregate stats are exposed — the eval composition stays hidden, so I’ll optimize empirically.' },
+	{ kind: 'tool', at: '01:34', mix: 'dclm 100%', budget: '100M' },
+	{ kind: 'res', at: '01:58', text: 'val_loss 3.444 · train_loss 3.445', mark: 'ok' },
+	{ kind: 'tool', at: '01:59', mix: 'fineweb-edu 100%', budget: '100M' },
+	{ kind: 'res', at: '02:18', text: 'val_loss 3.688 · train_loss 3.308', mark: 'ok' },
+	{ kind: 'say', at: '02:18', text: 'Notable signal from the 100M runs: DCLM’s eval loss ≈ its train loss (3.44 vs 3.45), while FineWeb-Edu’s eval loss far exceeds its train loss (3.69 vs 3.31) — the eval set looks like broad web text, in-distribution for DCLM.' },
+	{ kind: 'tool', at: '02:23', mix: 'dclm 100%', budget: '400M' },
+	{ kind: 'res', at: '03:34', text: 'val_loss 3.2306 · reward 1.0131', mark: 'best' },
+	{ kind: 'note', at: '05:49', text: '5 more 100M screens: dclm-edu 3.447 · refinedweb 3.527 · ultra-fineweb 3.698 · wikipedia 3.834 · finemath 3.850' },
+	{ kind: 'say', at: '05:49', text: 'The eval set is RefinedWeb/DCLM-pipeline CommonCrawl web text.' },
+	{ kind: 'tool', at: '08:29', mix: 'dclm 80% · wikipedia 20%', budget: '400M' },
+	{ kind: 'res', at: '09:54', text: 'val_loss 3.2575', mark: 'worse' },
+	{ kind: 'say', at: '09:54', text: 'Scale dependence detected: Wikipedia 0.2 helped at 100M but hurt at 400M (3.2575 vs 3.2306).' },
+	{ kind: 'tool', at: '11:20', mix: 'dclm 85% · cosmopedia 7.5% · wikipedia 7.5%', budget: '400M' },
+	{ kind: 'res', at: '12:23', text: 'val_loss 3.1773', mark: 'best' },
+	{ kind: 'tool', at: '12:28', mix: 'dclm 90% · cosmopedia 5% · wikipedia 5%', budget: '400M' },
+	{ kind: 'res', at: '13:30', text: 'val_loss 3.1528', mark: 'best' },
+	{ kind: 'tool', at: '14:40', mix: 'dclm 85% · refinedweb 10% · cosmopedia 2.5% · wikipedia 2.5%', budget: '400M' },
+	{ kind: 'res', at: '15:59', text: 'val_loss 3.1297', mark: 'best' },
+	{ kind: 'tool', at: '17:37', mix: 'dclm 83% · refinedweb 10% · cosmopedia 2.5% · wikipedia 2.5% · pg-19 2%', budget: '400M' },
+	{ kind: 'res', at: '19:02', text: 'val_loss 3.1513', mark: 'worse' },
+	{ kind: 'tool', at: '20:30', mix: 'dclm 82% · refinedweb 10% · fineweb 3% · cosmopedia 2.5% · wikipedia 2.5%', budget: '400M' },
+	{ kind: 'res', at: '21:47', text: 'val_loss 3.1229 · reward 1.0422 · leakage 0', mark: 'best' },
+	{ kind: 'say', at: '26:00', text: 'The task is essentially complete — the plateau is flat and further weight tweaks gain <0.005 (within run noise).' },
+	{ kind: 'note', at: '26:01', text: 'submitted manifest.json → test loss 3.1247 · reward 1.042 · 1st of 3' }
+];
+
+// When each line appears, in seconds: messages take time to type, tool
+// calls wait for their bar to fill, results and notes follow quickly
+const typeTime = (text: string) => Math.min(3.2, Math.max(0.7, text.length / 48));
+const pace = { say: 0.9, tool: 1.9, res: 0.55, note: 1.1 };
+let clock = 0.6;
+const lines = script.map((e) => {
+	const on = clock;
+	const dur = e.kind === 'say' ? typeTime(e.text) : 0;
+	clock += dur + pace[e.kind];
+	// Typing speed bucket for the CSS (.th-ty1 … .th-ty4)
+	const ty = dur ? Math.min(4, Math.max(1, Math.round(dur))) : 0;
+	return { ...e, on: Math.round(on * 10) / 10, ty };
+});
+---
+
+<figure class="term-hook sp-anim" data-cycle={CYCLE}>
+	<div class="th-window" role="img" aria-label="A terminal replay of Kimi K3's run: it finds the eval looks like broad web text from the gap between training and eval loss, learns that cheap runs mislead, tunes a DCLM-heavy mixture at the full budget to a best reward of 1.0422, and wins with a test reward of 1.042.">
+		<div class="th-bar">
+			<span class="th-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+			<span class="th-title" aria-hidden="true">kimi-k3 · kimi code · pretraingym</span>
+			<div class="sp-controls th-controls" hidden>
+				<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
+				<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+			</div>
+		</div>
+		<div class="th-body" aria-hidden="true">
+			{lines.map((l) => (
+				<p class={`th-line th-${l.kind}`} data-on={l.on}>
+					<span class="th-at">[{l.at}]</span>
+					{l.kind === 'say' && (
+						<>
+							<span class="th-prompt">kimi-k3 ›</span> <span class={`th-say th-type th-ty${l.ty}`}>“{l.text}”</span>
+						</>
+					)}
+					{l.kind === 'tool' && (
+						<>
+							<span class="th-tool">▸ self_score</span><span class="th-args">({l.mix}, {l.budget})</span>
+							<span class="th-track"><span class="th-fill"></span></span>
+						</>
+					)}
+					{l.kind === 'res' && (
+						<span class={`th-res th-${l.mark}`}>
+							{l.mark === 'worse' ? '✗' : '✓'} {l.text}
+							{l.mark === 'best' && <span class="th-star"> ★ new best</span>}
+							{l.mark === 'worse' && <span class="th-worse-tag"> worse</span>}
+						</span>
+					)}
+					{l.kind === 'note' && <span class="th-note">{l.text}</span>}
+				</p>
+			))}
+			<p class="th-line th-end" data-on={Math.round(clock * 10) / 10}><span class="th-prompt">kimi-k3 ›</span><span class="th-cursor"></span></p>
+		</div>
+	</div>
+</figure>

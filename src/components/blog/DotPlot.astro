@@ -1,0 +1,97 @@
+---
+// Cleveland dot plot (static SVG): one row per item, one dot per row on a
+// shared axis that need not start at zero, so close values far from zero
+// (losses, rewards) stay easy to compare where a zero-based <BarChart> would
+// draw near-identical bars. Each dot is value-labeled. Like <LineChart full>,
+// it ships a column-wide drawing and a compact one for phones, where each
+// row's name moves above its line. `mark="bar"` draws each value as a bar
+// from the axis's start instead of a dot, keeping the same grid and ticks; the
+// tick labels show where that start is.
+import { type Axis, type ChartColor, chartId, format, r1, scale } from '../../lib/charts';
+
+interface Row {
+	label: string;
+	value: number;
+	color?: ChartColor;
+}
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	rows: Row[];
+	x: Axis;
+	mark?: 'dot' | 'bar';
+	digits?: number;
+	caption?: string;
+}
+
+const { title, subtitle, rows, x, mark = 'dot', digits = 3, caption } = Astro.props;
+const id = chartId('dots');
+const tf = x.format ?? 'dec1';
+
+const layouts = [
+	// Wide: names in a left column, dots on a line to their right
+	{ variant: 'chart-svg-full', W: 720, rowH: 30, top: 6, l: 190, r: 690, labelX: 0, labelDy: 4, lineDy: 0, axisGap: 14 },
+	// Compact: names above each row's line
+	{ variant: 'chart-svg-compact', W: 330, rowH: 44, top: 4, l: 8, r: 300, labelX: 8, labelDy: -10, lineDy: 12, axisGap: 4 }
+].map((L) => ({ ...L, H: L.top + rows.length * L.rowH + L.axisGap + 26 }));
+
+// Square at the axis, 4px rounded data end (as in <BarChart>)
+const bar = (x0: number, y0: number, w: number, h: number) => {
+	const r = Math.min(4, w / 2, h / 2);
+	return `M${x0} ${y0}H${r1(x0 + w - r)}Q${r1(x0 + w)} ${y0} ${r1(x0 + w)} ${y0 + r}V${y0 + h - r}Q${r1(x0 + w)} ${y0 + h} ${r1(x0 + w - r)} ${y0 + h}H${x0}Z`;
+};
+---
+
+<figure class="chart chart-full chart-dots">
+	<div class="chart-head">
+		<p class="chart-title" id={`${id}-title`}>{title}</p>
+		{subtitle && <p class="chart-sub">{subtitle}</p>}
+	</div>
+	{layouts.map((L) => {
+		const sx = scale(x, L.l, L.r);
+		const rowY = (i: number) => L.top + i * L.rowH + L.rowH / 2 + L.lineDy;
+		const axisY = L.top + rows.length * L.rowH + L.axisGap;
+		return (
+			<svg class={`chart-svg ${L.variant}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-labelledby={`${id}-title`}>
+				<g class="chart-grid">
+					{x.ticks.map((t) => (
+						<line x1={r1(sx(t))} x2={r1(sx(t))} y1={L.top} y2={axisY} />
+					))}
+				</g>
+				<line class="chart-axis" x1={L.l} x2={L.r} y1={axisY} y2={axisY} />
+				<g class="chart-ticks">
+					{x.ticks.map((t) => (
+						<>
+							<line class="chart-tick" x1={r1(sx(t))} x2={r1(sx(t))} y1={axisY} y2={axisY + 4} />
+							<text x={r1(sx(t))} y={axisY + 17} text-anchor="middle">{format(t, tf)}</text>
+						</>
+					))}
+				</g>
+				{rows.map((row, i) => {
+					const y = r1(rowY(i));
+					const cx = r1(sx(row.value));
+					const value = row.value.toFixed(digits);
+					return (
+						<g>
+							<title>{`${row.label}: ${value}`}</title>
+							<text class="chart-bar-label" x={L.labelX} y={y + L.labelDy}>{row.label}</text>
+							{mark === 'bar' ? (
+								<path class={`chart-bar c-${row.color ?? 'gray'}`} d={bar(L.l, y - 7, cx - L.l, 14)} />
+							) : (
+								<>
+									<line class="dot-guide" x1={L.l} x2={L.r} y1={y} y2={y} />
+									<circle class={`dot-mark c-${row.color ?? 'gray'}`} cx={cx} cy={y} r="5.5" />
+								</>
+							)}
+							<text class="chart-bar-value" x={cx + (mark === 'bar' ? 7 : 10)} y={y + 4}>{value}</text>
+						</g>
+					);
+				})}
+			</svg>
+		);
+	})}
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

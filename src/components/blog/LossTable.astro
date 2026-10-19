@@ -1,0 +1,58 @@
+---
+// A table of losses (or any lower-is-better numbers) by row and agent, where
+// each row's best cell wears its agent's hue: a tint, a left edge and bold
+// text, plus a visually hidden "lowest" for screen readers. Column headers
+// carry the same hue as a dot, so the winner of a row reads at a glance
+// without hunting for bold. `total` is an optional summary row (e.g. the
+// mean that makes the score), set off by a heavier rule.
+import type { ChartColor } from '../../lib/charts';
+
+interface Row {
+	label: string;
+	values: number[];
+}
+
+interface Props {
+	rowHeader: string;
+	agents: { name: string; color: ChartColor }[];
+	rows: Row[];
+	total?: Row;
+	digits?: number;
+	caption?: string;
+}
+
+const { rowHeader, agents, rows, total, digits = 3, caption } = Astro.props;
+const best = (values: number[]) => values.indexOf(Math.min(...values));
+---
+
+<figure class="loss-table">
+	<table>
+		<thead>
+			<tr>
+				<th scope="col">{rowHeader}</th>
+				{agents.map((a) => (
+					<th scope="col" class={`lt-num c-${a.color}`}><span class="lt-key" aria-hidden="true"></span>{a.name}</th>
+				))}
+			</tr>
+		</thead>
+		<tbody>
+			{[...rows, ...(total ? [total] : [])].map((row, r) => {
+				const win = best(row.values);
+				return (
+					<tr class={total && r === rows.length ? 'lt-total' : undefined}>
+						<th scope="row">{row.label}</th>
+						{row.values.map((v, i) => (
+							<td class={`lt-num${i === win ? ` lt-best c-${agents[i].color}` : ''}`}>
+								{v.toFixed(digits)}
+								{i === win && <span class="visually-hidden"> (lowest)</span>}
+							</td>
+						))}
+					</tr>
+				);
+			})}
+		</tbody>
+	</table>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>

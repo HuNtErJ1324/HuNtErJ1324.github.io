@@ -66,9 +66,11 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 			<h1>{title}</h1>
 			<p class="post-meta">
 				<PostChips post={post} linkTags={!shared} />
-				<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
-				<span class="meta-sep" aria-hidden="true">&middot;</span>
-				<span>{minutes} min read</span>
+				<span class="post-when">
+					<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
+					<span class="meta-sep" aria-hidden="true">&middot;</span>
+					<span>{minutes} min read</span>
+				</span>
 			</p>
 			{draft && (shared ? (
 				<p class="draft-note">

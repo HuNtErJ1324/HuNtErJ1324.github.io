@@ -1,25 +1,31 @@
 ---
 // Animated replay of one agent's PretrainGym run, built from its self_score
 // history (src/data/pretraingym.json → replay.<agent>). Left: validation loss
-// by hour, where each job's dot appears as it finishes (filled = full 400M
+// by agent turn, where each job's dot appears at the turn its result came
+// back (filled = full 400M
 // budget, hollow = a cheaper probe) and a dashed line tracks the best
 // full-budget result. Right: the mixture of the job that is running, then its
 // result, ending on the submitted mixture and its test loss. Below: the
 // phases of the run, highlighted in step.
 //
 // It reuses SelfPlayAnimation's clock (public/script.js §12): data-on/off,
-// data-active and a data-travel playhead, with hours mapped linearly to
-// seconds; the .sp-scrub slider lets readers drag to any point and .sp-time
-// reads the clock back as hours. Without JS or under prefers-reduced-motion it
-// is a static chart:
+// data-active and a data-travel playhead, with turns mapped linearly to
+// seconds (so long waits on a job don't stretch the replay, but busy stretches
+// of tool calls do); the .sp-scrub slider lets readers drag to any point and
+// .sp-time reads the clock back as a turn. Without JS or under
+// prefers-reduced-motion it is a static chart:
 // every dot, the final best line, and the submitted mixture. Like
 // <LineChart full>, it ships a 720-unit drawing and a compact one for phones.
 import { type ChartColor, chartId, r1 } from '../../lib/charts';
 
 type Row = [string, number, string];
+// start/end are agent turns (launch, and the turn its result came back);
+// hourStart/hourEnd are the same moments in wall-clock hours
 interface Job {
 	start: number;
 	end: number;
+	hourStart: number;
+	hourEnd: number;
 	budget: string;
 	full: boolean;
 	loss: number;
@@ -34,24 +40,24 @@ interface Phase {
 interface Props {
 	name: string;
 	color: ChartColor;
-	data: { hours: number; jobs: Job[]; submitted: { rows: Row[]; test: number } };
+	data: { hours: number; turns: number; jobs: Job[]; submitted: { rows: Row[]; test: number } };
 	phases: Phase[];
 	xMax: number;
 	xTicks: number[];
-	// Seconds per loop; hours map linearly onto it
+	// Seconds per loop; turns map linearly onto it
 	cycle?: number;
 	caption?: string;
 }
 
 const { name, color, data, phases, xMax, xTicks, cycle = 24, caption } = Astro.props;
 const id = chartId('replay');
-const { hours: H, jobs, submitted } = data;
+const { hours, turns: T, jobs, submitted } = data;
 
 const Y = { min: 3.1, max: 3.9, ticks: [3.1, 3.3, 3.5, 3.7, 3.9] };
 // 0.5 s lead-in; the run ends with ~4.5 s left to read the submitted mixture
-const k = (cycle - 5) / H;
-const t = (h: number) => r1(0.5 + h * k);
-const tEnd = r1(t(H) + 1.2);
+const k = (cycle - 5) / T;
+const t = (turn: number) => r1(0.5 + turn * k);
+const tEnd = r1(t(T) + 1.2);
 // Off-scale probes (GLM-5.3's 655K-token runs sit near 10.4) share one
 // label, beside the last of them
 const lastOff = jobs.map((j) => j.loss > 3.9).lastIndexOf(true);
@@ -69,7 +75,7 @@ const frames = [
 		on: t(j.start),
 		off: i + 1 < jobs.length ? t(jobs[i + 1].start) : tEnd,
 		head: `JOB ${i + 1} · ${j.budget} TOKENS`,
-		sub: `launched at hour ${j.start.toFixed(1)}`,
+		sub: `launched at turn ${j.start} · hour ${j.hourStart.toFixed(1)}`,
 		rows: j.rows,
 		running: [t(j.start), t(j.end)] as [number, number],
 		result: `val loss ${j.loss.toFixed(4)}`,
@@ -110,18 +116,18 @@ const layouts = [
 
 const fmtLoss = (v: number) => v.toFixed(v >= 10 ? 1 : 4);
 const nFull = jobs.filter((j) => j.full).length;
-const desc = `A replay of ${name}'s run. Over ${H.toFixed(1)} hours it ran ${jobs.length} self_score jobs, ${nFull} of them at the full 400M-token budget. Its best full-budget validation loss was ${Math.min(...jobs.filter((j) => j.full).map((j) => j.loss)).toFixed(4)}, and its submitted mixture (${submitted.rows.map((r) => `${r[0]} ${r[2]}`).join(', ')}) scored a test loss of ${submitted.test.toFixed(4)}.`;
+const desc = `A replay of ${name}'s run. Over ${T} turns (${hours.toFixed(1)} hours) it ran ${jobs.length} self_score jobs, ${nFull} of them at the full 400M-token budget. Its best full-budget validation loss was ${Math.min(...jobs.filter((j) => j.full).map((j) => j.loss)).toFixed(4)}, and its submitted mixture (${submitted.rows.map((r) => `${r[0]} ${r[2]}`).join(', ')}) scored a test loss of ${submitted.test.toFixed(4)}.`;
 ---
 
 <figure class={`chart chart-full sp-anim ar-anim c-${color}`} data-cycle={cycle}>
 	<div class="chart-head">
 		<p class="chart-title" id={`${id}-title`}>{name}'s run, replayed</p>
-		<p class="chart-sub">Each dot is a self_score job at the hour it finished; the panel shows that job's mixture.</p>
+		<p class="chart-sub">Each dot is a self_score job, placed at the agent turn its result came back; the panel shows that job's mixture.</p>
 	</div>
 	<p class="visually-hidden" id={`${id}-desc`}>{desc}</p>
 	{layouts.map((L) => {
 		const { l, r, t: top, b } = L.plot;
-		const sx = (h: number) => l + (h / xMax) * (r - l);
+		const sx = (turn: number) => l + (turn / xMax) * (r - l);
 		const sy = (v: number) => b - ((Math.min(v, Y.max) - Y.min) / (Y.max - Y.min)) * (b - top);
 		const P = L.panel;
 		const barW = (v: number) => Math.max(1.5, (v / 100) * P.barW);
@@ -149,10 +155,10 @@ const desc = `A replay of ${name}'s run. Over ${H.toFixed(1)} hours it ran ${job
 						</>
 					))}
 				</g>
-				<text class="chart-axis-label" x={(l + r) / 2} y={b + 34} text-anchor="middle">hours</text>
+				<text class="chart-axis-label" x={(l + r) / 2} y={b + 34} text-anchor="middle">agent turns</text>
 				<text class="chart-axis-label" x={l - 40} y={top - 6}>val loss</text>
 
-				<g class="sp-packet ar-playhead" transform={`translate(${r1(sx(0))} 0)`} data-travel={`${t(0)} ${t(H)}`} data-route={`${r1(sx(0))} 0 ${r1(sx(H))} 0`} data-ease="linear" aria-hidden="true">
+				<g class="sp-packet ar-playhead" transform={`translate(${r1(sx(0))} 0)`} data-travel={`${t(0)} ${t(T)}`} data-route={`${r1(sx(0))} 0 ${r1(sx(T))} 0`} data-ease="linear" aria-hidden="true">
 					<line x1="0" x2="0" y1={top} y2={b} />
 				</g>
 
@@ -166,7 +172,7 @@ const desc = `A replay of ${name}'s run. Over ${H.toFixed(1)} hours it ran ${job
 				{jobs.map((j, i) => (
 					<g data-on={t(j.end)}>
 						<circle class={`ar-dot${j.full ? '' : ' ar-probe'}`} cx={r1(sx(j.end))} cy={r1(sy(j.loss))} r={j.full ? 4.5 : 3.8}>
-							<title>{`Job ${i + 1} · ${j.budget} tokens · finished hour ${j.end.toFixed(1)} · val loss ${fmtLoss(j.loss)}`}</title>
+							<title>{`Job ${i + 1} · ${j.budget} tokens · result at turn ${j.end} (hour ${j.hourEnd.toFixed(1)}) · val loss ${fmtLoss(j.loss)}`}</title>
 						</circle>
 						{i === lastOff && (
 							<text class="ar-offscale" x={r1(sx(j.end)) + 7} y={r1(sy(j.loss)) + 4}>↑{fmtLoss(j.loss)}</text>
@@ -175,10 +181,10 @@ const desc = `A replay of ${name}'s run. Over ${H.toFixed(1)} hours it ran ${job
 				))}
 
 				<g data-on={tEnd}>
-					<path class="ar-test" d={`M${r1(sx(H))} ${r1(sy(submitted.test)) - 6}l6 6l-6 6l-6 -6Z`}>
+					<path class="ar-test" d={`M${r1(sx(T))} ${r1(sy(submitted.test)) - 6}l6 6l-6 6l-6 -6Z`}>
 						<title>{`Final test loss ${submitted.test.toFixed(4)}`}</title>
 					</path>
-					<text class="ar-test-label" x={r1(sx(H)) + 6} y={r1(sy(submitted.test)) - 11} text-anchor="end">test {submitted.test.toFixed(4)}</text>
+					<text class="ar-test-label" x={r1(sx(T)) + 6} y={r1(sy(submitted.test)) - 11} text-anchor="end">test {submitted.test.toFixed(4)}</text>
 				</g>
 
 				{frames.map((f) => (
@@ -209,7 +215,7 @@ const desc = `A replay of ${name}'s run. Over ${H.toFixed(1)} hours it ran ${job
 		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
 		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
 		<input type="range" class="sp-scrub" min="0" max={cycle} step="any" value="0" aria-label={`Replay position in ${name}'s run`} />
-		<span class="sp-time" data-offset="0.5" data-rate={k} data-max={H} aria-hidden="true">hour 0.0</span>
+		<span class="sp-time" data-offset="0.5" data-rate={k} data-max={T} data-unit="turn" data-digits="0" aria-hidden="true">turn 0</span>
 	</div>
 	<ol class="sp-steps">
 		{phases.map((p, i) => (

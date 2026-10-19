@@ -1,7 +1,9 @@
 ---
 // Horizontal bar chart (static SVG). Each row's name sits above its bar so
 // long model names never get squeezed on a phone; every bar is value-labeled
-// at its tip, so the chart needs no separate table.
+// in a column just past the track's end, so the chart needs no separate table.
+// Bars start at zero: when values sit close together far from zero, use
+// <DotPlot> on a zoomed axis instead.
 import { type ChartColor, chartId, r1 } from '../../lib/charts';
 
 interface Row {
@@ -60,7 +62,8 @@ const bar = (x: number, y: number, w: number, h: number) => {
 					</text>
 					<rect class="chart-track" x={left} y={y + 18} width={W - left - right} height={barH} rx="2" />
 					<path class={`chart-bar c-${row.color ?? 'gray'}`} d={bar(left, y + 18, w, barH)} />
-					<text class="chart-bar-value" x={r1(left + w + 7)} y={y + 30}>{value}</text>
+					{/* Values sit in a column past the track's end, never on top of it */}
+					<text class="chart-bar-value" x={W - right + 8} y={y + 30}>{value}</text>
 				</g>
 			);
 		})}

@@ -1318,10 +1318,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     scrub.style.setProperty('--p', (t / cycle).toFixed(4));
                 }
                 if (clock) {
-                    // Seconds back to the figure's own units, e.g. hours of a run
-                    const { offset, rate, max } = clock.dataset;
+                    // Seconds back to the figure's own units, e.g. turns of a run
+                    const { offset, rate, max, unit = 'hour', digits = '1' } = clock.dataset;
                     const value = Math.min(Number(max), Math.max(0, (t - Number(offset)) / Number(rate)));
-                    clock.textContent = `hour ${value.toFixed(1)}`;
+                    clock.textContent = `${unit} ${value.toFixed(Number(digits))}`;
                     if (scrub) scrub.setAttribute('aria-valuetext', clock.textContent);
                 }
             };
