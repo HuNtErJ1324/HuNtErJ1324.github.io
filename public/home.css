@@ -1605,12 +1605,6 @@ pre code {
 	font-size: 1.3rem;
 }
 
-.tv-crumbs {
-	margin-bottom: 0.9em;
-	font-size: 0.85rem;
-	color: var(--subtle);
-}
-
 .tv-lede {
 	margin-top: 0.8em;
 	color: var(--subtle);
@@ -1686,11 +1680,61 @@ pre code {
 	color: var(--gold);
 }
 
-.tv-runs {
+/* TraceSwitch.astro: post ↔ traces, at the top of the post and each trace
+   page. "traces" opens the index; each pill opens a run, the current one
+   edged in its hue */
+.trace-switch {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5em;
-	margin-top: 1.3em;
+}
+
+.post-header .trace-switch {
+	margin-top: 0.9em;
+}
+
+.tv-head .trace-switch {
+	margin-bottom: 1.3em;
+}
+
+.ts-label,
+.ts-label:visited,
+.ts-back,
+.ts-back:visited {
+	font-family: var(--font-display);
+	font-size: 0.78rem;
+	letter-spacing: 0.08em;
+	text-decoration: none;
+}
+
+.ts-label,
+.ts-label:visited {
+	margin-right: 0.2em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.ts-back,
+.ts-back:visited {
+	margin-right: 0.6em;
+	padding: 0.2em 0.7em;
+	border: 1px solid var(--border-bright);
+	border-radius: 999px;
+	color: var(--subtle);
+}
+
+.ts-back[hidden] {
+	display: none;
+}
+
+.ts-label:hover,
+.ts-label:focus-visible,
+.ts-label[aria-current='page'],
+.ts-back:hover,
+.ts-back:focus-visible {
+	background: none;
+	color: var(--rose);
 }
 
 .tv-run,

@@ -1,0 +1,40 @@
+---
+// Switches between a post and its agent traces (src/lib/traces.ts): a row at
+// the top of the post and of each trace page with "traces" (the index) and a
+// pill per run, the current one marked; trace pages also get "← the post".
+// The post's URL is only known once it's published (or under `astro dev`).
+// Before that, the shared draft link must not go into these public pages, so
+// the post marks its row with data-trace-home and script.js §14 remembers the
+// page in the reader's browser; on the trace pages it then shows the link
+// back to that page.
+import { TRACE_POSTS, traceRuns } from '../lib/traces';
+
+interface Props {
+	post: string;
+	// A run id, 'index', or nothing (on the post)
+	current?: string;
+	// Where "← the post" goes; null hides it until script.js fills it in
+	postHref?: string | null;
+	onPost?: boolean;
+}
+
+const { post, current, postHref = null, onPost = false } = Astro.props;
+const runs = traceRuns(post);
+---
+
+<nav
+	class="trace-switch"
+	aria-label={`${TRACE_POSTS[post].title}: post and traces`}
+	data-trace-post={post}
+	data-trace-home={onPost ? '' : undefined}
+>
+	{!onPost && (
+		<a class="ts-back" href={postHref ?? `/blog/`} hidden={!postHref} data-trace-back>← the post</a>
+	)}
+	<a class="ts-label" href={`/traces/${post}/`} aria-current={current === 'index' ? 'page' : undefined}>traces</a>
+	{runs.map((run) => (
+		<a class={`tv-run c-${run.color}`} href={`/traces/${post}/${run.id}/`} aria-current={run.id === current ? 'page' : undefined}>
+			<img src={run.logo} alt="" width="20" height="20" />{run.name}
+		</a>
+	))}
+</nav>

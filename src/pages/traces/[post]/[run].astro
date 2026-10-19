@@ -7,6 +7,7 @@
 // tool calls and output stay as written. Turns are #turn-N anchors, so a post can
 // link straight to one. script.js §14 adds a focus toggle (hides routine calls)
 // and a jump-to-turn box; without JS every step shows.
+import TraceSwitch from '../../../components/TraceSwitch.astro';
 import Base from '../../../layouts/Base.astro';
 import { agentMarkdown } from '../../../lib/trace-markdown';
 import { TRACE_POSTS, tracePostLink, traceRuns, type MixRow, type TraceScore } from '../../../lib/traces';
@@ -67,10 +68,7 @@ const taskHtml = run.task ? await agentMarkdown(run.task) : '';
 	</header>
 	<article class="tv">
 		<header class="tv-head">
-			<p class="tv-crumbs">
-				<a href={`/traces/${post}/`}>{info.title} traces</a>
-				{postHref && <><span class="meta-sep" aria-hidden="true">&middot;</span><a href={postHref}>the post</a></>}
-			</p>
+			<TraceSwitch post={post} current={run.id} postHref={postHref} />
 			<div class="tv-title">
 				<img class={`tv-logo c-${run.color}`} src={run.logo} alt="" width="48" height="48" />
 				<div>
@@ -87,13 +85,6 @@ const taskHtml = run.task ? await agentMarkdown(run.task) : '';
 				<div><dt>wall clock</dt><dd>{stats.hours.toFixed(1)} h</dd></div>
 				{stats.hellaswag != null && <div><dt>HellaSwag</dt><dd>{(stats.hellaswag * 100).toFixed(1)}%</dd></div>}
 			</dl>
-			<nav class="tv-runs" aria-label="Runs">
-				{runs.map((r) => (
-					<a class={`tv-run c-${r.color}`} href={`/traces/${post}/${r.id}/`} aria-current={r.id === run.id ? 'page' : undefined}>
-						<img src={r.logo} alt="" width="20" height="20" />{r.name}
-					</a>
-				))}
-			</nav>
 		</header>
 
 		<div class="tv-section" role="region" aria-labelledby="tv-jobs-title">

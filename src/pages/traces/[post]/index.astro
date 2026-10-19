@@ -1,6 +1,7 @@
 ---
 // A post's traces: one card per run, best first, each linking to the run's
 // turn-by-turn page.
+import TraceSwitch from '../../../components/TraceSwitch.astro';
 import Base from '../../../layouts/Base.astro';
 import { TRACE_POSTS, tracePostLink, traceRuns } from '../../../lib/traces';
 
@@ -27,11 +28,11 @@ const { href: postHref, published } = await tracePostLink(post);
 	</header>
 	<article class="tv">
 		<header class="tv-head">
+			<TraceSwitch post={post} current="index" postHref={postHref} />
 			<h1>{info.title} traces</h1>
 			<p class="tv-lede">
 				{info.about} Each run's page shows every turn: the agent's messages, its tool calls and their output, and every
 				self_score job it launched.
-				{postHref && <> The results are discussed in <a href={postHref}>the post</a>.</>}
 			</p>
 		</header>
 		<ol class="tv-cards">

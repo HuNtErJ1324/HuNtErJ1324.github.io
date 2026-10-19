@@ -1515,10 +1515,32 @@ document.addEventListener('DOMContentLoaded', () => {
             updateToc();
         }
 
-        // 14. Trace viewer (src/pages/traces/): show the toolbar, whose focus
-        // mode hides routine tool calls and environment notices, and whose box
-        // jumps to a turn. A #turn-N or #e-N link that focus would hide
-        // switches back to every step, so links from a post always land.
+        // 14. Trace viewer (src/pages/traces/) and its links to the post.
+        // The post ↔ traces row (TraceSwitch.astro): until a post is published
+        // its trace pages can't name the shared draft link, so the post records
+        // where it was read (this browser only) and the traces link back there.
+        document.querySelectorAll('.trace-switch[data-trace-post]').forEach((row) => {
+            const key = `trace-back:${row.dataset.tracePost}`;
+            try {
+                if ('traceHome' in row.dataset) {
+                    localStorage.setItem(key, location.pathname);
+                    return;
+                }
+                const back = row.querySelector('[data-trace-back]');
+                const saved = localStorage.getItem(key);
+                if (back && back.hidden && saved && /^\/(blog|drafts)\/[\w-]+\/$/.test(saved)) {
+                    back.href = saved;
+                    back.hidden = false;
+                }
+            } catch (error) {
+                // Storage blocked (private mode, site data off): no link back
+            }
+        });
+
+        // The toolbar: focus mode hides routine tool calls and environment
+        // notices, and the box jumps to a turn. A #turn-N or #e-N link that
+        // focus would hide switches back to every step, so links from a post
+        // always land.
         const traceLog = document.querySelector('.tv-log');
         const traceBar = document.querySelector('.tv-toolbar');
         if (traceLog && traceBar) {

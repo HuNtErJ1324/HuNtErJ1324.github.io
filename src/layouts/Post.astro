@@ -5,11 +5,15 @@
 // renders a draft at its /drafts/<token>/ link: noindex, no canonical URL.
 // A post with at least three h2/h3 headings gets a table of contents in the
 // left gutter on wide screens (script.js §13 marks the section being read).
+// A post with published agent traces (src/lib/traces.ts) links to them at the
+// top, under the date.
 import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
+import TraceSwitch from '../components/TraceSwitch.astro';
 import { giscus } from '../lib/giscus';
 import { formatDate, isDraft, type Post } from '../lib/posts';
+import { TRACE_POSTS } from '../lib/traces';
 import { assetVersion } from '../lib/site';
 
 interface Props {
@@ -90,6 +94,7 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 					<span>{minutes} min read</span>
 				</span>
 			</p>
+			{post.id in TRACE_POSTS && <TraceSwitch post={post.id} onPost />}
 			{draft && (shared ? (
 				<p class="draft-note">
 					Unpublished draft, shared by link. It isn't listed on this site yet.
