@@ -31,8 +31,8 @@ const { href: postHref, published } = await tracePostLink(post);
 			<TraceSwitch post={post} current="index" postHref={postHref} />
 			<h1>{info.title} traces</h1>
 			<p class="tv-lede">
-				{info.about} Each run's page shows every turn: the agent's messages, its tool calls and their output, and every
-				self_score job it launched.
+				{info.about}{info.effort && ` Every run used ${info.effort} reasoning effort.`} Each run's page shows every turn: the
+				agent's messages, its tool calls and their output, and every self_score job it launched.
 			</p>
 		</header>
 		<ol class="tv-cards">

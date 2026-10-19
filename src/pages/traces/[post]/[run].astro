@@ -73,7 +73,7 @@ const taskHtml = run.task ? await agentMarkdown(run.task) : '';
 				<img class={`tv-logo c-${run.color}`} src={run.logo} alt="" width="48" height="48" />
 				<div>
 					<h1>{run.name}</h1>
-					<p class="tv-sub">{run.harness} harness<span class="meta-sep" aria-hidden="true">&middot;</span><code>{run.model}</code></p>
+					<p class="tv-sub">{run.harness} harness{info.effort && <><span class="meta-sep" aria-hidden="true">&middot;</span>{info.effort} reasoning effort</>}<span class="meta-sep" aria-hidden="true">&middot;</span><code>{run.model}</code></p>
 				</div>
 			</div>
 			<dl class="tv-stats">

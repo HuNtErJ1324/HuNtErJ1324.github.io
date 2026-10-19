@@ -74,13 +74,16 @@ interface TracePost {
 	about: string;
 	// Run ids in display order (best first)
 	runs: string[];
+	// Reasoning effort every run used, e.g. 'max'
+	effort?: string;
 }
 
 export const TRACE_POSTS: Record<string, TracePost> = {
 	pretraingym: {
 		title: 'PretrainGym',
 		about: 'Three coding agents, each curating a 400M-token pretraining corpus for a fixed small model and scored by its loss on a hidden eval set.',
-		runs: ['kimi-k3', 'glm-5-3', 'gpt-6-1-sol']
+		runs: ['kimi-k3', 'glm-5-3', 'gpt-6-1-sol'],
+		effort: 'max'
 	}
 };
 
