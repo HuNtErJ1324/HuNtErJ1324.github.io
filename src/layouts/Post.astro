@@ -3,6 +3,9 @@
 // aside the general post anatomy calls for and giscus comments. MathJax loads
 // only on posts that contain math (hasMath, set by remark-mathjax). `shared`
 // renders a draft at its /drafts/<token>/ link: noindex, no canonical URL.
+// A post with at least three h2/h3 headings gets a table of contents in the
+// left gutter on wide screens (script.js §13 marks the section being read).
+import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
 import { giscus } from '../lib/giscus';
@@ -16,10 +19,13 @@ interface Props {
 	previous: Post | null;
 	next: Post | null;
 	related: Post[];
+	headings?: MarkdownHeading[];
 	shared?: boolean;
 }
 
-const { post, minutes, hasMath, previous, next, related, shared = false } = Astro.props;
+const { post, minutes, hasMath, previous, next, related, headings = [], shared = false } = Astro.props;
+// Sections and subsections only; remark-gfm's "Footnotes" heading isn't one
+const toc = headings.filter((h) => (h.depth === 2 || h.depth === 3) && h.slug !== 'footnote-label');
 const { date, title, description } = post.data;
 const dateIso = date.toISOString();
 const draft = isDraft(post);
@@ -62,6 +68,18 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {fileName}</p>
 	</header>
 	<article class="post">
+		{toc.length >= 3 && (
+			<nav class="post-toc" aria-labelledby="toc-title">
+				<div class="toc-inner">
+					<p class="toc-title" id="toc-title">contents</p>
+					<ol>
+						{toc.map((h) => (
+							<li class={`toc-d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>
+						))}
+					</ol>
+				</div>
+			</nav>
+		)}
 		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="post-meta">

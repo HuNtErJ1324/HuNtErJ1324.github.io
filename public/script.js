@@ -1446,6 +1446,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 controls.hidden = true;
             });
         });
+
+        // 13. Post table of contents (Post.astro, wide screens only): mark the
+        // section being read — the last heading above a line a quarter of the
+        // way down the view, or the last one once the page bottoms out — and
+        // keep its entry in view when the outline scrolls on its own
+        const toc = document.querySelector('.post-toc');
+        if (toc) {
+            const box = toc.querySelector('.toc-inner');
+            const nav = document.querySelector('.site-nav');
+            const entries = [...toc.querySelectorAll('a[href^="#"]')]
+                .map((link) => ({ link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))) }))
+                .filter((entry) => entry.heading);
+            let current = null;
+            let tocTicking = false;
+
+            const updateToc = () => {
+                tocTicking = false;
+                // Hidden below its breakpoint: nothing to mark
+                if (!box || box.offsetParent === null || entries.length === 0) return;
+                const line = (nav ? nav.offsetHeight : 0) + window.innerHeight * 0.25;
+                const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+                let next = null;
+                entries.forEach((entry) => {
+                    if (entry.heading.getBoundingClientRect().top <= line) next = entry;
+                });
+                if (atBottom && entries[entries.length - 1].heading.getBoundingClientRect().top < window.innerHeight) {
+                    next = entries[entries.length - 1];
+                }
+                if (next === current) return;
+                if (current) current.link.removeAttribute('aria-current');
+                current = next;
+                if (!current) return;
+                current.link.setAttribute('aria-current', 'true');
+                if (box.scrollHeight > box.clientHeight) {
+                    const top = current.link.offsetTop;
+                    const bottom = top + current.link.offsetHeight;
+                    if (top < box.scrollTop) box.scrollTop = top - 8;
+                    else if (bottom > box.scrollTop + box.clientHeight) box.scrollTop = bottom - box.clientHeight + 8;
+                }
+            };
+
+            const queueToc = () => {
+                if (tocTicking) return;
+                tocTicking = true;
+                requestAnimationFrame(updateToc);
+            };
+            window.addEventListener('scroll', queueToc, { passive: true });
+            window.addEventListener('resize', queueToc);
+            updateToc();
+        }
     } catch (error) {
         console.error('Error initializing site scripts:', error);
     }

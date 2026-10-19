@@ -1063,8 +1063,96 @@ a:hover {
    Blog: single post
    -------------------------------------------------------------------------- */
 .post {
+	position: relative;
 	max-width: 800px;
 	margin: 2.25em auto 0;
+}
+
+/* Table of contents: a sticky outline in the left gutter, shown only where the
+   gutter fits it (12rem plus a 1.75rem gap beside the 800px column). Each entry
+   rides the site's list rail, which turns rose for the section being read
+   (script.js §13 sets aria-current) and on hover. */
+.post-toc {
+	display: none;
+}
+
+@media (min-width: 1280px) {
+	.post-toc {
+		display: block;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: calc(100% + 1.75rem);
+		width: 12rem;
+	}
+}
+
+.toc-inner {
+	position: sticky;
+	top: calc(var(--nav-h) + 1.5rem);
+	max-height: calc(100vh - var(--nav-h) - var(--statusline-h) - 3rem);
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.toc-title {
+	max-width: none;
+	margin: 0 0 0.6em;
+	font-family: var(--font-display);
+	font-size: 0.85rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--gold);
+}
+
+.toc-title::before {
+	content: '> ';
+	color: var(--muted);
+}
+
+.post-toc ol {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.post-toc li {
+	margin: 0;
+	padding: 0;
+}
+
+.post-toc a,
+.post-toc a:visited {
+	display: block;
+	padding: 0.25em 0 0.25em 0.8em;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	color: var(--subtle);
+	text-decoration: none;
+}
+
+.post-toc .toc-d3 a {
+	padding-left: 1.8em;
+	font-size: 0.76rem;
+}
+
+.post-toc a:hover,
+.post-toc a:focus-visible {
+	background: none;
+	color: var(--text);
+}
+
+.post-toc li:has(> a[aria-current='true']) {
+	border-left-color: var(--rose);
+}
+
+.post-toc a[aria-current='true'] {
+	color: var(--rose);
+}
+
+/* Headings clear the fixed nav when reached from the contents or a #link */
+.post-content :is(h2, h3) {
+	scroll-margin-top: calc(var(--nav-h) + 1rem);
 }
 
 .post-header {
