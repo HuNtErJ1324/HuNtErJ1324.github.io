@@ -43,7 +43,7 @@ const { href: postHref, published } = await tracePostLink(post);
 						<img class={`tv-logo c-${run.color}`} src={run.logo} alt="" width="40" height="40" />
 						<span class="tv-card-who">
 							<span class="tv-card-name">{run.name}</span>
-							<span class="tv-card-harness">{run.harness} harness</span>
+							<span class="tv-card-harness">{run.harness} harness{info.effort && ` · ${info.effort} reasoning effort`}</span>
 						</span>
 						<span class="tv-card-score">
 							<span class="tv-big">{run.stats.testLoss.toFixed(4)}</span>
