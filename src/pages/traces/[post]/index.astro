@@ -1,0 +1,59 @@
+---
+// A post's traces: one card per run, best first, each linking to the run's
+// turn-by-turn page.
+import Base from '../../../layouts/Base.astro';
+import { TRACE_POSTS, tracePostLink, traceRuns } from '../../../lib/traces';
+
+export async function getStaticPaths() {
+	return Object.keys(TRACE_POSTS).map((post) => ({ params: { post }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const info = TRACE_POSTS[post];
+const runs = traceRuns(post);
+const { href: postHref, published } = await tracePostLink(post);
+---
+
+<Base
+	title={`${info.title} traces | Justin Yang Chae`}
+	description={`Full agent traces from ${info.title}. ${info.about}`}
+	canonical={published ? `/traces/${post}/` : undefined}
+	noindex={!published}
+	statuslinePath={`~/traces/${post}`}
+	activeNavLink="blog"
+>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~/traces/{post}$ ls</p>
+	</header>
+	<article class="tv">
+		<header class="tv-head">
+			<h1>{info.title} traces</h1>
+			<p class="tv-lede">
+				{info.about} Each run's page shows every turn: the agent's messages, its tool calls and their output, and every
+				self_score job it launched.
+				{postHref && <> The results are discussed in <a href={postHref}>the post</a>.</>}
+			</p>
+		</header>
+		<ol class="tv-cards">
+			{runs.map((run, i) => (
+				<li>
+					<a class={`tv-card c-${run.color}`} href={`/traces/${post}/${run.id}/`}>
+						<span class="tv-card-rank">#{i + 1}</span>
+						<img class={`tv-logo c-${run.color}`} src={run.logo} alt="" width="40" height="40" />
+						<span class="tv-card-who">
+							<span class="tv-card-name">{run.name}</span>
+							<span class="tv-card-harness">{run.harness} harness</span>
+						</span>
+						<span class="tv-card-score">
+							<span class="tv-big">{run.stats.testLoss.toFixed(4)}</span>
+							<span class="tv-card-unit">test loss</span>
+						</span>
+						<span class="tv-card-stats">
+							reward {run.stats.reward.toFixed(3)}<span class="meta-sep" aria-hidden="true">&middot;</span>{run.stats.turnsEnv} turns<span class="meta-sep" aria-hidden="true">&middot;</span>{run.stats.jobs + run.stats.rejected.length} self_score jobs{run.stats.rejected.length > 0 && ` (${run.stats.rejected.length} rejected)`}<span class="meta-sep" aria-hidden="true">&middot;</span>{run.stats.hours.toFixed(1)} h
+						</span>
+					</a>
+				</li>
+			))}
+		</ol>
+	</article>
+</Base>

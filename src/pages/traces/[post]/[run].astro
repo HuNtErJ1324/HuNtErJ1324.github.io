@@ -1,0 +1,221 @@
+---
+// One agent's run, turn by turn: its stats, every self_score job (linked to
+// the turns that launched it and got its result), then the trace. Each turn
+// shows the agent's message, its thinking where the harness kept it, and each
+// tool call with its output collapsed. Agent-written text (messages, thinking,
+// summaries, the task prompt) renders as markdown (src/lib/trace-markdown.ts);
+// tool calls and output stay as written. Turns are #turn-N anchors, so a post can
+// link straight to one. script.js §14 adds a focus toggle (hides routine calls)
+// and a jump-to-turn box; without JS every step shows.
+import Base from '../../../layouts/Base.astro';
+import { agentMarkdown } from '../../../lib/trace-markdown';
+import { TRACE_POSTS, tracePostLink, traceRuns, type MixRow, type TraceScore } from '../../../lib/traces';
+
+export async function getStaticPaths() {
+	return Object.keys(TRACE_POSTS).flatMap((post) => {
+		const runs = traceRuns(post);
+		return runs.map((run, i) => ({ params: { post, run: run.id }, props: { post, run, runs, rank: i + 1 } }));
+	});
+}
+
+const { post, run, runs, rank } = Astro.props;
+const info = TRACE_POSTS[post];
+const { href: postHref, published } = await tracePostLink(post);
+const { stats } = run;
+const ordinal = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10] ?? 'th'}`;
+
+// "DCLM 82 · RefinedWeb 10 · +3 more"
+const mixShort = (rows: MixRow[], keep = 3) => {
+	const shown = rows.slice(0, keep).map(([label, , pct]) => `${label} ${pct}`);
+	const rest = rows.length - keep;
+	return shown.join(' · ') + (rest > 0 ? ` · +${rest} more` : '');
+};
+
+const scoreLabel = (s: TraceScore) =>
+	s.kind === 'launch'
+		? `launched a ${s.budget}-token job`
+		: `val_loss ${(s.losses ?? []).map((l) => l.toFixed(4)).join(' · ')}${s.reward != null ? ` · reward ${s.reward.toFixed(4)}` : ''}`;
+
+const fullJobs = run.jobs.filter((j) => j.full);
+const bestLoss = Math.min(...fullJobs.map((j) => j.loss));
+const turnCount = stats.turns;
+const routineTurn = (e: Extract<(typeof run.entries)[number], { k: 'turn' }>) =>
+	!e.text && !e.think && e.calls.every((c) => !c.score);
+
+// Agent-written text as HTML, keyed by entry id ("turn-12:think" for thinking)
+const md = new Map<string, string>();
+await Promise.all(
+	run.entries.flatMap((e) => [
+		...(e.k === 'turn' && e.text ? [agentMarkdown(e.text).then((html) => md.set(e.id, html))] : []),
+		...(e.k === 'turn' && e.think ? [agentMarkdown(e.think).then((html) => md.set(`${e.id}:think`, html))] : []),
+		...(e.k === 'summary' ? [agentMarkdown(e.text).then((html) => md.set(e.id, html))] : [])
+	])
+);
+const taskHtml = run.task ? await agentMarkdown(run.task) : '';
+---
+
+<Base
+	title={`${run.name}'s run · ${info.title} traces | Justin Yang Chae`}
+	description={`${run.name}'s full trace from ${info.title}: ${turnCount} turns, ${stats.jobs} self_score jobs, test loss ${stats.testLoss.toFixed(4)}.`}
+	canonical={published ? `/traces/${post}/${run.id}/` : undefined}
+	noindex={!published}
+	statuslinePath={`~/traces/${post}`}
+	activeNavLink="blog"
+>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~/traces/{post}$ less {run.id}.log</p>
+	</header>
+	<article class="tv">
+		<header class="tv-head">
+			<p class="tv-crumbs">
+				<a href={`/traces/${post}/`}>{info.title} traces</a>
+				{postHref && <><span class="meta-sep" aria-hidden="true">&middot;</span><a href={postHref}>the post</a></>}
+			</p>
+			<div class="tv-title">
+				<img class={`tv-logo c-${run.color}`} src={run.logo} alt="" width="48" height="48" />
+				<div>
+					<h1>{run.name}</h1>
+					<p class="tv-sub">{run.harness} harness<span class="meta-sep" aria-hidden="true">&middot;</span><code>{run.model}</code></p>
+				</div>
+			</div>
+			<dl class="tv-stats">
+				<div><dt>place</dt><dd>{ordinal(rank)} of {runs.length}</dd></div>
+				<div><dt>test loss</dt><dd class="tv-big">{stats.testLoss.toFixed(4)}</dd></div>
+				<div><dt>reward</dt><dd>{stats.reward.toFixed(4)}</dd></div>
+				<div><dt>turns</dt><dd>{stats.turnsEnv}</dd></div>
+				<div><dt>self_score jobs</dt><dd>{stats.jobs + stats.rejected.length}{stats.rejected.length > 0 && <span class="tv-aside"> ({stats.rejected.length} rejected)</span>}</dd></div>
+				<div><dt>wall clock</dt><dd>{stats.hours.toFixed(1)} h</dd></div>
+				{stats.hellaswag != null && <div><dt>HellaSwag</dt><dd>{(stats.hellaswag * 100).toFixed(1)}%</dd></div>}
+			</dl>
+			<nav class="tv-runs" aria-label="Runs">
+				{runs.map((r) => (
+					<a class={`tv-run c-${r.color}`} href={`/traces/${post}/${r.id}/`} aria-current={r.id === run.id ? 'page' : undefined}>
+						<img src={r.logo} alt="" width="20" height="20" />{r.name}
+					</a>
+				))}
+			</nav>
+		</header>
+
+		<div class="tv-section" role="region" aria-labelledby="tv-jobs-title">
+			<h2 id="tv-jobs-title">self_score jobs</h2>
+			<p class="tv-note">
+				Every training run self_score ran for a candidate mixture, in launch order. Hours are since the run
+				started; the links jump to the turn that launched each job and to where its result came back.{stats.rejected.length > 0 && ` The job count above also includes ${stats.rejected.length === 1 ? 'one submission' : `${stats.rejected.length} submissions`} self_score rejected before training (${stats.rejected.join(', ')}), so ${stats.rejected.length === 1 ? 'it isn’t' : 'they aren’t'} listed.`}
+			</p>
+			<div class="tv-table-wrap">
+				<table class="tv-jobs">
+					<thead>
+						<tr><th scope="col">#</th><th scope="col">tokens</th><th scope="col">mixture</th><th scope="col">val loss</th><th scope="col">hours</th><th scope="col">in the trace</th></tr>
+					</thead>
+					<tbody>
+						{run.jobs.map((j, i) => (
+							<tr class={j.full && j.loss === bestLoss ? `is-best c-${run.color}` : undefined}>
+								<td>{i + 1}</td>
+								<td>{j.budget}</td>
+								<td class="tv-mix" title={j.rows.map(([label, , pct]) => `${label} ${pct}`).join(', ')}>{mixShort(j.rows)}</td>
+								<td class="tv-num">{j.loss.toFixed(4)}{j.full && j.loss === bestLoss && <span class="visually-hidden"> (best)</span>}</td>
+								<td class="tv-num">{j.hourStart.toFixed(1)}–{j.hourEnd.toFixed(1)}</td>
+								<td class="tv-links">
+									{j.launch ? <a href={`#${j.launch}`}>launch</a> : <span>launch</span>}
+									<span aria-hidden="true">→</span>
+									{j.result ? <a href={`#${j.result}`}>result</a> : <span>result</span>}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p class="tv-submitted">
+				<span class="tv-submitted-label">submitted</span>
+				{run.submitted.map(([label, , pct]) => `${label} ${pct}`).join(' · ')}
+				<span class="tv-submitted-score">→ test loss {stats.testLoss.toFixed(4)}</span>
+			</p>
+		</div>
+
+		<div class="tv-section" role="region" aria-labelledby="tv-trace-title">
+			<h2 id="tv-trace-title">trace</h2>
+			<p class="tv-note">
+				{turnCount === stats.turnsEnv
+					? `All ${turnCount} turns.`
+					: `The ${turnCount} turns the trace kept; the environment counted ${stats.turnsEnv}.`}
+				{' '}Tool output over 3,000 characters is trimmed, the {run.harness} harness's own system prompt is left out, and
+				context compactions show the summary the agent continued from.
+				{run.thinking && ` ${run.name}'s thinking survives only in its harness's compaction requests, so it shows on the turns those covered.`}
+			</p>
+			<div class="tv-toolbar" hidden>
+				<div class="tv-modes" role="group" aria-label="Show">
+					<button type="button" class="sp-btn" data-tv-mode="full" aria-pressed="true">[every step]</button>
+					<button type="button" class="sp-btn" data-tv-mode="focus" aria-pressed="false">[messages + self_score]</button>
+				</div>
+				<form class="tv-jump">
+					<label for="tv-jump-input">turn</label>
+					<input id="tv-jump-input" type="number" min="1" max={turnCount} inputmode="numeric" placeholder={`1–${turnCount}`} />
+					<button type="submit" class="sp-btn">[go]</button>
+				</form>
+			</div>
+			{run.task && (
+				<details class="trace-block tb-annotation tv-task">
+					<summary><span class="trace-label">task prompt</span></summary>
+					<div class="tv-text tv-md" set:html={taskHtml} />
+				</details>
+			)}
+			<ol class="tv-log">
+				{run.entries.map((e) => {
+					if (e.k === 'turn') {
+						return (
+							<li class={`tv-turn${routineTurn(e) ? ' tv-routine' : ''}`} id={e.id}>
+								<a class="tv-n" href={`#${e.id}`} aria-label={`Turn ${e.n}`}>{e.n}</a>
+								<div class="tv-turn-body">
+									{e.think && (
+										<details class="tv-think">
+											<summary>thinking</summary>
+											<div class="tv-text tv-md" set:html={md.get(`${e.id}:think`)} />
+										</details>
+									)}
+									{e.text && <div class={`tv-say tv-md c-${run.color}`} set:html={md.get(e.id)} />}
+									{e.calls.map((c) => (
+										<div class={`tv-call${c.score ? ` tv-key tv-key-${c.score.kind}` : ' tv-routine'}`}>
+											<div class="tv-call-head">
+												<span class="tv-tool">{c.tool}</span>
+												{c.args && <code class="tv-args">{c.args}</code>}
+											</div>
+											{c.score && <p class="tv-score">{scoreLabel(c.score)}</p>}
+											{c.out ? (
+												<details class="tv-out">
+													<summary>output <span class="tv-len">{c.len.toLocaleString('en-US')} chars</span></summary>
+													<pre>{c.out}</pre>
+												</details>
+											) : (
+												<p class="tv-noout">{c.out === null ? 'no output recorded' : 'empty output'}</p>
+											)}
+										</div>
+									))}
+								</div>
+							</li>
+						);
+					}
+					if (e.k === 'env') {
+						return (
+							<li class={`tv-env${e.score ? ' tv-key' : ' tv-routine'}`} id={e.id}>
+								<p class="tv-env-label">environment</p>
+								{e.score && <p class="tv-score">{scoreLabel(e.score)}</p>}
+								<pre class="tv-env-text">{e.text}</pre>
+							</li>
+						);
+					}
+					if (e.k === 'compact') {
+						return <li class="tv-compact" id={e.id}><span>context compacted</span></li>;
+					}
+					return (
+						<li class="tv-summary" id={e.id}>
+							<details class="trace-block tb-reasoning">
+								<summary><span class="trace-label">context summary</span></summary>
+								<div class="tv-text tv-md" set:html={md.get(e.id)} />
+							</details>
+						</li>
+					);
+				})}
+			</ol>
+		</div>
+	</article>
+</Base>

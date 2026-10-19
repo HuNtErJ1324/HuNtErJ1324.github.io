@@ -1229,13 +1229,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 12. Clock-driven blog animations: the self-play diagram
         //     (src/components/blog/SelfPlayAnimation.astro), the PretrainGym
-        //     rollout diagram (PretrainGymLoop.astro) and agent replays
-        //     (AgentReplay.astro), all marked .sp-anim.
+        //     rollout diagram (PretrainGymLoop.astro), agent replays
+        //     (AgentReplay.astro) and the terminal replay that opens the
+        //     PretrainGym post (TerminalHook.astro), all marked .sp-anim.
         //     The markup already draws the whole round, so without JS or under
         //     prefers-reduced-motion nothing runs. Otherwise one clock loops over
         //     data-cycle seconds and every element follows its own times:
-        //     data-on/data-off (shown), data-active="start end" (highlighted) and
-        //     data-travel + data-route (a packet moving along an edge's points).
+        //     data-on/data-off (shown), data-active="start end" (highlighted),
+        //     data-travel + data-route (a packet moving along an edge's points)
+        //     and data-type="start end" (text typed out in order, so wrapped
+        //     lines fill one after another; .is-typing while it runs).
         //     Pause and restart only move the clock. Plays while on screen.
         //     A .sp-scrub range input (the replays) lets readers drag the clock;
         //     with one, reduced motion still gets the figure, parked at its end
@@ -1277,6 +1280,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return { el, start, end, points, lengths, total, linear };
             });
 
+            // Typing reveals characters in order (a clip-path wipe would uncover
+            // every wrapped line at once); the full text is read once, here
+            const typed = [...figure.querySelectorAll('[data-type]')].map((el) => {
+                const [start, end] = span(el.dataset.type);
+                return { el, start, end, chars: [...el.textContent], count: -1 };
+            });
+
             const easeInOut = (p) => (p < 0.5 ? 2 * p * p : 1 - ((-2 * p + 2) ** 2) / 2);
             const pointAt = (packet, progress) => {
                 let distance = progress * packet.total;
@@ -1311,6 +1321,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const progress = (t - packet.start) / (packet.end - packet.start);
                     const [x, y] = pointAt(packet, packet.linear ? progress : easeInOut(progress));
                     packet.el.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+                });
+                typed.forEach((item) => {
+                    const progress = Math.min(1, Math.max(0, (t - item.start) / (item.end - item.start)));
+                    item.el.classList.toggle('is-typing', progress > 0 && progress < 1);
+                    const count = Math.round(progress * item.chars.length);
+                    if (count === item.count) return;
+                    item.count = count;
+                    item.el.textContent = item.chars.slice(0, count).join('');
                 });
                 if (fill) fill.style.transform = `scaleX(${(t / cycle).toFixed(4)})`;
                 if (scrub) {
@@ -1495,6 +1513,52 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('scroll', queueToc, { passive: true });
             window.addEventListener('resize', queueToc);
             updateToc();
+        }
+
+        // 14. Trace viewer (src/pages/traces/): show the toolbar, whose focus
+        // mode hides routine tool calls and environment notices, and whose box
+        // jumps to a turn. A #turn-N or #e-N link that focus would hide
+        // switches back to every step, so links from a post always land.
+        const traceLog = document.querySelector('.tv-log');
+        const traceBar = document.querySelector('.tv-toolbar');
+        if (traceLog && traceBar) {
+            traceBar.hidden = false;
+            const modeButtons = [...traceBar.querySelectorAll('[data-tv-mode]')];
+            const setMode = (mode) => {
+                traceLog.classList.toggle('is-focus', mode === 'focus');
+                modeButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.tvMode === mode)));
+            };
+            modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.tvMode)));
+
+            const showEntry = (entry) => {
+                if (!entry || !traceLog.contains(entry)) return false;
+                if (entry.offsetParent === null) setMode('full');
+                entry.scrollIntoView({ block: 'start' });
+                return true;
+            };
+
+            const jumpForm = traceBar.querySelector('.tv-jump');
+            const jumpInput = jumpForm && jumpForm.querySelector('input');
+            if (jumpForm && jumpInput) {
+                jumpForm.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    const id = `turn-${parseInt(jumpInput.value, 10)}`;
+                    if (showEntry(document.getElementById(id))) {
+                        history.replaceState(null, '', `#${id}`);
+                        jumpInput.setCustomValidity('');
+                    } else {
+                        jumpInput.setCustomValidity(`Pick a turn from ${jumpInput.min} to ${jumpInput.max}`);
+                        jumpInput.reportValidity();
+                    }
+                });
+                jumpInput.addEventListener('input', () => jumpInput.setCustomValidity(''));
+            }
+
+            const showHash = () => {
+                if (location.hash.length > 1) showEntry(document.getElementById(decodeURIComponent(location.hash.slice(1))));
+            };
+            window.addEventListener('hashchange', showHash);
+            showHash();
         }
     } catch (error) {
         console.error('Error initializing site scripts:', error);

@@ -957,6 +957,23 @@ a:hover {
 	color: var(--muted);
 }
 
+/* Link from an excerpt to its turn in the trace viewer, pushed to the row's end */
+.chat-trace,
+.chat-trace:visited {
+	flex-shrink: 0;
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--muted);
+	white-space: nowrap;
+	text-decoration-color: var(--border-bright);
+}
+
+.chat-trace:hover,
+.chat-trace:focus-visible {
+	background: none;
+	color: var(--rose);
+}
+
 .chat-bubble {
 	padding: 0.7em 0.95em;
 	background: var(--bg-raised);
@@ -1550,6 +1567,733 @@ pre code {
 
 .trace-block > .trace-prose > :last-child {
 	margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Trace viewer (src/pages/traces/): a post's agent runs, turn by turn.
+   Collapsibles reuse the trace-block [+]/[-] markers; script.js §14 adds the
+   sticky toolbar (focus toggle, jump to turn).
+   -------------------------------------------------------------------------- */
+.tv {
+	max-width: 800px;
+	margin: 2.25em auto 0;
+}
+
+/* Zero specificity, so each class below sets its own margins */
+:where(.tv) p {
+	max-width: none;
+	margin: 0;
+}
+
+.tv-head {
+	margin-bottom: 1.8em;
+	padding-bottom: 1.2em;
+	border-bottom: 1px dashed var(--border-bright);
+}
+
+.tv h1 {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: clamp(1.9rem, 5vw, 2.6rem);
+	font-weight: normal;
+	line-height: 1.1;
+	color: var(--text);
+}
+
+.tv h2 {
+	margin: 0 0 0.4em;
+	font-size: 1.3rem;
+}
+
+.tv-crumbs {
+	margin-bottom: 0.9em;
+	font-size: 0.85rem;
+	color: var(--subtle);
+}
+
+.tv-lede {
+	margin-top: 0.8em;
+	color: var(--subtle);
+}
+
+.tv-title {
+	display: flex;
+	align-items: center;
+	gap: 0.9em;
+}
+
+/* Lab logos on white, ringed in the run's chart hue (as in ChatMessage) */
+.tv-logo {
+	flex-shrink: 0;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 0 2px var(--c);
+	object-fit: cover;
+}
+
+.tv-sub {
+	margin-top: 0.35em;
+	font-size: 0.85rem;
+	color: var(--subtle);
+}
+
+.tv-sub .meta-sep {
+	margin: 0 0.5em;
+	color: var(--border-bright);
+}
+
+.tv-stats {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 0.7em 1.8em;
+	margin: 1.3em 0 0;
+}
+
+.tv-stats div {
+	display: flex;
+	flex-direction: column;
+}
+
+.tv-stats dt,
+.tv-jobs th,
+.tv-submitted-label,
+.tv-env-label {
+	font-family: var(--font-display);
+	font-size: 0.72rem;
+	font-weight: normal;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.tv-stats dd {
+	margin: 0;
+	color: var(--text);
+}
+
+.tv-aside {
+	font-size: 0.8rem;
+	color: var(--muted);
+}
+
+.tv-big {
+	font-family: var(--font-display);
+	font-size: 1.4rem;
+	line-height: 1.2;
+	color: var(--gold);
+}
+
+.tv-runs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin-top: 1.3em;
+}
+
+.tv-run,
+.tv-run:visited {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45em;
+	padding: 0.15em 0.75em 0.15em 0.3em;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	font-size: 0.82rem;
+	color: var(--subtle);
+	text-decoration: none;
+}
+
+.tv-run img {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 0 1.5px var(--c);
+}
+
+.tv-run:hover,
+.tv-run:focus-visible {
+	background: var(--bg-inset);
+	color: var(--text);
+}
+
+.tv-run[aria-current='page'] {
+	border-color: var(--c);
+	color: var(--text);
+}
+
+.tv-section {
+	margin-top: 2.2em;
+}
+
+.tv-note {
+	margin-bottom: 0.9em;
+	font-size: 0.85rem;
+	color: var(--subtle);
+}
+
+.tv-table-wrap {
+	overflow-x: auto;
+}
+
+.tv-jobs {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+}
+
+.tv-jobs th,
+.tv-jobs td {
+	padding: 0.35em 0.6em;
+	border-bottom: 1px solid var(--border);
+	text-align: left;
+	white-space: nowrap;
+}
+
+.tv-jobs td.tv-mix {
+	min-width: 16em;
+	white-space: normal;
+	color: var(--subtle);
+}
+
+.tv-num {
+	font-variant-numeric: tabular-nums;
+}
+
+/* The best full-budget job: tinted and edged in the run's hue, like LossTable's winners */
+.tv-jobs tr.is-best td {
+	background: color-mix(in srgb, var(--c) 18%, transparent);
+	color: var(--text);
+}
+
+.tv-jobs tr.is-best td:first-child {
+	box-shadow: inset 3px 0 var(--c);
+}
+
+.tv-links span {
+	color: var(--muted);
+}
+
+.tv-links span[aria-hidden] {
+	margin: 0 0.35em;
+}
+
+.tv-submitted {
+	margin-top: 0.9em;
+	font-size: 0.85rem;
+}
+
+.tv-submitted-label {
+	margin-right: 0.6em;
+	color: var(--gold);
+}
+
+.tv-submitted-score {
+	margin-left: 0.3em;
+	color: var(--gold);
+}
+
+/* Sticky under the site nav while the trace scrolls */
+.tv-toolbar {
+	position: sticky;
+	top: var(--nav-h);
+	z-index: 5;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5em 1.2em;
+	margin-bottom: 0.9em;
+	padding: 0.5em 0;
+	background: var(--bg);
+	border-bottom: 1px solid var(--border);
+}
+
+.tv-toolbar[hidden] {
+	display: none;
+}
+
+.tv-modes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em 1em;
+}
+
+.tv-modes .sp-btn[aria-pressed='true'] {
+	color: var(--rose);
+}
+
+.tv-jump {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	color: var(--subtle);
+}
+
+.tv-jump input {
+	width: 6em;
+	padding: 0.1em 0.4em;
+	background: var(--bg-inset);
+	border: 1px solid var(--border);
+	color: var(--text);
+	font: inherit;
+}
+
+.tv-task {
+	margin-bottom: 0.8em;
+}
+
+.tv-task .tv-text,
+.tv-summary .tv-text {
+	max-height: 30em;
+	overflow: auto;
+	padding: 0.75em 0.85em;
+	border-top: 1px solid var(--border);
+	font-size: 0.85rem;
+}
+
+.tv-text {
+	overflow-wrap: anywhere;
+}
+
+.tv-log {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+:where(.tv-log, .tv-cards) > li {
+	margin: 0;
+	padding: 0;
+	border-left: 0;
+}
+
+/* Entries reached by #link clear the fixed nav and the sticky toolbar */
+.tv-log > li {
+	scroll-margin-top: calc(var(--nav-h) + 3.5rem);
+}
+
+/* A turn: its number in a gutter, then thinking, message and tool calls */
+.tv-turn {
+	display: grid;
+	grid-template-columns: 3em minmax(0, 1fr);
+	gap: 0.8em;
+	padding: 0.75em 0;
+	border-top: 1px solid var(--border);
+}
+
+.tv-log > :target {
+	background: linear-gradient(90deg, color-mix(in srgb, var(--rose) 12%, transparent), transparent 70%);
+}
+
+.tv-n,
+.tv-n:visited {
+	padding-top: 0.2em;
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	color: var(--muted);
+	text-align: right;
+	text-decoration: none;
+}
+
+.tv-n:hover,
+.tv-n:focus-visible {
+	background: none;
+	color: var(--rose);
+}
+
+.tv-turn-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	min-width: 0;
+}
+
+.tv-say {
+	padding: 0.6em 0.85em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--c);
+	border-radius: 2px 10px 10px 2px;
+	font-size: 0.9rem;
+	overflow-wrap: anywhere;
+}
+
+/* Markdown in agent-written text (src/lib/trace-markdown.ts): compact
+   spacing for a transcript, lists marked like the post's, and the agent's
+   headings as bold lines */
+.tv-md > * {
+	margin: 0;
+}
+
+.tv-md > * + * {
+	margin-top: 0.55em;
+}
+
+.tv-md ul,
+.tv-md ol {
+	padding-left: 1.5em;
+}
+
+.tv-md ul {
+	list-style: none;
+}
+
+.tv-md li {
+	margin: 0.15em 0 0;
+	padding-left: 0.3em;
+	border-left: 0;
+}
+
+.tv-md ul > li {
+	position: relative;
+}
+
+.tv-md ul > li::before {
+	content: '·';
+	position: absolute;
+	left: -0.9em;
+	color: var(--muted);
+}
+
+.tv-md li > ul,
+.tv-md li > ol,
+.tv-md li > p + p {
+	margin: 0.2em 0 0;
+}
+
+.tv-md-h {
+	font-weight: 700;
+	color: var(--text);
+}
+
+.tv-md pre {
+	padding: 0.55em 0.8em;
+	background: var(--bg);
+	font-size: 0.8rem;
+}
+
+.tv-md table {
+	display: block;
+	overflow-x: auto;
+	border-collapse: collapse;
+	font-size: 0.8rem;
+}
+
+.tv-md th,
+.tv-md td {
+	padding: 0.25em 0.6em;
+	border: 1px solid var(--border);
+	text-align: left;
+}
+
+.tv-md blockquote {
+	padding-left: 0.9em;
+	border-left: 2px solid var(--border-bright);
+	color: var(--subtle);
+}
+
+.tv-md hr {
+	border: 0;
+	border-top: 1px dashed var(--border-bright);
+}
+
+.tv-think summary,
+.tv-out summary {
+	cursor: pointer;
+	list-style: none;
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	letter-spacing: 0.05em;
+	color: var(--subtle);
+}
+
+.tv-think summary::-webkit-details-marker,
+.tv-out summary::-webkit-details-marker {
+	display: none;
+}
+
+.tv-think summary::before,
+.tv-out summary::before {
+	content: '[+] ';
+	color: var(--muted);
+}
+
+.tv-think[open] summary::before,
+.tv-out[open] summary::before {
+	content: '[-] ';
+}
+
+.tv-think summary:hover,
+.tv-out summary:hover {
+	color: var(--text);
+}
+
+.tv-think .tv-text {
+	margin-top: 0.4em;
+	padding: 0.5em 0.85em;
+	border-left: 2px solid var(--border-bright);
+	font-size: 0.85rem;
+	color: var(--subtle);
+}
+
+.tv-call {
+	padding: 0.35em 0.7em;
+	border: 1px dashed var(--border-bright);
+	border-radius: 6px;
+	font-size: 0.82rem;
+}
+
+/* self_score launches and results: the moments the agent learned something */
+.tv-call.tv-key {
+	border-style: solid;
+	border-color: color-mix(in srgb, var(--gold) 55%, var(--border));
+}
+
+.tv-call-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.2em 0.6em;
+	min-width: 0;
+}
+
+.tv-tool {
+	flex-shrink: 0;
+	font-family: var(--font-display);
+	letter-spacing: 0.03em;
+	color: var(--gold);
+}
+
+/* Beside the tool name when there's room, else on its own line below */
+.tv-args {
+	flex: 1 1 16em;
+	display: block;
+	min-width: 0;
+	max-height: 9.5em;
+	overflow: auto;
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--subtle);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.tv-score {
+	margin-top: 0.3em;
+	font-family: var(--font-display);
+	font-size: 0.8rem;
+	letter-spacing: 0.03em;
+	color: var(--gold);
+}
+
+.tv-out {
+	margin-top: 0.3em;
+}
+
+.tv-out pre,
+.tv-env-text {
+	max-height: 26em;
+	margin: 0.4em 0 0;
+	padding: 0.6em 0.8em;
+	border-left-color: var(--foam);
+	font-size: 0.78rem;
+}
+
+.tv-len,
+.tv-noout {
+	color: var(--muted);
+}
+
+.tv-len {
+	margin-left: 0.3em;
+}
+
+.tv-noout {
+	margin-top: 0.2em;
+	font-size: 0.76rem;
+}
+
+/* Environment notices (a job finished, the date changed) sit under the turns */
+.tv-env {
+	padding: 0.6em 0 0.6em 3.8em;
+	border-top: 1px solid var(--border);
+}
+
+.tv-env-label {
+	color: var(--foam);
+}
+
+.tv-env-text {
+	max-height: 14em;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.tv-compact {
+	display: flex;
+	align-items: center;
+	gap: 0.8em;
+	padding: 0.9em 0;
+	font-family: var(--font-display);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.tv-compact::before,
+.tv-compact::after {
+	content: '';
+	flex: 1;
+	border-top: 1px dashed var(--border-bright);
+}
+
+.tv-summary {
+	padding-bottom: 0.6em;
+}
+
+.tv-summary .trace-block {
+	margin: 0;
+}
+
+/* Focus: agent messages, thinking and self_score only */
+.tv-log.is-focus .tv-routine {
+	display: none;
+}
+
+/* Index: one card per run */
+.tv-cards {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.8em;
+	margin: 0;
+	padding: 0;
+}
+
+.tv-card,
+.tv-card:visited {
+	display: grid;
+	grid-template-columns: auto auto minmax(0, 1fr) auto;
+	grid-template-areas:
+		'rank logo who score'
+		'. . stats stats';
+	align-items: center;
+	gap: 0.4em 0.9em;
+	padding: 0.9em 1.1em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--c);
+	color: var(--text);
+	text-decoration: none;
+}
+
+.tv-card:hover,
+.tv-card:focus-visible {
+	background: var(--bg-inset);
+	color: var(--text);
+}
+
+.tv-card-rank {
+	grid-area: rank;
+	font-family: var(--font-display);
+	color: var(--muted);
+}
+
+.tv-card .tv-logo {
+	grid-area: logo;
+	width: 40px;
+	height: 40px;
+}
+
+.tv-card-who,
+.tv-card-score {
+	display: flex;
+	flex-direction: column;
+}
+
+.tv-card-who {
+	grid-area: who;
+}
+
+.tv-card-name {
+	font-family: var(--font-display);
+	font-size: 1.15rem;
+}
+
+.tv-card-harness,
+.tv-card-stats {
+	font-size: 0.8rem;
+	color: var(--subtle);
+}
+
+.tv-card-score {
+	grid-area: score;
+	text-align: right;
+}
+
+.tv-card-unit {
+	font-size: 0.72rem;
+	color: var(--muted);
+}
+
+.tv-card-stats {
+	grid-area: stats;
+}
+
+.tv-card-stats .meta-sep {
+	margin: 0 0.5em;
+	color: var(--border-bright);
+}
+
+@media (max-width: 768px) {
+	.tv-toolbar {
+		top: 0;
+	}
+
+	.tv-log > li {
+		scroll-margin-top: 5.5rem;
+	}
+}
+
+@media (max-width: 600px) {
+	/* Wrapped onto several rows it would cover too much of a phone screen */
+	.tv-toolbar {
+		position: static;
+	}
+
+	.tv-log > li {
+		scroll-margin-top: 1rem;
+	}
+
+	.tv-turn {
+		grid-template-columns: 2.2em minmax(0, 1fr);
+		gap: 0.5em;
+	}
+
+	.tv-env {
+		padding-left: 0;
+	}
+
+	.tv-card,
+	.tv-card:visited {
+		grid-template-columns: auto auto minmax(0, 1fr);
+		grid-template-areas:
+			'rank logo who'
+			'. . score'
+			'stats stats stats';
+	}
+
+	.tv-card-score {
+		text-align: left;
+	}
 }
 
 /* --------------------------------------------------------------------------
@@ -2456,31 +3200,31 @@ pre code {
 	display: none;
 }
 
-/* Typing, bar fills and the cursor restart each time a line appears, since
-   an element's animations start over when it goes from display: none */
-@media (prefers-reduced-motion: no-preference) {
-	/* A box of its own beside the prompt, so the reveal covers every wrapped
-	   line (clip-path on a plain inline only reaches its first line) */
-	.sp-live .th-type {
-		display: inline-block;
-		max-width: calc(100% - 7.4em);
-		vertical-align: top;
-		text-indent: 0;
-		animation: th-type 1.5s steps(48, end) both;
-	}
-
-	.sp-live .th-ty1 { animation-duration: 0.9s; }
-	.sp-live .th-ty2 { animation-duration: 1.7s; }
-	.sp-live .th-ty3 { animation-duration: 2.5s; }
-	.sp-live .th-ty4 { animation-duration: 3.1s; }
-
-	.sp-live .th-fill { animation: th-fill 1.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
-	.sp-live .th-cursor { animation: th-blink 1s step-end infinite; }
+/* A message types out in order on the clock (script.js §12, data-type), in
+   a box of its own beside the prompt so its wrapped lines line up under its
+   first; a block cursor rides the end of the text while it types */
+.sp-live .th-type {
+	display: inline-block;
+	max-width: calc(100% - 7.4em);
+	vertical-align: top;
+	text-indent: 0;
 }
 
-@keyframes th-type {
-	from { opacity: 0.15; clip-path: inset(0 100% 0 0); }
-	to { opacity: 1; clip-path: inset(0 0 0 0); }
+.sp-live .th-type.is-typing::after {
+	content: '';
+	display: inline-block;
+	width: 0.5em;
+	height: 1.05em;
+	margin-left: 1px;
+	vertical-align: text-bottom;
+	background: var(--rose);
+}
+
+/* Bar fills and the prompt cursor restart each time a line appears, since an
+   element's animations start over when it goes from display: none */
+@media (prefers-reduced-motion: no-preference) {
+	.sp-live .th-fill { animation: th-fill 1.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+	.sp-live .th-cursor { animation: th-blink 1s step-end infinite; }
 }
 
 @keyframes th-fill {

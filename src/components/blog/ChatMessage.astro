@@ -6,7 +6,8 @@
 // a user message is a right-aligned bubble; a tool message is a compact
 // call/result row aligned under the assistant's bubble. The body goes in the
 // slot as ordinary markdown. Wrap consecutive messages in <Chat> to stack
-// them as one exchange with a single caption.
+// them as one exchange with a single caption. `trace` links the message to
+// where it happens in the full trace (a /traces/<post>/<run>/#turn-N URL).
 interface Props {
 	role?: 'assistant' | 'user' | 'tool';
 	name?: string;
@@ -14,9 +15,10 @@ interface Props {
 	color?: 'love' | 'blue' | 'gold' | 'iris' | 'rose' | 'gray';
 	avatar?: string;
 	tool?: string;
+	trace?: string;
 }
 
-const { role = 'assistant', name = '', meta, color = 'iris', avatar, tool } = Astro.props;
+const { role = 'assistant', name = '', meta, color = 'iris', avatar, tool, trace } = Astro.props;
 const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : '';
 ---
 
@@ -32,6 +34,7 @@ const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).
 				<p class="chat-who">
 					<span class="chat-name">{name}</span>
 					{meta && <span class="chat-meta">{meta}</span>}
+					{trace && <a class="chat-trace" href={trace}>in the trace →</a>}
 				</p>
 			)}
 			<div class="chat-bubble"><Fragment set:html={body} /></div>
@@ -48,6 +51,7 @@ const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).
 		<div class="chat-call">
 			{tool && <span class="chat-tool-name">{tool}</span>}
 			<div class="chat-call-body"><Fragment set:html={body} /></div>
+			{trace && <a class="chat-trace" href={trace}>in the trace →</a>}
 		</div>
 	</div>
 )}
