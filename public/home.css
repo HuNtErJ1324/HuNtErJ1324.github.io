@@ -3040,6 +3040,38 @@ pre code {
 	letter-spacing: 0.03em;
 }
 
+/* All three runs on one plot (AgentReplayCompare.astro): a series per agent
+   in its hue, its best full-budget loss as a step line that grows with the
+   playhead (a clip rect on the clock), and its test loss as a diamond */
+.arc-key {
+	stroke: var(--c);
+	stroke-width: 2.5;
+	stroke-linecap: round;
+}
+
+.arc-best {
+	fill: none;
+	stroke: var(--c);
+	stroke-width: 1.8;
+	stroke-linejoin: round;
+	opacity: 0.9;
+}
+
+.arc-test {
+	fill: var(--c);
+	stroke: var(--text);
+	stroke-width: 1.2;
+}
+
+.chart-svg .arc-end {
+	fill: var(--text);
+	font-size: 10.5px;
+	paint-order: stroke;
+	stroke: var(--bg);
+	stroke-width: 3px;
+	stroke-linejoin: round;
+}
+
 .ar-anim:not(.sp-live) .ar-frame:not(.ar-final),
 .ar-anim:not(.sp-live) .ar-best:not(.ar-final),
 .ar-anim:not(.sp-live) .ar-running {

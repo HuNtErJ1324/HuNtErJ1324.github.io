@@ -1,0 +1,198 @@
+---
+// The PretrainGym agents' runs replayed together on one plot: validation loss
+// by agent turn, every agent on the same turn axis and clock. Each job's dot
+// appears at the turn its result came back (filled = full 400M budget,
+// hollow = a cheaper probe), a step line per agent tracks its best
+// full-budget loss so far, and each run ends on its test-loss diamond at its
+// last turn. No mixture panel or phase list: the per-agent <AgentReplay>s
+// have those.
+//
+// It runs on SelfPlayAnimation's clock (public/script.js §12): dots and
+// diamonds use data-on, the playhead is a data-travel packet, and the step
+// lines are revealed by a clip rect that also rides data-travel, so they grow
+// with the playhead. Turns map linearly to seconds. The .sp-scrub slider drags
+// the clock; without JS or under prefers-reduced-motion it is the finished
+// plot. Like <LineChart full>, it ships a 720-unit drawing and a compact one.
+import { type ChartColor, chartId, r1 } from '../../lib/charts';
+
+type Row = [string, number, string];
+interface Job {
+	start: number;
+	end: number;
+	budget: string;
+	full: boolean;
+	loss: number;
+}
+interface Run {
+	name: string;
+	color: ChartColor;
+	data: { turns: number; jobs: Job[]; submitted: { rows: Row[]; test: number } };
+}
+interface Props {
+	title: string;
+	subtitle?: string;
+	runs: Run[];
+	xMax: number;
+	xTicks: number[];
+	// Seconds per loop; turns map linearly onto it
+	cycle?: number;
+	caption?: string;
+}
+
+const { title, subtitle, runs, xMax, xTicks, cycle = 30, caption } = Astro.props;
+const id = chartId('replays');
+const Y = { min: 3.1, max: 3.9, ticks: [3.1, 3.3, 3.5, 3.7, 3.9] };
+const T = Math.max(...runs.map((run) => run.data.turns));
+// 0.5 s lead-in; the longest run ends with ~4.5 s left to read the result
+const k = (cycle - 5) / T;
+const t = (turn: number) => r1(0.5 + turn * k);
+// The turn the clock is at after s seconds (negative before the lead-in ends)
+const turnAt = (s: number) => (s - 0.5) / k;
+
+// Each run's best full-budget loss as a step line: [turn, loss] corners from
+// its first full-budget result to its last turn
+const steps = runs.map(({ data }) => {
+	const pts: [number, number][] = [];
+	data.jobs.forEach((j) => {
+		if (!j.full) return;
+		const best = pts.length ? pts[pts.length - 1][1] : Infinity;
+		if (j.loss >= best) return;
+		if (pts.length) pts.push([j.end, best]);
+		pts.push([j.end, j.loss]);
+	});
+	if (pts.length) pts.push([data.turns, pts[pts.length - 1][1]]);
+	return pts;
+});
+
+const layouts = [
+	{ variant: 'chart-svg-full', W: 720, H: 318, plot: { l: 46, r: 676, t: 52, b: 266 }, legend: [{ y: 18, x: 46 }, { y: 18, x: 430 }] },
+	{ variant: 'chart-svg-compact', W: 330, H: 346, plot: { l: 40, r: 318, t: 72, b: 294 }, legend: [{ y: 14, x: 8 }, { y: 36, x: 8 }], short: true }
+];
+
+const fmtLoss = (v: number) => v.toFixed(v >= 10 ? 1 : 4);
+const desc = runs
+	.map(({ name, data }) => {
+		const full = data.jobs.filter((j) => j.full).map((j) => j.loss);
+		return `${name}: ${data.turns} turns, ${data.jobs.length} self_score jobs (${full.length} at the full budget, best ${Math.min(...full).toFixed(4)}), test loss ${data.submitted.test.toFixed(4)}.`;
+	})
+	.join(' ');
+---
+
+<figure class="chart chart-full sp-anim ar-anim arc-anim" data-cycle={cycle}>
+	<div class="chart-head">
+		<p class="chart-title" id={`${id}-title`}>{title}</p>
+		{subtitle && <p class="chart-sub">{subtitle}</p>}
+	</div>
+	<p class="visually-hidden" id={`${id}-desc`}>{desc}</p>
+	{layouts.map((L, li) => {
+		const { l, r, t: top, b } = L.plot;
+		const sx = (turn: number) => l + (turn / xMax) * (r - l);
+		const sy = (v: number) => b - ((Math.min(v, Y.max) - Y.min) / (Y.max - Y.min)) * (b - top);
+		const clip = `${id}-reveal-${li}`;
+		return (
+			<svg class={`chart-svg ${L.variant}`} viewBox={`0 0 ${L.W} ${L.H}`} role="img" aria-labelledby={`${id}-title`} aria-describedby={`${id}-desc`}>
+				<defs>
+					{/* Right edge rides the clock; it starts fully open for the static plot */}
+					<clipPath id={clip}>
+						<rect
+							x={-L.W}
+							y="0"
+							width={L.W}
+							height={L.H}
+							transform={`translate(${L.W} 0)`}
+							data-travel={`0 ${cycle}`}
+							data-route={`${r1(sx(turnAt(0)))} 0 ${r1(sx(turnAt(cycle)))} 0`}
+							data-ease="linear"
+						/>
+					</clipPath>
+				</defs>
+
+				<g class="ar-legend" aria-hidden="true">
+					{runs.map((run, i) => {
+						const x = L.legend[0].x + i * (li ? 104 : 118);
+						return (
+							<g class={`c-${run.color}`}>
+								<line class="arc-key" x1={x} x2={x + 14} y1={L.legend[0].y - 4} y2={L.legend[0].y - 4} />
+								<text x={x + 19} y={L.legend[0].y}>{run.name}</text>
+							</g>
+						);
+					})}
+					<g class="c-gray">
+						<circle class="ar-dot" cx={L.legend[1].x + 4} cy={L.legend[1].y - 4} r="4" />
+						<text x={L.legend[1].x + 13} y={L.legend[1].y}>400M run</text>
+						<circle class="ar-dot ar-probe" cx={L.legend[1].x + 84} cy={L.legend[1].y - 4} r="3.6" />
+						<text x={L.legend[1].x + 93} y={L.legend[1].y}>cheaper probe</text>
+						<path class="arc-test" d={`M${L.legend[1].x + 196} ${L.legend[1].y - 9}l5 5l-5 5l-5 -5Z`} />
+						<text x={L.legend[1].x + 206} y={L.legend[1].y}>test</text>
+					</g>
+				</g>
+
+				<g class="chart-grid">
+					{Y.ticks.map((v) => <line x1={l} x2={r} y1={r1(sy(v))} y2={r1(sy(v))} />)}
+				</g>
+				<line class="chart-axis" x1={l} x2={r} y1={b} y2={b} />
+				<g class="chart-ticks">
+					{Y.ticks.map((v) => <text x={l - 7} y={r1(sy(v)) + 4} text-anchor="end">{v.toFixed(1)}</text>)}
+					{xTicks.map((h) => (
+						<>
+							<line class="chart-tick" x1={r1(sx(h))} x2={r1(sx(h))} y1={b} y2={b + 4} />
+							<text x={r1(sx(h))} y={b + 17} text-anchor="middle">{h}</text>
+						</>
+					))}
+				</g>
+				<text class="chart-axis-label" x={(l + r) / 2} y={b + 34} text-anchor="middle">agent turns</text>
+				<text class="chart-axis-label" x={l - 40} y={top - 10}>val loss</text>
+
+				<g class="sp-packet ar-playhead" transform={`translate(${r1(sx(0))} 0)`} data-travel={`${t(0)} ${t(T)}`} data-route={`${r1(sx(0))} 0 ${r1(sx(T))} 0`} data-ease="linear" aria-hidden="true">
+					<line x1="0" x2="0" y1={top} y2={b} />
+				</g>
+
+				{runs.map((run, ri) => {
+					const { jobs, turns, submitted } = run.data;
+					const pts = steps[ri];
+					const lastOff = jobs.map((j) => j.loss > Y.max).lastIndexOf(true);
+					const endX = r1(sx(turns));
+					const endY = r1(sy(submitted.test));
+					// Near the right edge the label goes left of the diamond, and below the
+					// line, since a long run's later dots sit just above its best
+					const labelLeft = turns > xMax * 0.8;
+					return (
+						<g class={`c-${run.color}`}>
+							{pts.length > 0 && (
+								<path class="arc-best" clip-path={`url(#${clip})`} d={pts.map(([x, y], i) => `${i ? 'L' : 'M'}${r1(sx(x))} ${r1(sy(y))}`).join('')} />
+							)}
+							{jobs.map((j, i) => (
+								<g data-on={t(j.end)}>
+									<circle class={`ar-dot${j.full ? '' : ' ar-probe'}`} cx={r1(sx(j.end))} cy={r1(sy(j.loss))} r={j.full ? 4.5 : 3.6}>
+										<title>{`${run.name} · job ${i + 1} · ${j.budget} tokens · result at turn ${j.end} · val loss ${fmtLoss(j.loss)}`}</title>
+									</circle>
+									{i === lastOff && (
+										<text class="ar-offscale" x={r1(sx(j.end)) + 7} y={r1(sy(j.loss)) + 4}>↑{fmtLoss(j.loss)}</text>
+									)}
+								</g>
+							))}
+							<g data-on={t(turns)}>
+								<path class="arc-test" d={`M${endX} ${endY - 6}l6 6l-6 6l-6 -6Z`}>
+									<title>{`${run.name} · last turn ${turns} · test loss ${submitted.test.toFixed(4)}`}</title>
+								</path>
+								<text class="arc-end" x={labelLeft ? endX - 9 : endX + 9} y={labelLeft ? endY + 18 : endY - 8} text-anchor={labelLeft ? 'end' : 'start'}>
+									{/* On phones the legend names the hues, so the label is just the score */}
+									{L.short ? submitted.test.toFixed(4) : `${run.name} · test ${submitted.test.toFixed(4)}`}
+								</text>
+							</g>
+						</g>
+					);
+				})}
+			</svg>
+		);
+	})}
+	<div class="sp-controls" hidden>
+		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
+		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+		<input type="range" class="sp-scrub" min="0" max={cycle} step="any" value="0" aria-label="Replay position in all three runs" />
+		<span class="sp-time" data-offset="0.5" data-rate={k} data-max={T} data-unit="turn" data-digits="0" aria-hidden="true">turn 0</span>
+	</div>
+	{(caption || Astro.slots.has('default')) && (
+		<figcaption>{caption}<slot /></figcaption>
+	)}
+</figure>
