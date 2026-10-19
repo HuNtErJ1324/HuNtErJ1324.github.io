@@ -1518,7 +1518,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 14. Trace viewer (src/pages/traces/) and its links to the post.
         // The post ↔ traces row (TraceSwitch.astro): until a post is published
         // its trace pages can't name the shared draft link, so the post records
-        // where it was read (this browser only) and the traces link back there.
+        // where it was read (this browser only) and the traces' "← blog" link
+        // becomes "← the post" back there.
         document.querySelectorAll('.trace-switch[data-trace-post]').forEach((row) => {
             const key = `trace-back:${row.dataset.tracePost}`;
             try {
@@ -1528,12 +1529,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const back = row.querySelector('[data-trace-back]');
                 const saved = localStorage.getItem(key);
-                if (back && back.hidden && saved && /^\/(blog|drafts)\/[\w-]+\/$/.test(saved)) {
+                if (back && saved && /^\/(blog|drafts)\/[\w-]+\/$/.test(saved)) {
                     back.href = saved;
-                    back.hidden = false;
+                    back.textContent = '← the post';
                 }
             } catch (error) {
-                // Storage blocked (private mode, site data off): no link back
+                // Storage blocked (private mode, site data off): it stays "← blog"
             }
         });
 

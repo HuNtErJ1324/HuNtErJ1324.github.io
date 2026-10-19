@@ -1724,10 +1724,6 @@ pre code {
 	color: var(--subtle);
 }
 
-.ts-back[hidden] {
-	display: none;
-}
-
 .ts-label:hover,
 .ts-label:focus-visible,
 .ts-label[aria-current='page'],

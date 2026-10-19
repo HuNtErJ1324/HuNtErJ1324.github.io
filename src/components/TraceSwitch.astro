@@ -1,19 +1,20 @@
 ---
 // Switches between a post and its agent traces (src/lib/traces.ts): a row at
 // the top of the post and of each trace page with "traces" (the index) and a
-// pill per run, the current one marked; trace pages also get "← the post".
+// pill per run, the current one marked; trace pages also get a link back.
 // The post's URL is only known once it's published (or under `astro dev`).
 // Before that, the shared draft link must not go into these public pages, so
-// the post marks its row with data-trace-home and script.js §14 remembers the
-// page in the reader's browser; on the trace pages it then shows the link
-// back to that page.
+// the link reads "← blog" (the index), the post marks its row with
+// data-trace-home, and script.js §14 remembers the page in the reader's
+// browser; on the trace pages it then turns the link into "← the post".
 import { TRACE_POSTS, traceRuns } from '../lib/traces';
 
 interface Props {
 	post: string;
 	// A run id, 'index', or nothing (on the post)
 	current?: string;
-	// Where "← the post" goes; null hides it until script.js fills it in
+	// Where "← the post" goes; null falls back to "← blog" until script.js
+	// finds the page the reader came from
 	postHref?: string | null;
 	onPost?: boolean;
 }
@@ -29,7 +30,7 @@ const runs = traceRuns(post);
 	data-trace-home={onPost ? '' : undefined}
 >
 	{!onPost && (
-		<a class="ts-back" href={postHref ?? `/blog/`} hidden={!postHref} data-trace-back>← the post</a>
+		<a class="ts-back" href={postHref ?? '/blog/'} data-trace-back={postHref ? undefined : ''}>{postHref ? '← the post' : '← blog'}</a>
 	)}
 	<a class="ts-label" href={`/traces/${post}/`} aria-current={current === 'index' ? 'page' : undefined}>traces</a>
 	{runs.map((run) => (
