@@ -1240,6 +1240,8 @@ document.addEventListener('DOMContentLoaded', () => {
         //     and data-type="start end" (text typed out in order, so wrapped
         //     lines fill one after another; .is-typing while it runs).
         //     Pause and restart only move the clock. Plays while on screen.
+        //     A [data-sp="speed"] button (the replays) steps the playback
+        //     speed through 0.5×, 1×, 2× and 4×; only the clock's pace changes.
         //     A .sp-scrub range input (the replays) lets readers drag the clock;
         //     with one, reduced motion still gets the figure, parked at its end
         //     state and moved only by the reader, never autoplayed.
@@ -1251,6 +1253,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (reduceMotion.matches && !scrub) return;
             const toggle = controls.querySelector('[data-sp="toggle"]');
             const restart = controls.querySelector('[data-sp="restart"]');
+            const speedButton = controls.querySelector('[data-sp="speed"]');
+            const SPEEDS = [0.5, 1, 2, 4];
+            let speed = 1;
             const fill = controls.querySelector('.sp-progress-fill');
             const clock = controls.querySelector('.sp-time');
             const cycle = parseFloat(figure.dataset.cycle) || 18;
@@ -1346,7 +1351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tick = (now) => {
                 // Cap the step so a backgrounded tab resumes where it left off
-                t = (t + Math.min(0.1, (now - last) / 1000)) % cycle;
+                t = (t + Math.min(0.1, (now - last) / 1000) * speed) % cycle;
                 last = now;
                 render();
                 frame = requestAnimationFrame(tick);
@@ -1380,6 +1385,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 userPaused = false;
                 play();
             });
+
+            if (speedButton) {
+                const setSpeed = (value) => {
+                    speed = value;
+                    speedButton.textContent = `[speed ${value}×]`;
+                    speedButton.setAttribute('aria-label', `Playback speed ${value}×; change speed`);
+                };
+                speedButton.addEventListener('click', () => {
+                    setSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length]);
+                });
+                setSpeed(1);
+            }
 
             if (scrub) {
                 // Dragging pauses and moves the clock; letting go resumes only if

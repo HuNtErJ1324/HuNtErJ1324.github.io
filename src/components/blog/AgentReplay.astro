@@ -11,8 +11,9 @@
 // It reuses SelfPlayAnimation's clock (public/script.js §12): data-on/off,
 // data-active and a data-travel playhead, with turns mapped linearly to
 // seconds (so long waits on a job don't stretch the replay, but busy stretches
-// of tool calls do); the .sp-scrub slider lets readers drag to any point and
-// .sp-time reads the clock back as a turn. Without JS or under
+// of tool calls do); the .sp-scrub slider lets readers drag to any point,
+// [speed] steps the pace through 0.5×–4×, and .sp-time reads the clock back
+// as a turn. Without JS or under
 // prefers-reduced-motion it is a static chart:
 // every dot, the final best line, and the submitted mixture. Like
 // <LineChart full>, it ships a 720-unit drawing and a compact one for phones.
@@ -214,6 +215,7 @@ const desc = `A replay of ${name}'s run. Over ${T} turns (${hours.toFixed(1)} ho
 	<div class="sp-controls" hidden>
 		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
 		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+		<button type="button" class="sp-btn" data-sp="speed" aria-label="Playback speed 1×; change speed">[speed 1×]</button>
 		<input type="range" class="sp-scrub" min="0" max={cycle} step="any" value="0" aria-label={`Replay position in ${name}'s run`} />
 		<span class="sp-time" data-offset="0.5" data-rate={k} data-max={T} data-unit="turn" data-digits="0" aria-hidden="true">turn 0</span>
 	</div>

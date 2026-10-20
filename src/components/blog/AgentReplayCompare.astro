@@ -11,7 +11,7 @@
 // diamonds use data-on, the playhead is a data-travel packet, and the step
 // lines are revealed by a clip rect that also rides data-travel, so they grow
 // with the playhead. Turns map linearly to seconds. The .sp-scrub slider drags
-// the clock; without JS or under prefers-reduced-motion it is the finished
+// the clock and [speed] steps its pace through 0.5×–4×; without JS or under prefers-reduced-motion it is the finished
 // plot. Like <LineChart full>, it ships a 720-unit drawing and a compact one.
 import { type ChartColor, chartId, r1 } from '../../lib/charts';
 
@@ -189,6 +189,7 @@ const desc = runs
 	<div class="sp-controls" hidden>
 		<button type="button" class="sp-btn" data-sp="toggle" aria-label="Pause animation">[pause]</button>
 		<button type="button" class="sp-btn" data-sp="restart" aria-label="Restart animation">[restart]</button>
+		<button type="button" class="sp-btn" data-sp="speed" aria-label="Playback speed 1×; change speed">[speed 1×]</button>
 		<input type="range" class="sp-scrub" min="0" max={cycle} step="any" value="0" aria-label="Replay position in all three runs" />
 		<span class="sp-time" data-offset="0.5" data-rate={k} data-max={T} data-unit="turn" data-digits="0" aria-hidden="true">turn 0</span>
 	</div>

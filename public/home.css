@@ -2869,10 +2869,12 @@ pre code {
 	}
 }
 
+/* On narrow screens the scrubber and readout wrap to a row of their own */
 .sp-controls {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.9em;
+	gap: 0.4em 0.9em;
 	max-width: 480px;
 	margin-top: 0.5em;
 }
@@ -2883,6 +2885,7 @@ pre code {
 
 .sp-btn {
 	padding: 0;
+	white-space: nowrap;
 	background: none;
 	border: 0;
 	color: var(--subtle);
@@ -3088,8 +3091,8 @@ pre code {
 /* Scrubber: a native range input drawn as the progress line, filled up to
    --p (set by script.js §12) with a rose thumb; the readout shows the hour */
 .sp-scrub {
-	flex: 1;
-	min-width: 0;
+	flex: 1 1 9em;
+	min-width: 9em;
 	height: 18px;
 	margin: 0;
 	background: transparent;
