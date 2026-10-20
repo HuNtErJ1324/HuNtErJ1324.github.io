@@ -13,7 +13,10 @@ const postSchema = z.object({
 		z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { error: 'tags must be kebab-case, e.g. "llm-reasoning"' })
 	).default([]),
 	// Set to false to hide the giscus comments section on a post
-	comments: z.boolean().default(true)
+	comments: z.boolean().default(true),
+	// Link-preview card, a site path such as /assets/blog/<slug>-card.png
+	// (1200×630 or the same ratio); without it, previews use the profile photo
+	image: z.string().regex(/^\/[^\s]+\.(png|jpe?g|webp)$/, { error: 'image must be a site path to a .png, .jpg or .webp' }).optional()
 });
 
 const blog = defineCollection({

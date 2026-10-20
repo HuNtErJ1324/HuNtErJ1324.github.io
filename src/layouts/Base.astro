@@ -17,6 +17,8 @@ interface Props {
 	comments?: boolean;
 	ogType?: 'website' | 'article';
 	ogImage?: string;
+	// Describes a page's own preview image (read out where the card shows)
+	ogImageAlt?: string;
 	publishedTime?: string;
 	activeNavLink?: 'home' | 'violin' | 'blog';
 }
@@ -31,6 +33,7 @@ const {
 	comments = false,
 	ogType = 'website',
 	ogImage = '/assets/profile_photo.jpg',
+	ogImageAlt,
 	publishedTime,
 	activeNavLink
 } = Astro.props;
@@ -65,16 +68,20 @@ const linkCurrent = (key: NavKey) => (activeNavLink === key ? ('page' as const) 
 	<meta property="og:title" content={title}>
 	<meta property="og:description" content={description}>
 	<meta property="og:image" content={absolute(ogImage)}>
+	{ogImageAlt && <meta property="og:image:alt" content={ogImageAlt}>}
 	{canonical && <meta property="og:url" content={absolute(canonical)}>}
 	<meta property="og:type" content={ogType}>
 	<meta property="og:site_name" content="Justin Yang Chae">
 	{publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
 	<!-- Twitter Card -->
-	<meta name="twitter:card" content={ogType === 'article' ? 'summary' : 'summary_large_image'}>
+	{/* A page with its own preview image gets the large card; an article
+	     without one keeps the small square for the profile photo */}
+	<meta name="twitter:card" content={Astro.props.ogImage || ogType !== 'article' ? 'summary_large_image' : 'summary'}>
 	<meta name="twitter:title" content={title}>
 	<meta name="twitter:description" content={description}>
 	<meta name="twitter:image" content={absolute(ogImage)}>
+	{ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt}>}
 
 	{canonical && <link rel="canonical" href={absolute(canonical)}>}
 

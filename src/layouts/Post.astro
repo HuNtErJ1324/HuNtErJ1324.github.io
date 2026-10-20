@@ -55,6 +55,8 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 	csp="post"
 	comments={showComments}
 	ogType="article"
+	ogImage={post.data.image}
+	ogImageAlt={post.data.image ? title : undefined}
 	publishedTime={shared ? undefined : dateIso}
 	activeNavLink="blog"
 >
