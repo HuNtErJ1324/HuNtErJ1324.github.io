@@ -17,6 +17,11 @@ drafts/
 # ...but the shared-draft route (/drafts/<token>/) is site code, not a draft
 !/src/pages/drafts/
 
+# Comment server on the home server (comments-server/): its database and
+# identity-provider keys stay there (.env is covered above)
+comments-server/data/
+comments-server/secrets.yaml
+
 # Archived Jekyll build artifacts (sources kept in _jekyll/)
 _site/
 .jekyll-cache/

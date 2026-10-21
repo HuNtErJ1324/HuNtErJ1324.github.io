@@ -1,9 +1,13 @@
 ---
 // Shared chrome for every page (originally ported from the Jekyll default layout).
 // CSP note: 'post' pages allow style-src 'unsafe-inline' (MathJax SVG styles
-// and Shiki's inline token colors); posts with comments also allow
-// https://giscus.app for its script, default.css, and iframe. Every other page
-// stays strict.
+// and Shiki's inline token colors); posts with comments also allow the comment
+// server (src/lib/comments.ts) for its script, comentario.css, avatars, API
+// calls, and live-update WebSocket, plus data: images (the widget's CSS icons).
+// font-src lists it too: no font is fetched (no-fonts), but Chrome logs a
+// violation for every @font-face in comentario.css when the origin is missing.
+// Every other page stays strict.
+import { comments as commentServer } from '../lib/comments';
 import { assetVersion } from '../lib/site';
 
 interface Props {
@@ -38,10 +42,13 @@ const {
 	activeNavLink
 } = Astro.props;
 
-const giscusSrc = csp === 'post' && comments ? ' https://giscus.app' : '';
+const withComments = csp === 'post' && comments;
+const commentsSrc = withComments ? ` ${commentServer.origin}` : '';
+const commentsImg = withComments ? ` ${commentServer.origin} data:` : '';
+const commentsConnect = withComments ? ` ${commentServer.origin} ${commentServer.socketOrigin}` : '';
 const cspContent =
 	csp === 'post'
-		? `default-src 'self'; script-src 'self'${giscusSrc}; style-src 'self' 'unsafe-inline'${giscusSrc}; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://twitter.com https://x.com${giscusSrc}; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`
+		? `default-src 'self'; script-src 'self'${commentsSrc}; style-src 'self' 'unsafe-inline'${commentsSrc}; font-src 'self'${commentsSrc}; img-src 'self' https://img.youtube.com${commentsImg}; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://platform.twitter.com https://twitter.com https://x.com; connect-src 'self'${commentsConnect}; object-src 'none'; base-uri 'self'; form-action 'self'`
 		: "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https://img.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
 
 const absolute = (path: string) => new URL(path, Astro.site).href;

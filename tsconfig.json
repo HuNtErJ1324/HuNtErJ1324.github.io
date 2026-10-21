@@ -9,5 +9,5 @@
 		}
 	},
 	"include": [".astro/types.d.ts", "**/*"],
-	"exclude": ["dist", "_jekyll", "public/assets/mathjax"]
+	"exclude": ["dist", "_jekyll", "public/assets/mathjax", "comments-server"]
 }

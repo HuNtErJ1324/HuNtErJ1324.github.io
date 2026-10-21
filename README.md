@@ -11,7 +11,7 @@ Dedicated sections highlight my publications, projects, scholarships, and milest
 A collection of my orchestral and solo performances.
 
 ### 3. **Blog**
-Markdown/MDX posts rendered by Astro, with private drafts and [giscus](https://giscus.app) comments (GitHub Discussions) — see [Writing a blog post](#writing-a-blog-post).
+Markdown/MDX posts rendered by Astro, with private drafts and self-hosted comments (no account needed; [`comments-server/`](comments-server/README.md)) — see [Writing a blog post](#writing-a-blog-post).
 
 ## Tech
 
@@ -59,7 +59,7 @@ The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages
 
 Without the secret, the site still builds; it just has no shared drafts.
 
-**Comments:** every published post gets a giscus comment thread (stored in this repo's GitHub Discussions, *Announcements* category). Readers sign in with GitHub to comment, reply, and upvote with 👍. Moderate (hide, delete, lock) on GitHub.
+**Comments:** every published post gets a comment thread from [Comentario](https://comentario.app), running on the home server behind a Cloudflare Tunnel. Readers comment with just a name (or none), or make an account; Claude Haiku approves, rejects, or holds comments from readers who aren't signed in, and anything held waits for you, with a phone notification. Setup and upkeep: [`comments-server/README.md`](comments-server/README.md).
 
 **Math:** wrap LaTeX in `$$…$$` (used for both inline and display). It renders with self-hosted MathJax — for example `$$E = mc^2$$` inline, or a `$$…$$` block on its own line for centered display math. Write plain LaTeX: escapes such as `\;`, `\{`, and `\\` work as-is. MathJax only loads on posts that contain math.
 

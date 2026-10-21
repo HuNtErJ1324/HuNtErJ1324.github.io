@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Scroll Reveal Animation for the page's panels (not sections nested
         //    in post content, such as footnotes, and not the comments panel,
-        //    whose giscus iframe should never sit invisible)
+        //    whose comment widget should never sit invisible)
         const revealElements = document.querySelectorAll('main > section:not(.post-comments)');
 
         if (revealElements.length > 0 && 'IntersectionObserver' in window) {
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateScrollUi();
 
-            // Late layout growth (the giscus iframe resizes itself) fires no scroll event
+            // Late layout growth (the comment thread loading in) fires no scroll event
             if ('ResizeObserver' in window) {
                 new ResizeObserver(() => requestAnimationFrame(updateScrollUi)).observe(document.body);
             }
@@ -1057,52 +1057,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 9. Comments (giscus): inject giscus's client script once the comments
-        //    panel nears the viewport, so readers who never scroll that far make
-        //    no third-party requests. Config lives in data-* on .giscus
-        //    (Post.astro); client.js renders its iframe into that element.
-        const giscusMount = document.querySelector('.post-comments .giscus');
-        if (giscusMount) {
-            const loadGiscus = () => {
+        // 9. Comments (self-hosted Comentario): load the widget's script from the
+        //    comment server once the panel nears the viewport, so readers who
+        //    never scroll that far make no requests to it. Defining the
+        //    <comentario-comments> element (Post.astro) renders the thread into it.
+        const commentsMount = document.querySelector('.post-comments comentario-comments[data-src]');
+        if (commentsMount) {
+            const loadComments = () => {
                 const script = document.createElement('script');
-                script.src = 'https://giscus.app/client.js';
+                script.src = commentsMount.dataset.src;
                 script.async = true;
-                script.crossOrigin = 'anonymous';
-                // client.js reads its config from its own <script> element
-                Object.assign(script.dataset, giscusMount.dataset);
-                giscusMount.after(script);
+                // The server lives at home: say so when it can't be reached
+                script.addEventListener('error', () => {
+                    const note = document.createElement('p');
+                    note.className = 'comments-fallback comments-down';
+                    note.textContent = 'Comments are unavailable right now. Please try again later.';
+                    commentsMount.after(note);
+                });
+                document.head.append(script);
             };
 
-            // Back from giscus's GitHub sign-in (?giscus=<session>): load right away so
-            // client.js stores the session and strips it from the address bar
-            const returningFromSignIn = new URLSearchParams(window.location.search).has('giscus');
-            if (returningFromSignIn && 'ResizeObserver' in window) {
-                // The #giscus-thread anchor is reached while the mount is still empty;
-                // once giscus sizes its iframe, bring the panel into view (unless the
-                // reader has already started scrolling)
-                let readerScrolled = false;
-                ['wheel', 'touchstart', 'keydown'].forEach((eventName) => {
-                    window.addEventListener(eventName, () => {
-                        readerScrolled = true;
-                    }, { once: true, passive: true });
-                });
-                const returnObserver = new ResizeObserver(() => {
-                    if (giscusMount.offsetHeight === 0) return;
-                    returnObserver.disconnect();
-                    if (!readerScrolled) giscusMount.closest('section').scrollIntoView({ block: 'start' });
-                });
-                returnObserver.observe(giscusMount);
-            }
-            if (!returningFromSignIn && 'IntersectionObserver' in window) {
-                const giscusObserver = new IntersectionObserver((entries) => {
+            // A link to one comment (#comentario-<id>) needs the thread right away
+            const linkedComment = window.location.hash.startsWith('#comentario-');
+            if (!linkedComment && 'IntersectionObserver' in window) {
+                const commentsObserver = new IntersectionObserver((entries) => {
                     if (entries.some((entry) => entry.isIntersecting)) {
-                        giscusObserver.disconnect();
-                        loadGiscus();
+                        commentsObserver.disconnect();
+                        loadComments();
                     }
                 }, { rootMargin: '600px 0px' });
-                giscusObserver.observe(giscusMount);
+                commentsObserver.observe(commentsMount);
             } else {
-                loadGiscus();
+                loadComments();
             }
         }
 

@@ -3641,19 +3641,181 @@ pre code {
 	font-size: 0.88rem;
 }
 
-/* Comments panel: script.js loads the giscus iframe into .giscus */
-.post-comments .giscus {
+/* Comments panel: script.js loads Comentario's widget into
+   <comentario-comments>, rendered with no-fonts so it inherits the body font.
+   Its stylesheet (comentario.css, linked after this file) colors everything
+   through --cmntr-* custom properties set on the element, so the palette
+   below maps them onto Rosé Pine. comentario.css loads later, so on a tie it
+   wins: selectors here start with ".post-comments comentario-comments" to
+   outrank its rules, which are all ".comentario-root …", some with extra
+   :not()s. Recheck after a Comentario upgrade. */
+.post-comments comentario-comments[theme] {
+	display: block;
 	min-height: 10rem;
+	margin-top: 1.25em;
+	--cmntr-bg: var(--bg-raised);
+	--cmntr-bg-shade: var(--bg-inset);
+	--cmntr-bg-highlight: var(--bg-inset);
+	--cmntr-bg-blink: var(--border-bright);
+	--cmntr-danger-bg: color-mix(in srgb, var(--love) 18%, var(--bg-raised));
+	--cmntr-deleted-bg: color-mix(in srgb, var(--love) 8%, var(--bg-raised));
+	--cmntr-dlg-header-bg: var(--bg-inset);
+	--cmntr-input-bg: var(--bg);
+	--cmntr-pending-bg: color-mix(in srgb, var(--gold) 6%, var(--bg-raised));
+	--cmntr-placeholder-bg: var(--bg-inset);
+	--cmntr-placeholder-mask: var(--bg-raised);
+	--cmntr-rejected-bg: color-mix(in srgb, var(--love) 10%, var(--bg-raised));
+	--cmntr-success-bg: color-mix(in srgb, var(--foam) 14%, var(--bg-raised));
+	--cmntr-warning-bg: color-mix(in srgb, var(--gold) 14%, var(--bg-raised));
+	--cmntr-color: var(--text);
+	--cmntr-danger-color: var(--love);
+	--cmntr-input-color: var(--text);
+	--cmntr-input-ph-color: var(--muted);
+	--cmntr-input-disabled-color: var(--muted);
+	--cmntr-label-color: var(--subtle);
+	--cmntr-link-color: var(--iris);
+	--cmntr-link-hover-color: var(--rose);
+	--cmntr-muted-color: var(--subtle);
+	--cmntr-score-color: var(--subtle);
+	--cmntr-score-up-color: var(--foam);
+	--cmntr-score-down-color: var(--love);
+	--cmntr-sticky-color: var(--gold);
+	--cmntr-success-color: var(--foam);
+	--cmntr-warning-color: var(--gold);
+	--cmntr-card-border: var(--border);
+	--cmntr-dlg-border: var(--border-bright);
+	--cmntr-pending-border: var(--gold);
+	--cmntr-table-border: var(--border);
+	--cmntr-spoiler-bg: var(--bg-inset);
 }
 
-.post-comments .giscus:empty {
+/* Empty until the widget loads (or when JS is off) */
+.post-comments comentario-comments[theme]:not(:has(.comentario-root)) {
 	min-height: 0;
+}
+
+.post-comments comentario-comments .comentario-root {
+	font-size: 0.92rem;
+	line-height: 1.6;
+}
+
+.post-comments comentario-comments .comentario-root :is(button, input, select, textarea) {
+	font-family: inherit;
+}
+
+/* Buttons: flat terminal chips like the code [copy] button, not raised pills */
+.post-comments comentario-comments .comentario-root .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool) {
+	--cmntr-btn-color: var(--text);
+	--cmntr-btn-bg: var(--bg-inset);
+	--cmntr-btn-border-color: var(--border-bright);
+	--cmntr-btn-hover-color: var(--rose);
+	--cmntr-btn-hover-bg: var(--bg-inset);
+	--cmntr-btn-active-color: var(--rose);
+	--cmntr-btn-active-bg: var(--bg);
+	font-family: var(--font-display);
+	letter-spacing: 0.04em;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool):not(:disabled):is(:hover, :focus-visible) {
+	border-color: var(--rose);
+}
+
+/* The main actions (sign in, send) */
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-primary {
+	--cmntr-btn-color: var(--rose);
+	--cmntr-btn-border-color: var(--rose);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-danger {
+	--cmntr-btn-color: var(--love);
+	--cmntr-btn-border-color: var(--love);
+	--cmntr-btn-hover-color: var(--love);
+}
+
+.post-comments comentario-comments .comentario-root :is(input, textarea, select) {
+	border-radius: 0;
+}
+
+.post-comments comentario-comments .comentario-root :is(input, textarea, select):focus {
+	border-color: var(--rose);
+	outline: none;
+	box-shadow: none;
+}
+
+/* Colors comentario.css hard-codes instead of taking from --cmntr-* */
+.post-comments comentario-comments .comentario-root .comentario-add-comment-host {
+	background: var(--bg);
+	border-color: var(--border-bright);
+	border-radius: 0;
+	transition: border-color 0.15s ease;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-add-comment-host:not(.comentario-editor-inserted):is(:hover, :focus-within) {
+	border-color: var(--rose);
+	box-shadow: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor-preview,
+.post-comments comentario-comments .comentario-root input[type="checkbox"] + label::before,
+.post-comments comentario-comments .comentario-root input[type="radio"] + label::before {
+	background: var(--bg);
+	border-color: var(--border-bright);
+	border-radius: 0;
+}
+
+.post-comments comentario-comments .comentario-root input[type="checkbox"]:checked + label::before,
+.post-comments comentario-comments .comentario-root input[type="radio"]:checked + label::before {
+	background: var(--iris);
+	border-color: var(--iris);
+}
+
+.post-comments comentario-comments .comentario-root blockquote {
+	border-left-color: var(--border-bright);
+}
+
+/* Phones: monospace is wide, so let the thread toolbar (RSS, count, sort)
+   wrap between its parts instead of inside them */
+@media (max-width: 600px) {
+	.post-comments comentario-comments .comentario-root .comentario-thread-toolbar {
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+
+	.post-comments comentario-comments .comentario-root .comentario-thread-toolbar :is(.comentario-comment-count, .comentario-sort-buttons) {
+		white-space: nowrap;
+	}
+}
+
+/* A comment awaiting review gets a dashed gold box; keep its text off the edge */
+.post-comments comentario-comments .comentario-root .comentario-pending {
+	padding: 0.4rem 0.6rem;
+}
+
+/* Loading skeleton */
+.post-comments comentario-comments .comentario-root .comentario-ph-comment-card {
+	border-top-color: var(--border);
+	border-left-color: var(--border-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.post-comments comentario-comments .comentario-root *,
+	.post-comments comentario-comments .comentario-root *::before,
+	.post-comments comentario-comments .comentario-root *::after {
+		transition: none !important;
+		animation: none !important;
+	}
 }
 
 .comments-fallback {
 	margin: 1em 0 0;
 	color: var(--subtle);
 	font-size: 0.85rem;
+}
+
+.comments-down {
+	color: var(--love);
 }
 
 /* --------------------------------------------------------------------------

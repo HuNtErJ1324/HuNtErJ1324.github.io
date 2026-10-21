@@ -12,7 +12,7 @@ const postSchema = z.object({
 	tags: z.array(
 		z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { error: 'tags must be kebab-case, e.g. "llm-reasoning"' })
 	).default([]),
-	// Set to false to hide the giscus comments section on a post
+	// Set to false to hide the comments section on a post
 	comments: z.boolean().default(true),
 	// Link-preview card, a site path such as /assets/blog/<slug>-card.png
 	// (1200×630 or the same ratio); without it, previews use the profile photo

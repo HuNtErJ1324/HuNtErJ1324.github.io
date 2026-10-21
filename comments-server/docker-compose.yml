@@ -1,0 +1,65 @@
+# Comments for justin-chae.org, run on the home server: Comentario (the comment
+# server, SQLite in ./data) reached publicly through a Cloudflare Tunnel, and
+# a moderator that asks Claude Haiku about each comment awaiting approval.
+# Nothing listens on a public port. Setup and upkeep: README.md.
+name: comments
+
+services:
+  comentario:
+    image: registry.gitlab.com/comentario/comentario:v3.19.0
+    restart: unless-stopped
+    environment:
+      # Set BASE_URL in the shell only for the first start over Tailscale (README step 4)
+      BASE_URL: ${BASE_URL:-https://comments.justin-chae.org}
+      COMENTARIO_SQLITE3_FILE: /data/comentario.sqlite3
+      # Keeps sign-ins valid across restarts (random on every start otherwise)
+      COMENTARIO_SERVER_SIGNING_KEY: ${COMENTARIO_SIGNING_KEY:?set COMENTARIO_SIGNING_KEY in .env}
+      # The moderator's webhook never leaves this compose network: plain HTTP to a
+      # private address, which Comentario refuses unless allowed
+      WH_ALLOW_INSECURE: "true"
+      WH_ALLOW_PRIVATE_TARGETS: "true"
+    volumes:
+      - ./data:/data
+    ports:
+      # Only on the Tailscale address, for the first sign-up; the public route is the tunnel
+      - "${TAILSCALE_IP:?set TAILSCALE_IP in .env}:8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/api/user"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  moderator:
+    build: ./moderator
+    restart: unless-stopped
+    environment:
+      SITE_HOST: justin-chae.org
+      COMENTARIO_URL: http://comentario
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
+      MODERATOR_EMAIL: ${MODERATOR_EMAIL:-}
+      MODERATOR_PASSWORD: ${MODERATOR_PASSWORD:-}
+      DRY_RUN: ${DRY_RUN:-false}
+      NOTIFY_URL: ${NOTIFY_URL:-}
+      NOTIFY_TOKEN: ${NOTIFY_TOKEN:-}
+    depends_on:
+      comentario:
+        condition: service_healthy
+    # Lets it finish comments it already accepted before stopping
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      comentario:
+        condition: service_healthy

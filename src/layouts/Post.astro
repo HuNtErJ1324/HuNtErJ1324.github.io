@@ -1,7 +1,8 @@
 ---
 // Post layout — ported from the Jekyll post layout, plus the related-posts
-// aside the general post anatomy calls for and giscus comments. MathJax loads
-// only on posts that contain math (hasMath, set by remark-mathjax). `shared`
+// aside the general post anatomy calls for and comments (self-hosted
+// Comentario, src/lib/comments.ts). MathJax loads only on posts that
+// contain math (hasMath, set by remark-mathjax). `shared`
 // renders a draft at its /drafts/<token>/ link: noindex, no canonical URL.
 // A post with at least three h2/h3 headings gets a table of contents in the
 // left gutter on wide screens (script.js §13 marks the section being read).
@@ -11,10 +12,9 @@ import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
 import TraceSwitch from '../components/TraceSwitch.astro';
-import { giscus } from '../lib/giscus';
+import { comments } from '../lib/comments';
 import { formatDate, isDraft, type Post } from '../lib/posts';
 import { TRACE_POSTS } from '../lib/traces';
-import { assetVersion } from '../lib/site';
 
 interface Props {
 	post: Post;
@@ -35,14 +35,9 @@ const dateIso = date.toISOString();
 const draft = isDraft(post);
 const showComments = !draft && post.data.comments;
 const shareToken = post.collection === 'drafts' ? post.data.share : undefined;
-// giscus loads the theme from inside its iframe, so it gets the absolute
-// production URL (also in dev), versioned like home.css to beat Cloudflare's cache
-const giscusTheme = new URL(`/assets/giscus-rose-pine.css${assetVersion}`, Astro.site).href;
-// Pin the thread key and the discussion's backlink to the canonical URL, so
-// /index.html, query strings, or localhost previews never fork or mislabel a thread.
-// The term matches what pathname mapping produces for /blog/<slug>/.
-const giscusTerm = `blog/${post.id}/`;
-const canonicalUrl = new URL(`/blog/${post.id}/`, Astro.site).href;
+// Pin the thread to the canonical path, so /index.html or a query string
+// never starts a second thread for the same post
+const commentsPageId = `/blog/${post.id}/`;
 const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 ---
 
@@ -68,7 +63,6 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 				<script is:inline src="/assets/mathjax/tex-svg.js" id="MathJax-script" async></script>
 			</>
 		)}
-		{showComments && <meta name="giscus:backlink" content={canonicalUrl}>}
 	</Fragment>
 	<header class="banner page-banner">
 		<p class="boot-line" aria-hidden="true">justin@uw:~/blog$ cat {fileName}</p>
@@ -139,29 +133,21 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 	{showComments && (
 		<section class="post-comments" id="comments" data-label="~/comments" aria-labelledby="comments-heading">
 			<h2 id="comments-heading">Comments</h2>
-			<!-- script.js loads giscus here once the panel nears the viewport -->
-			<!-- The id makes giscus's GitHub sign-in return to #giscus-thread -->
-			<div
-				class="giscus"
-				id="giscus-thread"
-				data-repo={giscus.repo}
-				data-repo-id={giscus.repoId}
-				data-category={giscus.category}
-				data-category-id={giscus.categoryId}
-				data-mapping="specific"
-				data-term={giscusTerm}
-				data-strict="1"
-				data-reactions-enabled="1"
-				data-emit-metadata="0"
-				data-input-position="top"
-				data-lang="en"
-				data-theme={giscusTheme}
-			></div>
 			<p class="comments-fallback">
-				Comments run on <a href="https://giscus.app" target="_blank" rel="noopener noreferrer">giscus</a> (GitHub
-				Discussions): sign in with GitHub to comment, reply, or upvote with &#128077;. You can also
-				<a href={giscus.discussionsUrl} target="_blank" rel="noopener noreferrer">join the discussion on GitHub</a>.
+				No account needed: comment with just a name, or none. Comments from readers who
+				aren't signed in appear once they've been reviewed.
 			</p>
+			<!-- script.js loads the widget from data-src once the panel nears the viewport;
+			     the page's fonts and the Rosé Pine colors in home.css replace Comentario's own -->
+			<comentario-comments
+				data-src={comments.script}
+				page-id={commentsPageId}
+				lang="en"
+				theme="dark"
+				no-fonts="true"
+				max-level="3"
+			></comentario-comments>
+			<noscript><p class="comments-fallback">Comments need JavaScript.</p></noscript>
 		</section>
 	)}
 </Base>
