@@ -6,11 +6,18 @@
 // src/plugins/remark-mathjax.js). $$…$$ stays enabled for math in raw HTML.
 // Single $…$ is intentionally NOT enabled, so literal dollar signs in prose
 // are never mistaken for math.
+//
+// Readers' comments are typeset too (script.js §9b), so TeX from strangers
+// must not reach the html extension (\href, \class, \style, \cssId, which put
+// links and attributes in the page) or \unicode: neither may be autoloaded or
+// \require'd. Only tex-svg.js is self-hosted, so no extension can load anyway.
 window.MathJax = {
     tex: {
         inlineMath: [['\\(', '\\)']],
         displayMath: [['\\[', '\\]'], ['$$', '$$']],
-        processEscapes: true
+        processEscapes: true,
+        autoload: { html: [], unicode: [] },
+        require: { allow: { html: false, unicode: false } }
     },
     options: {
         // Never typeset inside code blocks, inline code, or form fields

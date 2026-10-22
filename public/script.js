@@ -1090,6 +1090,211 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 loadComments();
             }
+
+            // 9b. Math in comments: readers write $$…$$ as in posts, inline in a
+            //     sentence, display when it fills a paragraph. Comentario renders
+            //     comments as Markdown on its server, which drops the backslash
+            //     before punctuation (\{ \, \\ become { , \) and turns *…* into
+            //     emphasis, so the TeX comes from each comment's own Markdown:
+            //     fetched from the API the widget uses, or for the editor's
+            //     preview, read from its text box. The rendered text is the
+            //     fallback (a reader's own pending comment isn't in that list).
+            //     TeX only ever goes in as textContent; MathJax (the posts'
+            //     bundle, loaded the first time a comment has math) draws it.
+            const MATH = /\$\$([\s\S]+?)\$\$/g;
+            const commentsApi = `${new URL(commentsMount.dataset.src).origin}/api/embed/comments`;
+            const markdownById = new Map();
+            let markdownLoaded = null;
+            let markdownFetchedAt = 0;
+
+            const fetchMarkdown = () => {
+                markdownFetchedAt = Date.now();
+                markdownLoaded = fetch(commentsApi, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ host: window.location.host, path: commentsMount.getAttribute('page-id') })
+                })
+                    .then((response) => (response.ok ? response.json() : {}))
+                    .then((data) => (data.comments || []).forEach((c) => markdownById.set(c.id, c.markdown || '')))
+                    .catch(() => {});
+                return markdownLoaded;
+            };
+
+            // The $$…$$ spans in Markdown, in order, skipping code (where $$ is literal)
+            const sourceMath = (markdown) => [...markdown
+                .replace(/^(```|~~~)[\s\S]*?^\1/gm, ' ')
+                .replace(/(`+)[\s\S]*?\1/g, ' ')
+                .matchAll(MATH)].map((match) => match[1]);
+
+            // Replaces each $$…$$ in a rendered comment with a span holding its
+            // TeX in MathJax's delimiters, and returns the spans. `tex` (from the
+            // Markdown) wins when it lists the same number of spans.
+            const markMath = (container, tex) => {
+                const blocks = new Map();
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+                    acceptNode: (node) => (node.parentElement.closest('code, pre, .math-inline, .math-display')
+                        ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT)
+                });
+                for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                    const block = node.parentElement.closest('p, li, td, th, h1, h2, h3, h4, h5, h6') || container;
+                    if (!blocks.has(block)) blocks.set(block, []);
+                    blocks.get(block).push(node);
+                }
+
+                // Matches can span elements (<br>, or <em> where Markdown found *…*)
+                const found = [];
+                blocks.forEach((nodes) => {
+                    let text = '';
+                    const starts = nodes.map((node) => {
+                        const start = text.length;
+                        text += node.data;
+                        return start;
+                    });
+                    const at = (offset) => {
+                        let i = starts.length - 1;
+                        while (i > 0 && starts[i] > offset) i--;
+                        return [nodes[i], offset - starts[i]];
+                    };
+                    for (const match of text.matchAll(MATH)) {
+                        found.push({
+                            start: at(match.index),
+                            end: at(match.index + match[0].length),
+                            rendered: match[1],
+                            display: text.trim() === match[0]
+                        });
+                    }
+                });
+
+                const fromSource = Array.isArray(tex) && tex.length === found.length;
+                const spans = [];
+                // Last first, so earlier offsets stay valid
+                for (let i = found.length - 1; i >= 0; i--) {
+                    const { start, end, rendered, display } = found[i];
+                    const math = (fromSource ? tex[i] : rendered).trim();
+                    const span = document.createElement('span');
+                    span.className = display ? 'math-display' : 'math-inline';
+                    span.textContent = display ? `\\[${math}\\]` : `\\(${math}\\)`;
+                    const range = document.createRange();
+                    range.setStart(...start);
+                    range.setEnd(...end);
+                    range.deleteContents();
+                    range.insertNode(span);
+                    spans.push(span);
+                }
+                return spans;
+            };
+
+            // Posts with math already load MathJax; elsewhere load the same
+            // config and bundle, and typeset only what's asked for
+            let mathJaxReady = null;
+            const loadMathJax = () => {
+                if (!mathJaxReady) {
+                    const addScript = (src) => new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = src;
+                        script.addEventListener('load', resolve);
+                        script.addEventListener('error', reject);
+                        document.head.append(script);
+                    });
+                    const postMathJax = document.getElementById('MathJax-script');
+                    mathJaxReady = new Promise((resolve, reject) => {
+                        if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                            resolve();
+                        } else if (postMathJax) {
+                            postMathJax.addEventListener('load', resolve);
+                            postMathJax.addEventListener('error', reject);
+                        } else {
+                            addScript('/assets/mathjax-config.js')
+                                .then(() => {
+                                    window.MathJax.startup = { typeset: false };
+                                    return addScript('/assets/mathjax/tex-svg.js');
+                                })
+                                .then(resolve, reject);
+                        }
+                    }).then(() => window.MathJax.startup.promise);
+                }
+                return mathJaxReady;
+            };
+
+            // MathJax wants one typeset at a time
+            let typesetQueue = Promise.resolve();
+            const typeset = (spans) => {
+                typesetQueue = typesetQueue
+                    .then(loadMathJax)
+                    .then(() => window.MathJax.typesetPromise(spans))
+                    .catch(() => {});
+            };
+
+            const commentId = (body) => {
+                const link = body.parentElement.querySelector('.comentario-subtitle a[href^="#comentario-"]');
+                return link ? link.getAttribute('href').slice('#comentario-'.length) : null;
+            };
+
+            let mathRunning = false;
+            let mathAgain = false;
+            const renderCommentMath = async () => {
+                if (mathRunning) {
+                    mathAgain = true;
+                    return;
+                }
+                mathRunning = true;
+                try {
+                    const hasMath = (el) => el.textContent.includes('$$');
+                    const bodies = [...commentsMount.querySelectorAll('.comentario-card-body')].filter(hasMath);
+                    const previews = [...commentsMount.querySelectorAll('.comentario-comment-editor-preview')].filter(hasMath);
+                    const spans = [];
+                    if (bodies.length) {
+                        // A comment newer than the list we have: fetch it again (at most every 10s)
+                        const unknown = bodies.some((body) => !markdownById.has(commentId(body)));
+                        await (unknown && Date.now() - markdownFetchedAt > 10000 ? fetchMarkdown() : markdownLoaded || fetchMarkdown());
+                        bodies.forEach((body) => {
+                            const markdown = markdownById.get(commentId(body));
+                            spans.push(...markMath(body, markdown === undefined ? null : sourceMath(markdown)));
+                        });
+                    }
+                    previews.forEach((preview) => {
+                        const textarea = preview.parentElement.querySelector('textarea');
+                        spans.push(...markMath(preview, textarea ? sourceMath(textarea.value) : null));
+                    });
+                    if (spans.length) typeset(spans);
+                } finally {
+                    mathRunning = false;
+                }
+                if (mathAgain) {
+                    mathAgain = false;
+                    renderCommentMath();
+                }
+            };
+
+            // Comentario's sign-in dialog opens when a signed-out reader presses
+            // "Add Comment"; home.css puts its no-account form first while a
+            // comment is being written, so start the cursor in its name field.
+            // Once faded in, the dialog focuses its close button unless focus is
+            // already inside, and the login form then focuses its email field;
+            // hand that back too.
+            const seenDialogs = new WeakSet();
+            const focusNameField = () => {
+                const dialog = commentsMount.querySelector('.comentario-dialog');
+                if (!dialog || seenDialogs.has(dialog) || !commentsMount.querySelector('.comentario-comment-editor')) return;
+                const name = dialog.querySelector('#comentario-unregistered-name');
+                if (!name) return;
+                seenDialogs.add(dialog);
+                name.focus({ preventScroll: true });
+                const email = dialog.querySelector('#comentario-login-email');
+                if (email) email.addEventListener('focus', () => name.focus({ preventScroll: true }), { once: true });
+            };
+
+            // New comments, live updates, edits and previews all arrive as DOM changes
+            let commentsChanged = false;
+            new MutationObserver(() => {
+                focusNameField();
+                if (commentsChanged) return;
+                commentsChanged = true;
+                requestAnimationFrame(() => {
+                    commentsChanged = false;
+                    renderCommentMath();
+                });
+            }).observe(commentsMount, { childList: true, subtree: true, characterData: true });
         }
 
         // 10. 404 page: echo the path that was actually requested

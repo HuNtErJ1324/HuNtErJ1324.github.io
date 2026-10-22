@@ -3876,7 +3876,10 @@ pre code {
 	resize: vertical;
 }
 
-.post-comments comentario-comments .comentario-root .comentario-comment-editor textarea:focus {
+/* The box's rose border already shows focus; a ring around the text area
+   inside it drew a second, offset box */
+.post-comments comentario-comments .comentario-root .comentario-comment-editor textarea:is(:focus, :focus-visible) {
+	outline: none !important;
 	box-shadow: none;
 }
 
@@ -3902,6 +3905,25 @@ pre code {
 	padding: 0.5rem 0.6rem;
 	background: var(--bg-raised);
 	border-top: 1px solid var(--border);
+}
+
+/* What the text box understands, left of the buttons. Generated content, so
+   MathJax never sees the $$ */
+.post-comments comentario-comments .comentario-root .comentario-comment-editor .comentario-comment-editor-footer::before {
+	content: 'Markdown · math in $$…$$';
+	margin-right: auto;
+	padding-left: 0.3rem;
+	color: var(--muted);
+	font-size: 0.75rem;
+}
+
+/* Math in comments (script.js §9b) */
+.post-comments comentario-comments .comentario-root .math-display {
+	display: block;
+}
+
+.post-comments comentario-comments .comentario-root mjx-container[display="true"] {
+	margin: 0.5em 0;
 }
 
 /* Comment count and sort order, ruled off from the thread. Comentario's RSS
@@ -4150,6 +4172,12 @@ pre code {
 .post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-header .comentario-dialog-btn-close {
 	width: 2.25rem;
 	height: 100%;
+	border-radius: 0;
+}
+
+/* The dialog focuses this button when it opens; keep the ring inside the header */
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-header .comentario-dialog-btn-close:focus-visible {
+	outline-offset: -4px;
 }
 
 .post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-body {
@@ -4165,6 +4193,31 @@ pre code {
 	margin: 0.9rem 0;
 	border: 0;
 	border-top: 1px solid var(--border);
+}
+
+/* "Add Comment" while signed out opens this sign-in dialog. The blog promises
+   no account is needed, so while a comment is being written its no-account
+   form (name, then send) comes first and logging in follows it (script.js
+   §9b puts the cursor in the name field). The dialog's last rule, which sat
+   above that form, goes. */
+.post-comments comentario-comments .comentario-root:has(.comentario-comment-editor) .comentario-dialog-body > div {
+	display: flex;
+	flex-direction: column;
+}
+
+.post-comments comentario-comments .comentario-root:has(.comentario-comment-editor) .comentario-dialog-body > div > hr:last-of-type {
+	display: none;
+}
+
+.post-comments comentario-comments .comentario-root:has(.comentario-comment-editor) #comentario-unregistered-form {
+	order: -1;
+	margin-bottom: 0.9rem;
+	padding-bottom: 0.9rem;
+	border-bottom: 1px solid var(--border);
+}
+
+.post-comments comentario-comments .comentario-root:has(.comentario-comment-editor) #comentario-unregistered-form .comentario-dialog-centered {
+	color: var(--text);
 }
 
 .post-comments comentario-comments .comentario-root .comentario-form-field {
