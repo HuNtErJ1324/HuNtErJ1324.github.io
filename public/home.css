@@ -3652,7 +3652,7 @@ pre code {
 .post-comments comentario-comments[theme] {
 	display: block;
 	min-height: 10rem;
-	margin-top: 1.25em;
+	margin-top: 1em;
 	--cmntr-bg: var(--bg-raised);
 	--cmntr-bg-shade: var(--bg-inset);
 	--cmntr-bg-highlight: var(--bg-inset);
@@ -3703,35 +3703,93 @@ pre code {
 	font-family: inherit;
 }
 
+.post-comments comentario-comments .comentario-root :focus-visible {
+	outline: 2px solid var(--rose) !important;
+	outline-offset: 2px;
+}
+
+/* The site-wide li rule (left rule, indent, gap) is for the home page's
+   lists; the widget is built from lists (the thread, replies, sort buttons) */
+.post-comments comentario-comments .comentario-root li {
+	margin-bottom: 0;
+	padding-left: 0;
+	border-left: 0;
+	transition: none;
+}
+
+/* Interface links change color on hover; the site-wide fill is for prose */
+.post-comments comentario-comments .comentario-root a:is(:hover, :focus-visible) {
+	background-color: transparent;
+}
+
 /* Buttons: flat terminal chips like the code [copy] button, not raised pills */
 .post-comments comentario-comments .comentario-root .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool) {
 	--cmntr-btn-color: var(--text);
-	--cmntr-btn-bg: var(--bg-inset);
+	--cmntr-btn-bg: transparent;
 	--cmntr-btn-border-color: var(--border-bright);
 	--cmntr-btn-hover-color: var(--rose);
-	--cmntr-btn-hover-bg: var(--bg-inset);
+	--cmntr-btn-hover-bg: transparent;
 	--cmntr-btn-active-color: var(--rose);
 	--cmntr-btn-active-bg: var(--bg);
+	margin: 0;
+	padding: 0.3rem 0.85rem;
 	font-family: var(--font-display);
+	font-size: 0.82rem;
+	line-height: 1.4;
 	letter-spacing: 0.04em;
 	border-radius: 0;
 	box-shadow: none;
+	transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .post-comments comentario-comments .comentario-root .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool):not(:disabled):is(:hover, :focus-visible) {
 	border-color: var(--rose);
 }
 
-/* The main actions (sign in, send) */
-.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-primary {
+/* The main actions (sign in, send) fill with rose on hover, like the nav's
+   current page. The :not()s match the rule above, which would win otherwise. */
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-primary:not(.comentario-btn-link):not(.comentario-btn-tool) {
 	--cmntr-btn-color: var(--rose);
 	--cmntr-btn-border-color: var(--rose);
+	--cmntr-btn-hover-color: var(--bg);
+	--cmntr-btn-hover-bg: var(--rose);
 }
 
-.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-danger {
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-danger:not(.comentario-btn-link):not(.comentario-btn-tool) {
 	--cmntr-btn-color: var(--love);
 	--cmntr-btn-border-color: var(--love);
-	--cmntr-btn-hover-color: var(--love);
+	--cmntr-btn-hover-color: var(--bg);
+	--cmntr-btn-hover-bg: var(--love);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-danger:not(.comentario-btn-link):not(.comentario-btn-tool):not(:disabled):is(:hover, :focus-visible) {
+	border-color: var(--love);
+}
+
+/* Text buttons (Cancel, the sort order) */
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-link {
+	--cmntr-btn-color: var(--subtle);
+	--cmntr-btn-hover-color: var(--rose);
+	--cmntr-btn-active-color: var(--rose);
+	margin: 0;
+	padding: 0.2rem 0.4rem;
+	border: 0;
+	border-radius: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-btn.comentario-btn-link.comentario-btn-active {
+	--cmntr-btn-color: var(--rose);
+	font-weight: normal;
+}
+
+/* Icon buttons (votes, reply, the editor's formatting) */
+.post-comments comentario-comments .comentario-root .comentario-toolbar .comentario-btn-tool {
+	--cmntr-btn-color: var(--muted);
+	--cmntr-btn-hover-color: var(--rose);
+	width: 1.9rem;
+	height: 1.9rem;
+	border: 0;
+	border-radius: 0;
 }
 
 .post-comments comentario-comments .comentario-root :is(input, textarea, select) {
@@ -3744,10 +3802,28 @@ pre code {
 	box-shadow: none;
 }
 
-/* Colors comentario.css hard-codes instead of taking from --cmntr-* */
-.post-comments comentario-comments .comentario-root .comentario-add-comment-host {
+/* Signed out, this bar holds only "Sign in"; signed in, the reader's name
+   and settings */
+.post-comments comentario-comments .comentario-root .comentario-profile-bar {
+	align-items: center;
+	gap: 0.6rem;
+	margin-bottom: 0.75rem;
+	padding: 0 !important;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-avatar,
+.post-comments comentario-comments .comentario-root .comentario-avatar-img {
+	width: 1.6rem;
+	height: 1.6rem;
+	margin-right: 0.5rem;
+	font-size: 0.95rem;
+}
+
+/* "Add a comment": a one-line prompt until it's clicked, not a tall empty box */
+.post-comments comentario-comments .comentario-root .comentario-add-comment-host:not(.comentario-editor-inserted) {
+	min-height: 0;
 	background: var(--bg);
-	border-color: var(--border-bright);
+	border: 1px solid var(--border-bright);
 	border-radius: 0;
 	transition: border-color 0.15s ease;
 }
@@ -3755,6 +3831,377 @@ pre code {
 .post-comments comentario-comments .comentario-root .comentario-add-comment-host:not(.comentario-editor-inserted):is(:hover, :focus-within) {
 	border-color: var(--rose);
 	box-shadow: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-add-comment-placeholder {
+	justify-content: flex-start;
+	padding: 0.7rem 0.9rem;
+	color: var(--muted);
+	text-align: left;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-add-comment-placeholder::before {
+	content: '>';
+	margin-right: 0.7em;
+	color: var(--rose);
+}
+
+/* The editor (new comments, replies, edits): one bordered box with the
+   formatting bar on top and the buttons along the bottom */
+.post-comments comentario-comments .comentario-root .comentario-comment-editor {
+	background: var(--bg);
+	border: 1px solid var(--border-bright);
+	transition: border-color 0.15s ease;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor:focus-within {
+	border-color: var(--rose);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor > .comentario-toolbar {
+	flex-wrap: nowrap;
+	gap: 0.5rem;
+	padding: 0.2rem 0.35rem;
+	overflow-x: auto;
+	background: var(--bg-raised);
+	border-bottom: 1px solid var(--border);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor textarea {
+	min-height: 7.5rem;
+	padding: 0.75rem 0.9rem;
+	color: var(--text);
+	background: transparent;
+	border: 0;
+	resize: vertical;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor textarea:focus {
+	box-shadow: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor textarea::placeholder {
+	display: block;
+	font-size: inherit;
+	line-height: inherit;
+	text-align: left;
+	color: var(--muted);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor .comentario-comment-editor-preview {
+	min-height: 7.5rem;
+	padding: 0.75rem 0.9rem;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comment-editor .comentario-comment-editor-footer {
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0.5rem 0.6rem;
+	background: var(--bg-raised);
+	border-top: 1px solid var(--border);
+}
+
+/* Comment count and sort order, ruled off from the thread. Comentario's RSS
+   button is the only thing in .comentario-thread-buttons: the blog has no
+   feeds, so it stays hidden. */
+.post-comments comentario-comments .comentario-root .comentario-thread-toolbar {
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 1px solid var(--border);
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-thread-buttons {
+	display: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-thread-toolbar .comentario-comment-count {
+	color: var(--subtle);
+	text-align: left;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-thread-toolbar .comentario-sort-buttons li + li::before {
+	content: '/';
+	color: var(--border-bright);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-thread-toolbar .comentario-btn-sm {
+	font-size: 0.8rem;
+	line-height: 1.4;
+}
+
+/* Comments: name and time on one line, a thin rule down the left that
+   collapses a thread when it has replies */
+.post-comments comentario-comments .comentario-root .comentario-card {
+	margin-top: 0;
+	border-top: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comments > .comentario-card {
+	padding: 1rem 0 0.4rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-comments > .comentario-card + .comentario-card {
+	border-top: 1px solid var(--border);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card-children > .comentario-card {
+	margin-top: 0.75rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card :is(.comentario-card-expand-spacer, .comentario-card-expand-toggler) {
+	flex-basis: 1rem;
+	border-left: 1px solid var(--border-bright) !important;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-expand-toggler:not(.comentario-collapsed):hover {
+	border-left: 2px solid var(--rose) !important;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-expand-toggler.comentario-collapsed {
+	border-left: 1px dashed var(--rose) !important;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-self {
+	padding-top: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-header {
+	align-items: center;
+	margin-bottom: 0.15rem;
+}
+
+/* Most readers comment without an account, so nearly every avatar would be
+   the same grey silhouette */
+.post-comments comentario-comments .comentario-root .comentario-card-header :is(.comentario-avatar, .comentario-avatar-img) {
+	display: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-name-container {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 0.75rem;
+	margin-bottom: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-name-wrap {
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-name {
+	font-size: 0.92rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle {
+	color: var(--muted);
+	font-size: 0.78rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle a {
+	color: var(--muted);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle a:is(:hover, :focus-visible) {
+	color: var(--rose);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body p {
+	margin: 0.25rem 0;
+}
+
+/* What readers write: links, code and lists look like the post's */
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body a {
+	color: var(--iris);
+	text-decoration: underline;
+	text-decoration-color: var(--muted);
+	text-underline-offset: 3px;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body a:is(:hover, :focus-visible) {
+	background-color: var(--iris);
+	color: var(--bg);
+	text-decoration: none;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body code {
+	font-family: var(--font-body);
+	font-size: 0.9em;
+	white-space: pre-wrap;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body pre {
+	margin: 0.4rem 0;
+	padding: 0.6rem 0.8rem;
+	background: var(--bg);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body pre code {
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--text);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body :is(ul, ol) {
+	margin: 0.3rem 0;
+	padding-left: 1.4em;
+	list-style: disc;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body ol {
+	list-style: decimal;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-card-body li {
+	margin: 0.15rem 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-toolbar {
+	margin-left: -0.45rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-card .comentario-score {
+	min-width: 1.5ch;
+	font-size: 0.82rem;
+	font-weight: normal;
+	text-align: center;
+}
+
+/* Role badges: outlined chips instead of colored pills */
+.post-comments comentario-comments .comentario-root .comentario-badge {
+	margin-left: 0;
+	padding: 0 0.45rem;
+	font-family: var(--font-display);
+	font-size: 0.68rem;
+	line-height: 1.5;
+	letter-spacing: 0.04em;
+	background: none;
+	border: 1px solid currentColor;
+	border-radius: 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-badge-moderator {
+	color: var(--foam);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-badge-pending {
+	color: var(--gold);
+}
+
+/* A comment awaiting review gets a dashed gold box; keep its text off the edge */
+.post-comments comentario-comments .comentario-root .comentario-pending {
+	padding: 0.4rem 0.6rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-moderation-notice {
+	font-size: 0.82rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-footer {
+	margin: 1rem 0 0;
+	padding: 0;
+	font-size: 0.72rem;
+	line-height: 1.4;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-footer a {
+	color: var(--muted);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-footer a:is(:hover, :focus-visible) {
+	color: var(--rose);
+}
+
+/* Sign-in and name dialogs */
+.post-comments comentario-comments .comentario-root .comentario-backdrop {
+	background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog {
+	background: var(--bg-raised);
+	border-color: var(--border-bright);
+	box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 0.45);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-arrow::before {
+	background: var(--bg-raised);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog[data-popper-placement^="bottom"] > .comentario-dialog-arrow::before {
+	background: var(--bg-inset);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-header {
+	padding: 0.4rem 1rem;
+	border-bottom: 1px solid var(--border);
+	font-family: var(--font-display);
+	font-weight: normal;
+	letter-spacing: 0.04em;
+	color: var(--rose);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-header .comentario-dialog-btn-close {
+	width: 2.25rem;
+	height: 100%;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-body {
+	padding: 0.75rem 1rem 1rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog .comentario-dialog-centered {
+	color: var(--subtle);
+	font-size: 0.85rem;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-dialog hr {
+	margin: 0.9rem 0;
+	border: 0;
+	border-top: 1px solid var(--border);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-form-field {
+	margin: 0.6rem 0;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-form-field .comentario-input-label {
+	margin: 0 0 0.3rem;
+	color: var(--subtle);
+	font-size: 0.78rem;
+}
+
+/* A text box and its submit arrow read as one field */
+.post-comments comentario-comments .comentario-root .comentario-input-group {
+	background: var(--bg);
+	border: 1px solid var(--border-bright);
+	transition: border-color 0.15s ease;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-input-group:focus-within {
+	border-color: var(--rose);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-input-group .comentario-input {
+	height: 2.4rem;
+	padding: 0 0.75rem;
+	color: var(--text);
+	background: transparent;
+}
+
+.post-comments comentario-comments .comentario-root .comentario-input-group .comentario-input::placeholder {
+	color: var(--muted);
+}
+
+.post-comments comentario-comments .comentario-root .comentario-input-group .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool) {
+	padding: 0 0.9rem;
+	border-width: 0 0 0 1px;
 }
 
 .post-comments comentario-comments .comentario-root .comentario-comment-editor-preview,
@@ -3775,8 +4222,8 @@ pre code {
 	border-left-color: var(--border-bright);
 }
 
-/* Phones: monospace is wide, so let the thread toolbar (RSS, count, sort)
-   wrap between its parts instead of inside them */
+/* Phones: monospace is wide, so let the thread toolbar (count, sort) wrap
+   between its parts instead of inside them */
 @media (max-width: 600px) {
 	.post-comments comentario-comments .comentario-root .comentario-thread-toolbar {
 		flex-wrap: wrap;
@@ -3786,14 +4233,25 @@ pre code {
 	.post-comments comentario-comments .comentario-root .comentario-thread-toolbar :is(.comentario-comment-count, .comentario-sort-buttons) {
 		white-space: nowrap;
 	}
+
+	/* Ten formatting buttons and help fit on one row */
+	.post-comments comentario-comments .comentario-root .comentario-comment-editor > .comentario-toolbar .comentario-btn-tool {
+		width: 1.6rem;
+		flex-shrink: 0;
+	}
 }
 
-/* A comment awaiting review gets a dashed gold box; keep its text off the edge */
-.post-comments comentario-comments .comentario-root .comentario-pending {
-	padding: 0.4rem 0.6rem;
+/* Loading skeleton, sized like the loaded widget so nothing jumps */
+.post-comments comentario-comments .comentario-root .comentario-ph-profile-bar {
+	height: 2.6rem;
+	margin-top: 0;
 }
 
-/* Loading skeleton */
+.post-comments comentario-comments .comentario-root .comentario-ph-add-comment-host {
+	height: 2.9rem;
+	border-radius: 0;
+}
+
 .post-comments comentario-comments .comentario-root .comentario-ph-comment-card {
 	border-top-color: var(--border);
 	border-left-color: var(--border-bright);
