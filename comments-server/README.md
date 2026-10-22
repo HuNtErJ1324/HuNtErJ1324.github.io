@@ -37,15 +37,17 @@ cp .env.example .env && chmod 600 .env
 openssl rand -hex 32    # paste into .env as COMENTARIO_SIGNING_KEY
 ```
 
-Set `TAILSCALE_IP` in `.env` to the server's Tailscale address (`tailscale ip -4`).
+Set `TAILSCALE_IP` in `.env` to the server's Tailscale address (`tailscale ip -4`). Comentario listens on port 8080 there. If something on the server already uses 8080 (`ss -ltn | grep ':8080 '` prints a line), set `COMENTARIO_PORT` in `.env` to a free port. The steps below call it `<port>`.
 
 ### 2. Create your admin account, over Tailscale only
 
 ```sh
-BASE_URL=http://<tailscale-ip>:8080 docker compose up -d comentario
+BASE_URL=http://<tailscale-ip>:<port> docker compose up -d comentario
 ```
 
-From a device on your tailnet, open `http://<tailscale-ip>:8080/en/auth/signup` and sign up. **The first account on a Comentario server becomes its superuser.** That's why this happens before the tunnel exists: nobody else can reach the server yet.
+From a device on your tailnet, open `http://<tailscale-ip>:<port>/en/auth/signup` and sign up. **The first account on a Comentario server becomes its superuser.** That's why this happens before the tunnel exists: nobody else can reach the server yet.
+
+If that page doesn't load, but `curl -sI http://<tailscale-ip>:<port>/` on the server itself answers, the server's firewall is blocking the port. Rather than open it, reach Comentario through SSH. Restart it with `BASE_URL=http://localhost:<port>` in place of the command above, then on your own computer run `ssh -N -L <port>:<tailscale-ip>:<port> <user>@<tailscale-ip>` and open `http://localhost:<port>/en/auth/signup`.
 
 ### 3. Put it online
 
@@ -69,6 +71,14 @@ In the Administration UI, **Domains → New domain**:
 - **General:** Host `https://` `justin-chae.org`. Further down, turn off **Enable images in comments**: the blog's CSP wouldn't display outside images anyway.
 - **Authentication:** turn on **Commenting without registration**. Leave **Local (password-based)** on if readers should also be able to make accounts.
 - **Moderation:** under *Require moderator approval on comment, if*, tick **Author is unregistered**, **Comment contains link**, and **Comment contains image**. Set **Email moderators** to never: no email is set up, and the moderator notifies you instead.
+
+**Bring over the giscus comments.** Comments from before the switch live in this repo's GitHub Discussions, one discussion per post. On a computer with this repo and the GitHub CLI signed in, run:
+
+```sh
+node comments-server/giscus-import.mjs giscus-import.json
+```
+
+It prints how many comments it found for each post (git ignores `giscus-import.json`). Then open the domain → **Operations → Import data**, pick **Commento/Comentario** as the source format, and upload `giscus-import.json` as the data file. Each comment keeps its GitHub username as its author name, its date, and its place in the thread, and goes in approved. No accounts or emails are created. They arrive as plain text, so any Markdown in them shows as typed. Importing doesn't send webhooks, so the moderator won't see them, and importing twice duplicates them. The discussions stay on GitHub. Once the comments show up on the blog, you can uninstall the giscus GitHub app.
 
 ### 5. Connect the moderator
 

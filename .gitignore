@@ -18,9 +18,11 @@ drafts/
 !/src/pages/drafts/
 
 # Comment server on the home server (comments-server/): its database and
-# identity-provider keys stay there (.env is covered above)
+# identity-provider keys stay there (.env is covered above), and the giscus
+# import file is a one-off
 comments-server/data/
 comments-server/secrets.yaml
+giscus-import.json
 
 # Archived Jekyll build artifacts (sources kept in _jekyll/)
 _site/

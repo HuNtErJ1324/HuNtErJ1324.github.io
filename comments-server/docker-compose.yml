@@ -9,7 +9,7 @@ services:
     image: registry.gitlab.com/comentario/comentario:v3.19.0
     restart: unless-stopped
     environment:
-      # Set BASE_URL in the shell only for the first start over Tailscale (README step 4)
+      # Set BASE_URL in the shell only for the first start over Tailscale (README step 2)
       BASE_URL: ${BASE_URL:-https://comments.justin-chae.org}
       COMENTARIO_SQLITE3_FILE: /data/comentario.sqlite3
       # Keeps sign-ins valid across restarts (random on every start otherwise)
@@ -22,7 +22,7 @@ services:
       - ./data:/data
     ports:
       # Only on the Tailscale address, for the first sign-up; the public route is the tunnel
-      - "${TAILSCALE_IP:?set TAILSCALE_IP in .env}:8080:80"
+      - "${TAILSCALE_IP:?set TAILSCALE_IP in .env}:${COMENTARIO_PORT:-8080}:80"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/api/user"]
       interval: 30s
