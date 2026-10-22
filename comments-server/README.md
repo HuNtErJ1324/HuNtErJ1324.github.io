@@ -15,7 +15,7 @@ reader's browser ── justin-chae.org (GitHub Pages: the post, with an empty <
 
 - **[Comentario](https://comentario.app)** stores and serves the comments. Readers comment with just a name (or none), or make an account. Comments from readers who aren't signed in wait in a moderation queue.
 - **The moderator** (`moderator/`, TypeScript) gets a signed webhook for each comment that lands in that queue and asks Claude Haiku 5.5 for `approve`, `hold`, or `reject`. It approves or rejects through Comentario's API. Anything held waits for you, and so does any comment with a link or an image, whatever Claude said. If something fails, the comment stays pending. Each comment costs about $0.0002.
-- **cloudflared** connects out to Cloudflare, so no port is open on your router and your home IP stays hidden. Comentario's port is published only on the Tailscale address, for first-time setup.
+- **cloudflared** connects out to Cloudflare, so no port is open on your router and your home IP stays hidden. If the server already runs a Cloudflare Tunnel, Comentario becomes one more route on it. Otherwise the compose file runs one. Comentario's port is published only on the Tailscale address, for first-time setup, and on `127.0.0.1`, for a tunnel running on the server itself.
 
 The blog side lives in this repo too: `src/lib/comments.ts` (the server's URL), `src/layouts/Post.astro` (the embed), `src/layouts/Base.astro` (CSP), `public/script.js` §9 (lazy-loads the widget) and `public/home.css` (Rosé Pine colors for the widget).
 
@@ -51,18 +51,26 @@ If that page doesn't load, but `curl -sI http://<tailscale-ip>:<port>/` on the s
 
 ### 3. Put it online
 
-In the Cloudflare dashboard, open **Zero Trust → Networks → Tunnels → Create a tunnel**, choose **Cloudflared**, and name it `comments`. Cloudflare shows an install command: copy the long token after `--token` into `.env` as `TUNNEL_TOKEN`. Skip the install step, since the compose file runs cloudflared. Then add a public hostname (Cloudflare also calls these *published application routes*):
+Comentario goes public through a Cloudflare Tunnel. Which way depends on whether the server already runs one: `systemctl status cloudflared` shows it running if it does.
+
+**The server already runs cloudflared.** In the Cloudflare dashboard, open **Zero Trust → Networks → Tunnels**, open that tunnel, and add a public hostname (Cloudflare also calls these *published application routes*):
 
 - Subdomain `comments`, domain `justin-chae.org`
-- Service type **HTTP**, URL `comentario:80`
+- Service type **HTTP**, URL `127.0.0.1:<port>` (Comentario listens on IPv4 loopback only, so not `localhost`)
 
-Then, without the `BASE_URL` override:
+Leave `COMPOSE_PROFILES` and `TUNNEL_TOKEN` in `.env` empty. Then, without the `BASE_URL` override:
+
+```sh
+docker compose up -d comentario
+```
+
+**No tunnel yet.** Open **Zero Trust → Networks → Tunnels → Create a tunnel**, choose **Cloudflared**, and name it `comments`. Cloudflare shows an install command: copy the long token after `--token` into `.env` as `TUNNEL_TOKEN`, and set `COMPOSE_PROFILES=tunnel` so the compose file runs cloudflared. Skip the install step. Add a public hostname as above, but with the URL `comentario:80`, since this cloudflared runs inside the compose network. Then, without the `BASE_URL` override:
 
 ```sh
 docker compose up -d comentario cloudflared
 ```
 
-This restarts Comentario under its public address (`https://comments.justin-chae.org`, the `BASE_URL` default). Check that <https://comments.justin-chae.org/comentario.js> loads, then sign in at <https://comments.justin-chae.org/en/auth/login>. From now on, use that address for the Administration UI. The Tailscale address stops working for it, because the UI calls the server at its public address. Any `docker compose` command that omits `BASE_URL` brings back the public address, which is why the tunnel goes up first.
+Either way, this restarts Comentario under its public address (`https://comments.justin-chae.org`, the `BASE_URL` default). Check that <https://comments.justin-chae.org/comentario.js> loads, then sign in at <https://comments.justin-chae.org/en/auth/login>. From now on, use that address for the Administration UI. The Tailscale address stops working for it, because the UI calls the server at its public address. Any `docker compose` command that omits `BASE_URL` brings back the public address, which is why the tunnel goes up first.
 
 ### 4. Add the blog
 

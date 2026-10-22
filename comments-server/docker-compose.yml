@@ -1,6 +1,7 @@
 # Comments for justin-chae.org, run on the home server: Comentario (the comment
-# server, SQLite in ./data) reached publicly through a Cloudflare Tunnel, and
-# a moderator that asks Claude Haiku about each comment awaiting approval.
+# server, SQLite in ./data) reached publicly through a Cloudflare Tunnel (a
+# cloudflared the server already runs, or the optional one below), and a
+# moderator that asks Claude Haiku about each comment awaiting approval.
 # Nothing listens on a public port. Setup and upkeep: README.md.
 name: comments
 
@@ -21,8 +22,10 @@ services:
     volumes:
       - ./data:/data
     ports:
-      # Only on the Tailscale address, for the first sign-up; the public route is the tunnel
+      # On the Tailscale address, for the first sign-up
       - "${TAILSCALE_IP:?set TAILSCALE_IP in .env}:${COMENTARIO_PORT:-8080}:80"
+      # On loopback, for a cloudflared running on the server itself (outside Docker)
+      - "127.0.0.1:${COMENTARIO_PORT:-8080}:80"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/api/user"]
       interval: 30s
@@ -54,8 +57,11 @@ services:
       timeout: 5s
       retries: 3
 
+  # Only for a server without its own tunnel: starts when COMPOSE_PROFILES=tunnel
+  # is in .env (or with --profile tunnel)
   cloudflared:
     image: cloudflare/cloudflared:2026.10.0
+    profiles: [tunnel]
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
