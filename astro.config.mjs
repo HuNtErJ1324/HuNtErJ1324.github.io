@@ -7,6 +7,7 @@ import remarkMath from 'remark-math';
 import { remarkMathJax } from './src/plugins/remark-mathjax.js';
 import { remarkTraceDirectives } from './src/plugins/remark-trace-directives.js';
 import draftsEditor from './scripts/drafts-editor/integration.mjs';
+import { draftsEditorOptions } from './scripts/drafts-editor-site.mjs';
 
 // Drafts (./drafts) may only ever render under `astro dev`, except drafts
 // shared by link (npm run draft:share), which builds render at /drafts/<token>/
@@ -34,9 +35,10 @@ const draftsGate = {
 export default defineConfig({
 	site: 'https://justin-chae.org',
 	// draftsEditor serves the browser editor at /edit/ under `astro dev` only
-	// (scripts/drafts-editor/); it must come before mdx() so its dev-only
-	// remark plugin reaches MDX too.
-	integrations: [draftsGate, draftsEditor(), mdx()],
+	// (scripts/drafts-editor/, with this site's settings in
+	// scripts/drafts-editor-site.mjs); it must come before mdx() so its
+	// dev-only remark plugin reaches MDX too.
+	integrations: [draftsGate, draftsEditor(draftsEditorOptions), mdx()],
 	// Astro 7 defaults to JSX whitespace rules ('jsx'), which drop the spaces
 	// between inline elements on separate lines (chips, "focus: …" meta, the
 	// 404 links). Keep the HTML-aware compression the site was built with.

@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         //    h/l previous/next page, ? toggles the :help overlay.
         const LINE_STEP = 72;
         const GG_WINDOW_MS = 600;
-        const PAGE_ORDER = ['/', '/music/', '/blog/'];
+        const PAGE_ORDER = ['/', '/music/', '/blog/', '/tools/'];
 
         const showcmd = document.getElementById('showcmd');
         const modeBlock = document.querySelector('.statusline-mode');
@@ -366,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentPageIndex = () => {
             const path = window.location.pathname;
+            if (path.startsWith('/tools')) return 3;
             if (path.startsWith('/blog')) return 2;
             if (path.startsWith('/music')) return 1;
             if (path === '/' || path === '/index.html') return 0;
@@ -655,6 +656,10 @@ document.addEventListener('DOMContentLoaded', () => {
             blog: () => {
                 window.location.href = '/blog/';
                 return 'opening ~/blog ...';
+            },
+            tools: () => {
+                window.location.href = '/tools/';
+                return 'opening ~/tools ...';
             },
             email: () => {
                 copyContactEmail();

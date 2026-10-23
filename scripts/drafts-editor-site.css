@@ -1,0 +1,41 @@
+/* This site's fonts for the drafts editor (the css option, set in
+   scripts/drafts-editor-site.mjs).
+   scripts/drafts-editor/ itself stays generic: it is published as
+   github.com/HuNtErJ1324/astro-drafts-editor. */
+
+@font-face {
+	font-family: 'Departure Mono';
+	src: url('/assets/fonts/DepartureMono-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('/assets/fonts/CommitMonoNF-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('/assets/fonts/CommitMonoNF-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'CommitMono Nerd Font';
+	src: url('/assets/fonts/CommitMonoNF-Italic.woff2') format('woff2');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+:root {
+	--font-display: 'Departure Mono', ui-monospace, monospace;
+	--font-body: 'CommitMono Nerd Font', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}

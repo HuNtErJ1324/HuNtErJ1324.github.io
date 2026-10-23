@@ -1,0 +1,51 @@
+---
+// Tools I've built, each published as its own public repo. One file per tool
+// in src/content/tools/ (schema in content.config.ts), newest first.
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const tools = (await getCollection('tools')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const entries = await Promise.all(tools.map(async (tool) => ({ tool, Content: (await render(tool)).Content })));
+---
+
+<Base
+	title="Tools | Justin Yang Chae"
+	description="Open source tools written entirely by AI, to test whether coding is really dead: a browser editor for Astro drafts, a self-hosted game tracker, and more."
+	canonical="/tools/"
+	statuslinePath="~/tools"
+	activeNavLink="tools"
+>
+	<header class="banner page-banner">
+		<p class="boot-line" aria-hidden="true">justin@uw:~$ ls ~/tools</p>
+		<h1>Tools</h1>
+		<p>
+			Everyone says coding is dead. To find out if that's true, I'm having AI write every tool here.
+			Each one is an open source repo: something I made to help with my day-to-day work, or just something I thought was cool.
+		</p>
+	</header>
+	{entries.length > 0 ? (
+		entries.map(({ tool, Content }, i) => (
+			<section id={tool.id} class="tool" data-label={`~/tools/${tool.id}/`}>
+				<h2><a href={tool.data.repo} target="_blank" rel="noopener noreferrer">{tool.data.name}</a></h2>
+				<p class="tool-description">{tool.data.description}</p>
+				<div class="entry-meta">
+					{tool.data.stack.map((item) => <span class="chip chip-tag">{item}</span>)}
+					<a href={tool.data.repo} target="_blank" rel="noopener noreferrer" aria-label={`${tool.data.name} on GitHub`}>[github]</a>
+				</div>
+				<a class="tool-shot" href={`${tool.data.image}.webp`} target="_blank" rel="noopener">
+					<picture>
+						<source srcset={`${tool.data.image}.webp`} type="image/webp">
+						<img src={`${tool.data.image}.jpg`} alt={tool.data.imageAlt} width="1600" height="1000" loading={i === 0 ? 'eager' : 'lazy'} decoding="async">
+					</picture>
+				</a>
+				<div class="tool-body">
+					<Content />
+				</div>
+			</section>
+		))
+	) : (
+		<section data-label="~/tools/">
+			<p class="listing-meta">total 0 — nothing here yet. check back soon.</p>
+		</section>
+	)}
+</Base>

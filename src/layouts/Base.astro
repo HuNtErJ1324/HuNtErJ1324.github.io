@@ -24,7 +24,7 @@ interface Props {
 	// Describes a page's own preview image (read out where the card shows)
 	ogImageAlt?: string;
 	publishedTime?: string;
-	activeNavLink?: 'home' | 'violin' | 'blog';
+	activeNavLink?: 'home' | 'violin' | 'blog' | 'tools';
 }
 
 const {
@@ -107,6 +107,7 @@ const linkCurrent = (key: NavKey) => (activeNavLink === key ? ('page' as const) 
 		<a href="/" class={linkClass('home')} aria-current={linkCurrent('home')}>Home</a>
 		<a href="/music/" class={linkClass('violin')} aria-current={linkCurrent('violin')}>Violin</a>
 		<a href="/blog/" class={linkClass('blog')} aria-current={linkCurrent('blog')}>Blog</a>
+		<a href="/tools/" class={linkClass('tools')} aria-current={linkCurrent('tools')}>Tools</a>
 	</nav>
 	<main id="main">
 		<slot />

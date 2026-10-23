@@ -6,9 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="noindex">
 	<title>Drafts editor</title>
-	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-	<link rel="stylesheet" href="/edit/editor.css">
-	<script type="module" src="/scripts/drafts-editor/client.js"></script>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23191724'/%3E%3Cpath d='M8 10l6 6-6 6M16 22h8' stroke='%23ebbcba' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+	<!-- The integration adds the stylesheets, the client config and client.js here -->
 </head>
 
 <body>
@@ -87,7 +86,7 @@
 			<label>Title
 				<input id="new-title" name="title" required autocomplete="off" placeholder="My post title">
 			</label>
-			<label>Slug <small>(the URL: /blog/<span id="new-slug-preview">my-post-title</span>/)</small>
+			<label>Slug <small>(the URL: <span id="new-slug-preview">/blog/my-post-title/</span>)</small>
 				<input id="new-slug" name="slug" required autocomplete="off" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="my-post-title">
 			</label>
 			<fieldset>

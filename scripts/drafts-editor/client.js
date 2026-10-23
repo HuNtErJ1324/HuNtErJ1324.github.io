@@ -1,5 +1,5 @@
 // Drafts editor client (dev only). Vite serves and bundles this module for
-// the page that scripts/drafts-editor/integration.mjs serves at /edit/.
+// the page that integration.mjs serves at /edit/ (the `base` option).
 //
 // The source pane is CodeMirror; every edit autosaves to drafts/<slug>.mdx.
 // The preview pane holds two iframes of /edit/preview/<slug>/: when Astro
@@ -38,6 +38,13 @@ import { tags as t } from '@lezer/highlight';
 import { getCM, Vim, vim } from '@replit/codemirror-vim';
 
 const $ = (selector) => document.querySelector(selector);
+
+// Set by the integration: where the editor lives, the page that renders a
+// draft, how components are imported, and the site's own insert-menu items
+const config = JSON.parse($('#drafts-editor-config')?.textContent || '{}');
+const BASE = config.base ?? '/edit/';
+const fill = (pattern, values) => pattern.replace(/\[(\w+)\]/g, (match, key) => values[key] ?? match);
+const postUrl = (slug) => fill(config.preview ?? '/blog/[slug]/', { slug });
 const els = {
     select: $('#draft-select'),
     newButton: $('#new-draft'),
@@ -100,7 +107,7 @@ const store = {
 async function api(path, { method = 'GET', body } = {}) {
     const headers = { 'X-Drafts-Editor': '1' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
-    const res = await fetch(`/edit/api/${path}`, {
+    const res = await fetch(`${BASE}api/${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body)
@@ -459,7 +466,7 @@ function showProblems(problems) {
     els.problemCount.textContent = `${problems.length} problem${problems.length === 1 ? '' : 's'}`;
 }
 
-// Same estimate as the post page (src/pages/blog/[...slug].astro)
+// Prose words only (no code, imports or components), at 200 a minute
 function updateStats() {
     const body = view.state.doc.toString().replace(/^---\n[\s\S]*?\n---/, '');
     const prose = body
@@ -601,13 +608,14 @@ function insertFootnote(view) {
     return true;
 }
 
-// Adds `import X from '@/components/blog/X.astro';` for any missing names.
+// Adds `import X from '@/components/X.astro';` (the componentImport option)
+// for any missing names.
 function ensureImports(view, names) {
     if (draft.ext !== '.mdx' || !names?.length) return;
     const text = view.state.doc.toString();
     const missing = names.filter((name) => !new RegExp(`^import\\s+(?:${name}\\b|\\{[^}]*\\b${name}\\b)`, 'm').test(text));
     if (!missing.length) return;
-    const lines = missing.map((name) => `import ${name} from '@/components/blog/${name}.astro';`).join('\n');
+    const lines = missing.map((name) => `import ${name} from '${fill(config.componentImport ?? '@/components/[name].astro', { name })}';`).join('\n');
     const imports = [...text.matchAll(/^import\s.*$/gm)];
     let from;
     let insert;
@@ -652,46 +660,15 @@ function insertSnippet(view, item) {
     applyTemplate(view, item.template, from, to, { block: item.block });
 }
 
-const LINE_CHART = `<LineChart
-\ttitle="\${Title}"
-\tsubtitle="\${What the axes show}"
-\tseries={[
-\t\t{ name: '\${Series}', color: 'blue', markers: true, points: [[0, 1], [1, 2], [2, 1.5]] }
-\t]}
-\tx={{ label: 'step', min: 0, max: 2, ticks: [0, 1, 2], format: 'int' }}
-\ty={{ min: 0, max: 2, ticks: [0, 1, 2], format: 'dec1' }}
-\tcaption="\${Caption}"
-/>`;
-
-const BAR_CHART = `<BarChart
-\ttitle="\${Title}"
-\tsubtitle="\${What the bars show}"
-\tmax={1}
-\trows={[
-\t\t{ label: '\${First}', value: 0.6, color: 'blue' },
-\t\t{ label: '\${Second}', value: 0.4, color: 'gold' }
-\t]}
-/>`;
-
+// Built-in items, then the site's own (the snippets option): each is
+// { group, label, template, imports?, block? }, with ${field} placeholders.
 const SNIPPETS = [
     { group: 'Text', label: 'Footnote', keys: 'Ctrl+Shift+F', run: insertFootnote },
-    { group: 'Text', label: 'Image', keys: 'or paste', run: () => els.imageInput.click() },
+    ...(config.uploads ? [{ group: 'Text', label: 'Image', keys: 'or paste', run: () => els.imageInput.click() }] : []),
     { group: 'Text', label: 'Section heading', template: '## ${Heading}', block: true },
-    { group: 'Math', label: 'Inline math', imports: ['Tex'], template: '<Tex tex="${x}" />' },
-    { group: 'Math', label: 'Display math', imports: ['Tex'], template: '<Tex block tex={String.raw`${x}`} />', block: true },
-    { group: 'Callouts', label: 'TL;DR', template: ':::tldr\n${}\n:::', block: true },
-    { group: 'Callouts', label: 'Collapsible section', imports: ['Fold'], template: '<Fold summary="${Summary}" hint="${hint}">\n\n${}\n\n</Fold>', block: true },
-    { group: 'Agent traces', label: 'Chat excerpt', imports: ['Chat', 'ChatMessage'], template: '<Chat caption="${Caption}">\n\t<ChatMessage name="${Model}" meta="${meta}" color="${love}">${Message}</ChatMessage>\n\t<ChatMessage role="tool" tool="${tool}">${Result}</ChatMessage>\n</Chat>', block: true },
-    { group: 'Agent traces', label: 'Chat message', imports: ['ChatMessage'], template: '<ChatMessage name="${Model}" meta="${meta}" color="${love}">${Message}</ChatMessage>' },
-    { group: 'Agent traces', label: 'Tool call', template: ':::tool-call\n```bash\n${}\n```\n:::', block: true },
-    { group: 'Agent traces', label: 'Tool output', template: ':::tool-output\n```\n${}\n```\n:::', block: true },
-    { group: 'Agent traces', label: 'Reasoning (collapsed)', template: ':::reasoning\n${}\n:::', block: true },
-    { group: 'Agent traces', label: 'Annotation', template: ':::annotation\n${}\n:::', block: true },
-    { group: 'Figures', label: 'Line chart', imports: ['LineChart'], template: LINE_CHART, block: true },
-    { group: 'Figures', label: 'Bar chart', imports: ['BarChart'], template: BAR_CHART, block: true },
-    { group: 'Figures', label: 'Two-up grid', imports: ['Grid'], template: '<Grid>\n\n${}\n\n</Grid>', block: true },
-    { group: 'Figures', label: 'Tweet card', imports: ['Tweet'], template: '<Tweet name="${Name}" handle="${handle}" date="${Oct 1, 2026}" url="${https://x.com/}" caption="${Caption}">\n\n${Post text}\n\n</Tweet>', block: true },
-    { group: 'End matter', label: 'Citation (BibTeX)', template: '## Citation\n\n:::bibtex\n```bibtex\n${}\n```\n:::', block: true }
+    { group: 'Text', label: 'Table', template: '| ${Column} | ${Column} |\n| --- | --- |\n| ${} | |', block: true },
+    { group: 'Text', label: 'Code block', template: '```${lang}\n${}\n```', block: true },
+    ...(config.snippets ?? [])
 ];
 
 const snippetFor = (name) => SNIPPETS.find((item) => item.imports?.[0] === name);
@@ -752,7 +729,8 @@ function componentCompletions(context) {
 }
 
 // ---------------------------------------------------------------------------
-// Images: paste, drop, or pick, saved under public/assets/blog/<slug>/
+// Images: paste, drop, or pick, saved under the assets option's folder
+// (public/assets/blog/<slug>/)
 // ---------------------------------------------------------------------------
 
 const imageName = (file) => {
@@ -764,9 +742,10 @@ const imageName = (file) => {
 async function uploadImages(files, pos) {
     const slug = draft.slug;
     const urls = [];
+    let dir = '';
     for (const file of files) {
         flash(`uploading ${file.name || 'image'}…`, 10000);
-        const res = await fetch(`/edit/api/assets/${slug}`, {
+        const res = await fetch(`${BASE}api/assets/${slug}`, {
             method: 'POST',
             headers: {
                 'X-Drafts-Editor': '1',
@@ -781,6 +760,7 @@ async function uploadImages(files, pos) {
             continue;
         }
         urls.push(data.url);
+        dir = data.dir;
     }
     if (!urls.length || slug !== draft.slug) return;
     enterInsertMode(view);
@@ -790,14 +770,14 @@ async function uploadImages(files, pos) {
     } else {
         applyTemplate(view, urls.map((url) => `![](${url})`).join('\n\n'), at, at, { block: true });
     }
-    flash(`saved to public/assets/blog/${slug}/`);
+    flash(`saved to ${dir}`);
 }
 
 const imagesIn = (list) => [...(list ?? [])].filter((file) => file.type.startsWith('image/'));
 
 function onPaste(event, view) {
     const images = imagesIn(event.clipboardData?.files);
-    if (images.length) {
+    if (images.length && config.uploads) {
         event.preventDefault();
         uploadImages(images, view.state.selection.main.head);
         return true;
@@ -816,7 +796,7 @@ function onPaste(event, view) {
 
 function onDrop(event, view) {
     const images = imagesIn(event.dataTransfer?.files);
-    if (!images.length) return false;
+    if (!images.length || !config.uploads) return false;
     event.preventDefault();
     const pos = view.posAtCoords({ x: event.clientX, y: event.clientY }) ?? view.state.selection.main.head;
     uploadImages(images, pos);
@@ -1308,7 +1288,7 @@ async function renderInto(frame) {
     const slug = draft.slug;
     prepared.delete(frame);
     invalidatePoints(frame);
-    frame.src = `/edit/preview/${slug}/?r=${token}`;
+    frame.src = `${BASE}preview/${slug}/?r=${token}`;
     const loaded = await waitForLoad(frame, token, 30000);
     if (!loaded || slug !== draft.slug || token !== previewToken) return;
     const marker = frame.contentDocument.querySelector('meta[name="drafts-editor-error"]');
@@ -1401,7 +1381,7 @@ for (const frame of frames) {
         } catch {
             // Cross-origin: certainly not the preview
         }
-        if (href !== 'about:blank' && !href.includes('/edit/preview/')) refreshPreview();
+        if (href !== 'about:blank' && !href.includes(`${BASE}preview/`)) refreshPreview();
     });
 }
 
@@ -1518,10 +1498,10 @@ async function openDraft(slug, { push = true } = {}) {
     const title = drafts.find((d) => d.slug === slug)?.title ?? slug;
     document.title = `${title} · drafts editor`;
     els.select.value = slug;
-    els.openPost.href = `/blog/${slug}/`;
+    els.openPost.href = postUrl(slug);
     els.filePath.textContent = data.file;
-    if (push) window.history.pushState({ slug }, '', `/edit/${slug}`);
-    else window.history.replaceState({ slug }, '', `/edit/${slug}`);
+    if (push) window.history.pushState({ slug }, '', BASE + slug);
+    else window.history.replaceState({ slug }, '', BASE + slug);
     store.set('last', slug);
     showProblems(data.problems ?? []);
     updateStats();
@@ -1577,18 +1557,18 @@ els.newButton.addEventListener('click', () => {
     els.newForm.reset();
     slugEdited = false;
     els.newError.hidden = true;
-    els.newSlugPreview.textContent = 'my-post-title';
+    els.newSlugPreview.textContent = postUrl('my-post-title');
     els.newDialog.showModal();
     els.newTitle.focus();
 });
 els.newTitle.addEventListener('input', () => {
     if (slugEdited) return;
     els.newSlug.value = slugify(els.newTitle.value);
-    els.newSlugPreview.textContent = els.newSlug.value || 'my-post-title';
+    els.newSlugPreview.textContent = postUrl(els.newSlug.value || 'my-post-title');
 });
 els.newSlug.addEventListener('input', () => {
     slugEdited = true;
-    els.newSlugPreview.textContent = els.newSlug.value || 'my-post-title';
+    els.newSlugPreview.textContent = postUrl(els.newSlug.value || 'my-post-title');
 });
 els.newCancel.addEventListener('click', () => els.newDialog.close());
 els.newForm.addEventListener('submit', async (event) => {
@@ -1623,6 +1603,7 @@ const commands = {
 for (const button of document.querySelectorAll('[data-cmd]')) {
     button.addEventListener('click', () => commands[button.dataset.cmd]());
 }
+$('[data-cmd="image"]').hidden = !config.uploads;
 
 els.imageInput.addEventListener('change', () => {
     const images = imagesIn(els.imageInput.files);
@@ -1798,7 +1779,7 @@ window.addEventListener('beforeunload', (event) => {
         event.preventDefault();
         return;
     }
-    fetch(`/edit/api/drafts/${draft.slug}`, {
+    fetch(`${BASE}api/drafts/${draft.slug}`, {
         method: 'PUT',
         keepalive: true,
         headers: { 'X-Drafts-Editor': '1', 'Content-Type': 'application/json' },
@@ -1811,7 +1792,7 @@ window.addEventListener('beforeunload', (event) => {
 // ---------------------------------------------------------------------------
 
 function connectEvents() {
-    const source = new EventSource('/edit/api/events');
+    const source = new EventSource(`${BASE}api/events`);
     let lost = false;
     source.addEventListener('open', () => {
         if (!lost) return;
@@ -1852,7 +1833,7 @@ async function init() {
         api('components').then(({ data }) => { components = data.components ?? []; })
     ]);
     connectEvents();
-    const fromUrl = location.pathname.replace(/^\/edit\/?/, '').replace(/\/$/, '');
+    const fromUrl = location.pathname.startsWith(BASE) ? location.pathname.slice(BASE.length).replace(/\/$/, '') : '';
     const last = store.get('last', null);
     const slug = [fromUrl, last, list[0]?.slug].find((s) => s && list.some((d) => d.slug === s));
     if (slug) {

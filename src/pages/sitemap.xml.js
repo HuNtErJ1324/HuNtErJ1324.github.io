@@ -9,6 +9,7 @@ export async function GET({ site }) {
 		{ loc: url('/'), priority: '1.0' },
 		{ loc: url('/music/'), priority: '0.8' },
 		{ loc: url('/blog/'), priority: '0.8' },
+		{ loc: url('/tools/'), priority: '0.8' },
 		...posts.map((p) => ({
 			loc: url(`/blog/${p.id}/`),
 			lastmod: p.data.date.toISOString(),

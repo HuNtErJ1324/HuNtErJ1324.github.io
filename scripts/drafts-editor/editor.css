@@ -1,36 +1,5 @@
-/* Drafts editor (dev only). Rosé Pine, matching the site's tokens in public/home.css. */
-
-@font-face {
-	font-family: 'Departure Mono';
-	src: url('/assets/fonts/DepartureMono-Regular.woff2') format('woff2');
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'CommitMono Nerd Font';
-	src: url('/assets/fonts/CommitMonoNF-Regular.woff2') format('woff2');
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'CommitMono Nerd Font';
-	src: url('/assets/fonts/CommitMonoNF-Bold.woff2') format('woff2');
-	font-weight: 700;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'CommitMono Nerd Font';
-	src: url('/assets/fonts/CommitMonoNF-Italic.woff2') format('woff2');
-	font-weight: 400;
-	font-style: italic;
-	font-display: swap;
-}
+/* Drafts editor (dev only). Rosé Pine. The fonts fall back to the system
+   monospace; the css option can load others (and override any token). */
 
 :root {
 	--bg: #191724;
@@ -48,8 +17,8 @@
 	--pine: #31748f;
 	--love: #eb6f92;
 	--highlight-low: #21202e;
-	--font-display: 'Departure Mono', ui-monospace, monospace;
-	--font-body: 'CommitMono Nerd Font', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	--font-display: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	--font-body: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 	--split: 50%;
 	color-scheme: dark;
 }

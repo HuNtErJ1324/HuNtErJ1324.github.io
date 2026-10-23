@@ -1,31 +1,33 @@
-// Browser editor for drafts/, under `astro dev` only: run `npm run dev`, then
-// open http://localhost:4321/edit/. It writes straight to drafts/<slug>.mdx
-// and shows the real rendered post beside the source.
+// Browser editor for an Astro site's drafts, under `astro dev` only: run the
+// dev server, then open http://localhost:4321/edit/. It writes straight to
+// drafts/<slug>.mdx and shows the real rendered post beside the source.
 //
 //   GET  /edit/ and /edit/<slug>     the editor page. It is plain HTML without
 //                                    the Vite client, so the full-page reloads
 //                                    Astro sends on every content change never
 //                                    reset it.
-//   GET  /edit/preview/<slug>/       /blog/<slug>/ as Astro renders it, minus
-//                                    the Vite client and dev toolbar, so the
-//                                    editor decides when the preview reloads
-//                                    (it double-buffers two iframes).
+//   GET  /edit/preview/<slug>/       the `preview` page (/blog/<slug>/) as
+//                                    Astro renders it, minus the Vite client
+//                                    and dev toolbar, so the editor decides
+//                                    when the preview reloads (it
+//                                    double-buffers two iframes).
 //   GET  /edit/api/events            server-sent events: `reload` whenever
 //                                    Astro reloads pages, `file` when a draft
 //                                    changes on disk.
 //   GET  /edit/api/drafts            the drafts, newest edit first
-//   POST /edit/api/drafts            create a draft (same template as draft:new)
+//   POST /edit/api/drafts            create a draft from `template`
 //   GET  /edit/api/drafts/<slug>     one draft's source and hash
 //   PUT  /edit/api/drafts/<slug>     save; 409 if the file changed on disk
 //                                    since the editor last saw it
-//   GET  /edit/api/components        names in src/components/blog/
-//   POST /edit/api/assets/<slug>     save a pasted image under
-//                                    public/assets/blog/<slug>/
+//   GET  /edit/api/components        names in the `components` folder
+//   POST /edit/api/assets/<slug>     save a pasted image under `assets`
 //
 // The client lives in client.js (served and bundled by Vite) and editor.css.
+// Every path above moves with the `base` option. It also defines
+// import.meta.env.SHOW_DRAFTS ('true' under astro dev, else 'false').
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, watch, writeFileSync } from 'node:fs';
-import { basename, dirname, extname, join } from 'node:path';
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { remarkSourceLines } from './remark-source-lines.mjs';
 
@@ -35,6 +37,12 @@ const IMAGE_TYPES = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 const sha = (text) => createHash('sha1').update(text).digest('hex');
+const posix = (path) => path.replace(/\\/g, '/');
+const fill = (pattern, values) => pattern.replace(/\[(\w+)\]/g, (match, key) => values[key] ?? match);
+const inside = (parent, child) => {
+    const path = relative(parent, child);
+    return !path.startsWith('..') && !isAbsolute(path);
+};
 
 const sendJson = (res, status, body) => {
     res.statusCode = status;
@@ -43,11 +51,11 @@ const sendJson = (res, status, body) => {
     res.end(JSON.stringify(body));
 };
 
-const sendFile = (res, file, type) => {
+const sendText = (res, text, type) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', type);
     res.setHeader('Cache-Control', 'no-store');
-    res.end(readFileSync(file));
+    res.end(text);
 };
 
 const readBody = (req, limit) => new Promise((resolve, reject) => {
@@ -101,7 +109,7 @@ const place = (err) => {
 
 // Problems the editor shows inline: YAML and required front matter, MDX
 // syntax, and components used without an import.
-function checkDraft(source, ext) {
+function checkDraft(source, ext, required) {
     const problems = [];
     let parsed;
     try {
@@ -111,7 +119,7 @@ function checkDraft(source, ext) {
         problems.push({ line, column: (err.mark?.column ?? 0) + 1, message: `Front matter: ${err.reason ?? err.message}` });
         return problems;
     }
-    for (const key of ['title', 'description', 'date']) {
+    for (const key of required) {
         if (parsed.frontmatter[key] == null || parsed.frontmatter[key] === '') {
             problems.push({ line: 1, column: 1, message: `Front matter is missing \`${key}\`.` });
         }
@@ -162,29 +170,60 @@ function checkDraft(source, ext) {
     return problems;
 }
 
-function draftTemplate(title) {
-    // Keep in step with scripts/new-draft.mjs
-    const today = new Date().toLocaleDateString('en-CA');
-    return `---
+const defaultTemplate = ({ title, date }) => `---
 title: ${JSON.stringify(title)}
-description: "One-line summary shown on the blog index."
-date: ${today}
-# category: research
-tags: []
+description: "One-line summary."
+date: ${date}
 ---
 
 Start writing here.
 `;
-}
 
-export default function draftsEditor() {
+// Options (all optional; paths are relative to the project root):
+//   base         where the editor is served                    '/edit/'
+//   drafts       folder of .md/.mdx drafts                     'drafts'
+//   preview      the page that renders a draft under astro dev '/blog/[slug]/'
+//   published    folders whose slugs a new draft can't reuse   ['src/content/blog']
+//   components   folder of .astro components for the insert
+//                menu and autocomplete, or false               'src/components'
+//   componentImport  import path written for a component       '@/components/[name].astro'
+//   assets       folder pasted images are saved to (under
+//                public/), or false to turn uploads off        'public/assets/blog/[slug]'
+//   required     front matter keys a draft must have           ['title']
+//   template     ({ title, slug, date, format }) => source of a new draft
+//   snippets     extra insert-menu items:
+//                { group, label, template, imports?, block? }, where template
+//                uses ${field} placeholders (Tab moves between them)
+//   css          stylesheets (paths) loaded after editor.css, for fonts or a theme
+export default function draftsEditor(options = {}) {
+    const settings = {
+        base: `/${String(options.base ?? '/edit/').replace(/^\/+|\/+$/g, '')}/`,
+        drafts: options.drafts ?? 'drafts',
+        preview: options.preview ?? '/blog/[slug]/',
+        published: [options.published ?? ['src/content/blog']].flat(),
+        components: options.components ?? 'src/components',
+        componentImport: options.componentImport ?? '@/components/[name].astro',
+        assets: options.assets ?? 'public/assets/blog/[slug]',
+        required: options.required ?? ['title'],
+        template: options.template ?? defaultTemplate,
+        snippets: options.snippets ?? [],
+        css: options.css ?? []
+    };
+    const base = settings.base;
     let root;
+    let publicDir;
     let sitePlugins = [];
 
     return {
         name: 'drafts-editor',
         hooks: {
             'astro:config:setup': ({ command, config, updateConfig, logger }) => {
+                // For the site to load drafts under `astro dev` only. Not
+                // import.meta.env.DEV, which is just NODE_ENV !== 'production':
+                // `NODE_ENV=development astro build` would ship every draft.
+                updateConfig({
+                    vite: { define: { 'import.meta.env.SHOW_DRAFTS': JSON.stringify(command === 'dev' ? 'true' : 'false') } }
+                });
                 if (command !== 'dev') return;
                 // Astro 7 keeps remark plugins on the unified({...}) processor,
                 // which .md and .mdx both read when they first render
@@ -194,10 +233,11 @@ export default function draftsEditor() {
                 } else {
                     logger.warn('markdown.processor is not unified({...}), so the editor can only sync scrolling roughly.');
                 }
+                const projectRoot = fileURLToPath(config.root);
                 updateConfig({
-                    // Pre-bundle the editor's dependencies at startup; discovering
-                    // them on first load would make Vite re-optimize mid-request.
                     vite: {
+                        // Pre-bundle the editor's dependencies at startup; discovering
+                        // them on first load would make Vite re-optimize mid-request.
                         optimizeDeps: {
                             include: [
                                 'codemirror',
@@ -213,21 +253,51 @@ export default function draftsEditor() {
                                 '@lezer/highlight',
                                 '@replit/codemirror-vim'
                             ]
-                        }
+                        },
+                        // A linked install lives outside the project, where Vite
+                        // won't serve client.js unless allowed
+                        ...(inside(projectRoot, here) ? {} : { server: { fs: { allow: [projectRoot, here] } } })
                     }
                 });
             },
             'astro:config:done': ({ config }) => {
                 root = fileURLToPath(config.root);
+                publicDir = fileURLToPath(config.publicDir);
                 sitePlugins = (config.markdown.processor?.options?.remarkPlugins ?? [])
                     .filter((plugin) => plugin !== remarkSourceLines);
             },
             'astro:server:setup': async ({ server, logger }) => {
                 await loadParsers(sitePlugins);
-                const draftsDir = join(root, 'drafts');
-                const componentsDir = join(root, 'src', 'components', 'blog');
-                const publishedDir = join(root, 'src', 'content', 'blog');
-                const assetsDir = join(root, 'public', 'assets', 'blog');
+                const draftsDir = resolve(root, settings.drafts);
+                const draftsLabel = `${posix(relative(root, draftsDir))}/`;
+                const componentsDir = settings.components ? resolve(root, settings.components) : null;
+                const publishedDirs = settings.published.map((dir) => resolve(root, dir));
+                const assetsDir = (slug) => resolve(root, fill(settings.assets, { slug }));
+                if (settings.assets && !inside(publicDir, assetsDir('x'))) {
+                    logger.warn(`assets (${settings.assets}) is outside public/, so pasted images would not be served. Uploads are off.`);
+                    settings.assets = false;
+                }
+                const stylesheets = settings.css.map((file) => resolve(root, file));
+
+                // The editor page: config for the client, then the client itself,
+                // served by Vite from wherever this package is installed
+                const clientPath = inside(root, here)
+                    ? `/${posix(relative(root, here))}/client.js`
+                    : `/@fs/${posix(here).replace(/^\//, '')}/client.js`;
+                const clientConfig = {
+                    base,
+                    preview: settings.preview,
+                    componentImport: settings.componentImport,
+                    uploads: Boolean(settings.assets),
+                    snippets: settings.snippets
+                };
+                const editorPage = () => readFileSync(join(here, 'editor.html'), 'utf8').replace('</head>', [
+                    `\t<link rel="stylesheet" href="${base}editor.css">`,
+                    ...stylesheets.map((_file, i) => `\t<link rel="stylesheet" href="${base}theme-${i}.css">`),
+                    `\t<script type="application/json" id="drafts-editor-config">${JSON.stringify(clientConfig).replace(/</g, '\\u003c')}</script>`,
+                    `\t<script type="module" src="${clientPath}"></script>`,
+                    '</head>'
+                ].join('\n'));
 
                 const draftFile = (slug) => ['.mdx', '.md']
                     .map((ext) => join(draftsDir, slug + ext))
@@ -288,8 +358,8 @@ export default function draftsEditor() {
                     };
                 }
 
-                // Drafts edited elsewhere (VS Code, git pull, Claude) reach open
-                // editors as `file` events with the new content hash.
+                // Drafts edited elsewhere (another editor, git pull, an agent)
+                // reach open editors as `file` events with the new content hash.
                 let watcher = null;
                 if (existsSync(draftsDir)) {
                     const fileTimers = new Map();
@@ -305,7 +375,7 @@ export default function draftsEditor() {
                             }, 120));
                         });
                     } catch (err) {
-                        logger.warn(`Not watching drafts/ for outside edits: ${err.message}`);
+                        logger.warn(`Not watching ${draftsLabel} for outside edits: ${err.message}`);
                     }
                 }
 
@@ -321,9 +391,10 @@ export default function draftsEditor() {
 
                 const servePreview = async (req, res, slug) => {
                     const started = Date.now();
+                    const page = fill(settings.preview, { slug });
                     let upstream;
                     try {
-                        upstream = await fetch(new URL(`/blog/${slug}/`, origin(req)), { headers: { accept: 'text/html' } });
+                        upstream = await fetch(new URL(page, origin(req)), { headers: { accept: 'text/html' } });
                     } catch (err) {
                         sendErrorDocument(res, { message: `Could not render the preview: ${err.message}` });
                         return;
@@ -334,7 +405,7 @@ export default function draftsEditor() {
                         const title = /<title>([^<]*)<\/title>/.exec(html)?.[1];
                         sendErrorDocument(res, recent ?? {
                             message: upstream.status === 404
-                                ? `/blog/${slug}/ doesn't exist yet. Astro may still be loading the new file.`
+                                ? `${page} doesn't exist yet. Astro may still be loading the new file.`
                                 : `${title ?? 'Render error'} (HTTP ${upstream.status}). The dev server terminal has the details.`
                         });
                         return;
@@ -363,13 +434,13 @@ export default function draftsEditor() {
                         } catch {
                             // Broken front matter: list it by file name
                         }
-                        return { slug: basename(name, ext), file: `drafts/${name}`, ext, title: String(title), date, mtime: statSync(file).mtimeMs };
+                        return { slug: basename(name, ext), file: draftsLabel + name, ext, title: String(title), date, mtime: statSync(file).mtimeMs };
                     })
                     .sort((a, b) => b.mtime - a.mtime);
 
                 const api = async (req, res, path) => {
                     if (!existsSync(draftsDir)) {
-                        sendJson(res, 503, { error: 'drafts/ is missing. Clone the private drafts repo into it first (see the README).' });
+                        sendJson(res, 503, { error: `${draftsLabel} doesn't exist. Create it, or point the drafts option at your drafts folder.` });
                         return;
                     }
                     const method = req.method ?? 'GET';
@@ -391,7 +462,7 @@ export default function draftsEditor() {
                     }
 
                     if (path === 'components' && method === 'GET') {
-                        const names = existsSync(componentsDir)
+                        const names = componentsDir && existsSync(componentsDir)
                             ? readdirSync(componentsDir).filter((n) => n.endsWith('.astro')).map((n) => n.slice(0, -6))
                             : [];
                         sendJson(res, 200, { components: names });
@@ -409,16 +480,23 @@ export default function draftsEditor() {
                             sendJson(res, 400, { error: 'Use a kebab-case slug, like my-post-title.' });
                             return;
                         }
-                        for (const dir of [draftsDir, publishedDir]) {
+                        for (const dir of [draftsDir, ...publishedDirs]) {
                             for (const ext of ['.md', '.mdx']) {
                                 if (existsSync(join(dir, slug + ext))) {
-                                    sendJson(res, 409, { error: `${slug}${ext} already exists in ${dir === draftsDir ? 'drafts/' : 'src/content/blog/'}.` });
+                                    sendJson(res, 409, { error: `${slug}${ext} already exists in ${posix(relative(root, dir))}/.` });
                                     return;
                                 }
                             }
                         }
                         const ext = format === 'md' ? '.md' : '.mdx';
-                        writeFileSync(join(draftsDir, slug + ext), draftTemplate(String(title || slug.replace(/-/g, ' '))));
+                        // Local calendar date (en-CA formats as YYYY-MM-DD), not UTC
+                        const source = settings.template({
+                            title: String(title || slug.replace(/-/g, ' ')),
+                            slug,
+                            date: new Date().toLocaleDateString('en-CA'),
+                            format: ext.slice(1)
+                        });
+                        writeFileSync(join(draftsDir, slug + ext), source);
                         sendJson(res, 201, { slug });
                         return;
                     }
@@ -434,7 +512,7 @@ export default function draftsEditor() {
                         const ext = extname(file);
                         if (method === 'GET') {
                             const content = readFileSync(file, 'utf8');
-                            sendJson(res, 200, { slug, file: `drafts/${basename(file)}`, ext, content, hash: sha(content), problems: checkDraft(content, ext) });
+                            sendJson(res, 200, { slug, file: draftsLabel + basename(file), ext, content, hash: sha(content), problems: checkDraft(content, ext, settings.required) });
                             return;
                         }
                         if (method === 'PUT') {
@@ -452,7 +530,7 @@ export default function draftsEditor() {
                             // The editor works in \n; keep the file's own line endings
                             const text = current.includes('\r\n') ? content.replace(/\r?\n/g, '\r\n') : content;
                             if (text !== current) writeFileSync(file, text);
-                            sendJson(res, 200, { hash: sha(text), problems: checkDraft(content, ext) });
+                            sendJson(res, 200, { hash: sha(text), problems: checkDraft(content, ext, settings.required) });
                             return;
                         }
                     }
@@ -460,6 +538,10 @@ export default function draftsEditor() {
                     const assetMatch = /^assets\/([^/]+)$/.exec(path);
                     if (assetMatch && method === 'POST') {
                         const slug = assetMatch[1];
+                        if (!settings.assets) {
+                            sendJson(res, 404, { error: 'Image uploads are off (the assets option).' });
+                            return;
+                        }
                         if (!SLUG.test(slug)) {
                             sendJson(res, 400, { error: 'Bad slug.' });
                             return;
@@ -472,30 +554,36 @@ export default function draftsEditor() {
                         }
                         const stem = basename(requested, extname(requested)).toLowerCase()
                             .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'image';
-                        const dir = join(assetsDir, slug);
+                        const dir = assetsDir(slug);
                         mkdirSync(dir, { recursive: true });
                         let name = stem + ext;
                         for (let i = 2; existsSync(join(dir, name)); i++) name = `${stem}-${i}${ext}`;
                         writeFileSync(join(dir, name), await readBody(req, MAX_IMAGE_BYTES));
-                        sendJson(res, 201, { url: `/assets/blog/${slug}/${name}` });
+                        sendJson(res, 201, {
+                            url: `/${posix(relative(publicDir, join(dir, name)))}`,
+                            dir: `${posix(relative(root, dir))}/`
+                        });
                         return;
                     }
 
-                    sendJson(res, 404, { error: `No route for ${method} /edit/api/${path}.` });
+                    sendJson(res, 404, { error: `No route for ${method} ${base}api/${path}.` });
                 };
 
                 server.middlewares.use(async (req, res, next) => {
                     const { pathname } = new URL(req.url ?? '/', 'http://localhost');
-                    if (pathname !== '/edit' && !pathname.startsWith('/edit/')) {
+                    if (pathname !== base.slice(0, -1) && !pathname.startsWith(base)) {
                         next();
                         return;
                     }
-                    const rest = pathname.slice('/edit/'.length);
+                    const rest = pathname.slice(base.length);
                     try {
+                        const theme = /^theme-(\d+)\.css$/.exec(rest);
                         if (rest.startsWith('api/')) {
                             await api(req, res, rest.slice(4));
                         } else if (rest === 'editor.css') {
-                            sendFile(res, join(here, 'editor.css'), 'text/css; charset=utf-8');
+                            sendText(res, readFileSync(join(here, 'editor.css')), 'text/css; charset=utf-8');
+                        } else if (theme && stylesheets[theme[1]]) {
+                            sendText(res, readFileSync(stylesheets[theme[1]]), 'text/css; charset=utf-8');
                         } else if (rest.startsWith('preview/')) {
                             const slug = rest.slice('preview/'.length).replace(/\/$/, '');
                             if (!SLUG.test(slug)) {
@@ -504,7 +592,7 @@ export default function draftsEditor() {
                             }
                             await servePreview(req, res, slug);
                         } else if (req.method === 'GET' && (rest === '' || SLUG.test(rest.replace(/\/$/, '')))) {
-                            sendFile(res, join(here, 'editor.html'), 'text/html; charset=utf-8');
+                            sendText(res, editorPage(), 'text/html; charset=utf-8');
                         } else {
                             next();
                         }
@@ -523,8 +611,8 @@ export default function draftsEditor() {
 
                 server.httpServer?.once('listening', () => {
                     setTimeout(() => {
-                        const base = server.resolvedUrls?.local?.[0] ?? 'http://localhost:4321/';
-                        logger.info(`Drafts editor: ${new URL('/edit/', base)}`);
+                        const url = server.resolvedUrls?.local?.[0] ?? 'http://localhost:4321/';
+                        logger.info(`Drafts editor: ${new URL(base, url)}`);
                     }, 0);
                 });
             }

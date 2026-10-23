@@ -56,4 +56,24 @@ const drafts = defineCollection({
 	})
 });
 
-export const collections = { blog, drafts };
+// Tools on /tools/: one file per tool, each published as its own public repo.
+// The body is the write-up under the screenshot. The page has the strict CSP,
+// so no fenced code blocks (Shiki's inline styles); inline code is fine.
+const tools = defineCollection({
+	loader: glob({ pattern: '**/*.md', base: './src/content/tools' }),
+	schema: z.object({
+		name: z.string(),
+		// One line under the name
+		description: z.string(),
+		repo: z.url(),
+		stack: z.array(z.string()).default([]),
+		// Screenshot path without extension: /assets/tools/<id>.webp and .jpg,
+		// both 1600×1000
+		image: z.string().regex(/^\/assets\/tools\/[a-z0-9-]+$/, { error: 'image must be /assets/tools/<name> (no extension)' }),
+		imageAlt: z.string(),
+		// When it went public; newest first
+		date: z.coerce.date()
+	})
+});
+
+export const collections = { blog, drafts, tools };

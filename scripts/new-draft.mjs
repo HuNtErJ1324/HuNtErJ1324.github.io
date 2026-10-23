@@ -34,8 +34,8 @@ const title = titleWords.join(' ') || slug.replace(/-/g, ' ');
 const today = new Date().toLocaleDateString('en-CA');
 const file = join('drafts', `${slug}.${mdx ? 'mdx' : 'md'}`);
 
-// The drafts editor's "+ new" writes the same text (draftTemplate in
-// scripts/drafts-editor/integration.mjs); keep the two in step.
+// The drafts editor's "+ new" writes the same text (the template option in
+// scripts/drafts-editor-site.mjs); keep the two in step.
 writeFileSync(file, `---
 title: ${JSON.stringify(title)}
 description: "One-line summary shown on the blog index."
