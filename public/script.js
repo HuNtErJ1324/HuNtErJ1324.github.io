@@ -551,6 +551,10 @@ document.addEventListener('DOMContentLoaded', () => {
         //    Feedback lands in the statusline (showcmd) plus a visually-hidden
         //    live region so screen readers hear command results too.
         const CONTACT_EMAIL = 'jcjustin.chae@gmail.com';
+        // The CV link carries the same ?v=<commit> as this script, so a new
+        // CV isn't hidden behind Cloudflare's cached copy of the old one.
+        const ownScript = document.querySelector('script[src^="/script.js"]');
+        const CV_URL = `/assets/justin_chae_cv.pdf${ownScript ? new URL(ownScript.src).search : ''}`;
         const SECTION_IDS = ['about', 'education', 'papers', 'projects', 'achievements', 'service'];
 
         let cmdline = null;
@@ -667,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             },
             cv: () => {
-                window.open('/assets/justin_chae_cv.pdf', '_blank', 'noopener');
+                window.open(CV_URL, '_blank', 'noopener');
                 return 'opening cv ...';
             },
             linkedin: () => {

@@ -72,7 +72,7 @@ This document serves as the primary source of truth for coding agents (AI) opera
 *   **Motion:** every animation/transition must have a `prefers-reduced-motion: reduce` override.
 *   **Scrollbar gutter:** `html` keeps `scrollbar-gutter: stable`. Without it, short pages (an empty blog, the 404) have no scrollbar and the centered nav and panels shift 5px sideways versus long pages.
 *   **Profile photo:** stays in full color — no grayscale/desaturate filter (explicit user request); hover only adds the rose border + shadow.
-*   **Cache-busting:** `Base.astro` appends `assetVersion` (`?v=<commit>` from `GITHUB_SHA`, defined in `src/lib/site.ts`) to `/home.css` and `/script.js`, because Cloudflare caches them in browsers for hours. Keep it if you move or rename any of them.
+*   **Cache-busting:** `Base.astro` appends `assetVersion` (`?v=<commit>` from `GITHUB_SHA`, defined in `src/lib/site.ts`) to `/home.css` and `/script.js`, and `index.astro` (the CV button) and `script.js` (`:cv`, reading the version off its own `src`) to the CV, because Cloudflare caches them in browsers for hours (an unversioned CV link kept serving the old PDF after an update). Keep it if you move or rename any of them.
 
 ### JavaScript (`public/script.js`)
 
