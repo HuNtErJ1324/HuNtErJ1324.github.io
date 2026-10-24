@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
         //    Feedback lands in the statusline (showcmd) plus a visually-hidden
         //    live region so screen readers hear command results too.
         const CONTACT_EMAIL = 'jcjustin.chae@gmail.com';
-        const SECTION_IDS = ['about', 'education', 'papers', 'projects', 'achievements'];
+        const SECTION_IDS = ['about', 'education', 'papers', 'projects', 'achievements', 'service'];
 
         let cmdline = null;
         let cmdlinePrompt = null;
@@ -644,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
             papers: () => goToSection('papers'),
             projects: () => goToSection('projects'),
             achievements: () => goToSection('achievements'),
+            service: () => goToSection('service'),
             ls: () => SECTION_IDS.join('  '),
             home: () => {
                 window.location.href = '/';
