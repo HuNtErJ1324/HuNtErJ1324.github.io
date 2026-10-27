@@ -3,6 +3,9 @@
 // a `share:` token (npm run draft:share) is dropped: it has no use in the public repo.
 //
 //   npm run draft:publish -- <slug> [--keep-date]
+//
+// The drafts editor's publish button does the same (the publish option in
+// scripts/drafts-editor-site.mjs); keep the two in step.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 

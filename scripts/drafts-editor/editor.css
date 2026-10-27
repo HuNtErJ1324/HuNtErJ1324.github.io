@@ -457,11 +457,12 @@ input:focus-visible,
 	text-decoration: underline dotted;
 }
 
-.linkish[hidden] {
+.linkish[hidden],
+.btn[hidden] {
 	display: none;
 }
 
-/* ---- New-draft dialog ---- */
+/* ---- Dialogs: new draft, publish ---- */
 
 .dialog {
 	width: min(28rem, calc(100vw - 2rem));
@@ -512,6 +513,21 @@ input:focus-visible,
 .dialog legend {
 	padding: 0 0.3rem;
 	color: var(--subtle);
+}
+
+.dialog-text {
+	margin: 0 0 1rem;
+	color: var(--subtle);
+	line-height: 1.5;
+}
+
+.dialog-text code {
+	color: var(--foam);
+}
+
+.dialog-check {
+	display: flex;
+	margin-bottom: 1rem;
 }
 
 .form-error {

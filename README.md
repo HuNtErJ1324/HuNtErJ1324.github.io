@@ -37,7 +37,7 @@ On a new machine, set it up once with `git clone git@github.com:HuNtErJ1324/blog
    ```
 2. `npm run dev` and open `http://localhost:4321/blog/some-slug/`. Drafts show a red **draft** chip and are left out of production builds.
 3. `npm run drafts:sync` backs drafts up to the private repo (pull, commit, push).
-4. When it's ready: `npm run draft:publish -- some-slug`. This moves it to `src/content/blog/` and sets `date:` to today (`--keep-date` keeps it). Then commit and push this repo, and run `npm run drafts:sync`.
+4. When it's ready: **publish** in the editor, or `npm run draft:publish -- some-slug`. Either moves it to `src/content/blog/` and sets `date:` to today (`--keep-date`, or the dialog's checkbox, keeps it). Then commit and push this repo, and run `npm run drafts:sync`.
 
 The post appears at `justin-chae.org/blog/some-slug/`; the blog index, tag pages, and sitemap update automatically.
 

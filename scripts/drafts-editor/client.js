@@ -75,6 +75,14 @@ const els = {
     newSlugPreview: $('#new-slug-preview'),
     newError: $('#new-error'),
     newCancel: $('#new-cancel'),
+    publishButton: $('#publish-draft'),
+    publishDialog: $('#publish-dialog'),
+    publishForm: $('#publish-form'),
+    publishFrom: $('#publish-from'),
+    publishTo: $('#publish-to'),
+    publishKeepDate: $('#publish-keep-date'),
+    publishError: $('#publish-error'),
+    publishCancel: $('#publish-cancel'),
     imageInput: $('#image-input')
 };
 
@@ -1586,6 +1594,99 @@ els.newForm.addEventListener('submit', async (event) => {
     els.newDialog.close();
     await loadDraftList();
     openDraft(data.slug);
+});
+
+// ---------------------------------------------------------------------------
+// Publish: move the draft into the published folder
+// ---------------------------------------------------------------------------
+
+els.publishButton.hidden = !config.publish;
+
+// Leave the editor empty, for when the last draft is published
+function closeDraft() {
+    Object.assign(draft, {
+        slug: null,
+        file: '',
+        savedText: '',
+        savedHash: '',
+        conflict: null,
+        problems: [],
+        again: false,
+        pendingDiskCheck: false
+    });
+    previewToken++;
+    view.setState(EditorState.create({ doc: '', extensions: extensions() }));
+    document.title = 'Drafts editor';
+    els.select.value = '';
+    els.openPost.removeAttribute('href');
+    els.filePath.textContent = '';
+    window.history.replaceState({}, '', BASE);
+    store.set('last', undefined);
+    hidePreviewError();
+    for (const frame of frames) {
+        prepared.delete(frame);
+        invalidatePoints(frame);
+        frame.src = 'about:blank';
+    }
+    showProblems([]);
+    updateStats();
+    updateCursorPos();
+    setStatus('saved', '');
+}
+
+els.publishButton.addEventListener('click', async () => {
+    if (!draft.slug) return;
+    await flushSave();
+    if (draft.conflict) {
+        flash('resolve the conflict first');
+        return;
+    }
+    if (view.state.doc.toString() !== draft.savedText) {
+        flash('not saved yet');
+        return;
+    }
+    if (draft.problems.length > 0) {
+        flash(`fix the ${draft.problems.length === 1 ? 'problem' : 'problems'} first`);
+        view.focus();
+        nextDiagnostic(view);
+        return;
+    }
+    els.publishFrom.textContent = draft.file;
+    els.publishTo.textContent = config.publish + draft.slug + draft.ext;
+    els.publishKeepDate.checked = false;
+    els.publishError.hidden = true;
+    els.publishDialog.showModal();
+});
+els.publishCancel.addEventListener('click', () => els.publishDialog.close());
+els.publishForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const slug = draft.slug;
+    const { status, data } = await api(`drafts/${slug}/publish`, {
+        method: 'POST',
+        body: { keepDate: els.publishKeepDate.checked }
+    });
+    if (status !== 200) {
+        els.publishError.textContent = data.error ?? `Couldn't publish (HTTP ${status}).`;
+        els.publishError.hidden = false;
+        if (data.problems) showProblems(data.problems);
+        return;
+    }
+    els.publishDialog.close();
+    store.set(`pos:${slug}`, undefined);
+    store.set(`backup:${slug}`, undefined);
+    // The file left the drafts folder on purpose, so its `file` event is no deletion
+    draft.slug = null;
+    const list = await loadDraftList();
+    if (list.length > 0) await openDraft(list[0].slug, { push: false });
+    else closeDraft();
+    const message = [
+        `Published ${data.file}. Commit and push it${data.assets ? ` and its images in ${data.assets}` : ''} to deploy.`,
+        ...(data.notes ?? [])
+    ].join(' ');
+    showBanner(message, 'info', [
+        { label: 'open the post', run: () => window.open(data.url, '_blank', 'noopener') },
+        { label: 'dismiss', run: hideBanner }
+    ]);
 });
 
 // ---------------------------------------------------------------------------

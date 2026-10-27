@@ -64,5 +64,14 @@ tags: []
 Start writing here.
 `,
     snippets,
+    // "publish" in the editor, after it sets date: to today; keep in step with
+    // scripts/publish-draft.mjs, which does the same from the command line
+    publish: ({ source }) => {
+        const notes = ['Then npm run drafts:sync records the move in the drafts repo.'];
+        const frontMatter = /^---\r?\n[\s\S]*?\r?\n---/.exec(source)?.[0];
+        if (!frontMatter || !/^share:/m.test(frontMatter)) return { source, notes };
+        notes.push('Its share: token is gone, so the shared /drafts/ link stops working once drafts:sync records the move and the site redeploys.');
+        return { source: frontMatter.replace(/^share:.*\r?\n/m, '') + source.slice(frontMatter.length), notes };
+    },
     css: ['scripts/drafts-editor-site.css']
 };

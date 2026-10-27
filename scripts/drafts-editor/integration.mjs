@@ -19,6 +19,11 @@
 //   GET  /edit/api/drafts/<slug>     one draft's source and hash
 //   PUT  /edit/api/drafts/<slug>     save; 409 if the file changed on disk
 //                                    since the editor last saw it
+//   POST /edit/api/drafts/<slug>/publish
+//                                    move it into the first `published`
+//                                    folder (the publish button); 422 while
+//                                    it has problems, 409 if a post owns
+//                                    the slug
 //   GET  /edit/api/components        names in the `components` folder
 //   POST /edit/api/assets/<slug>     save a pasted image under `assets`
 //
@@ -26,7 +31,7 @@
 // Every path above moves with the `base` option. It also defines
 // import.meta.env.SHOW_DRAFTS ('true' under astro dev, else 'false').
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, watch, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, watch, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { remarkSourceLines } from './remark-source-lines.mjs';
@@ -191,6 +196,11 @@ Start writing here.
 //                public/), or false to turn uploads off        'public/assets/blog/[slug]'
 //   required     front matter keys a draft must have           ['title']
 //   template     ({ title, slug, date, format }) => source of a new draft
+//   publish      what the publish button does to a draft's text after its
+//                date is set to today: ({ source, slug, ext, date }) =>
+//                source, or { source, notes } with lines for the editor to
+//                show; false removes the button. Either way the draft moves
+//                into the first `published` folder.
 //   snippets     extra insert-menu items:
 //                { group, label, template, imports?, block? }, where template
 //                uses ${field} placeholders (Tab moves between them)
@@ -206,6 +216,7 @@ export default function draftsEditor(options = {}) {
         assets: options.assets ?? 'public/assets/blog/[slug]',
         required: options.required ?? ['title'],
         template: options.template ?? defaultTemplate,
+        publish: options.publish ?? true,
         snippets: options.snippets ?? [],
         css: options.css ?? []
     };
@@ -272,6 +283,7 @@ export default function draftsEditor(options = {}) {
                 const draftsLabel = `${posix(relative(root, draftsDir))}/`;
                 const componentsDir = settings.components ? resolve(root, settings.components) : null;
                 const publishedDirs = settings.published.map((dir) => resolve(root, dir));
+                const publishedDir = settings.publish === false ? null : (publishedDirs[0] ?? null);
                 const assetsDir = (slug) => resolve(root, fill(settings.assets, { slug }));
                 if (settings.assets && !inside(publicDir, assetsDir('x'))) {
                     logger.warn(`assets (${settings.assets}) is outside public/, so pasted images would not be served. Uploads are off.`);
@@ -289,6 +301,7 @@ export default function draftsEditor(options = {}) {
                     preview: settings.preview,
                     componentImport: settings.componentImport,
                     uploads: Boolean(settings.assets),
+                    publish: publishedDir ? `${posix(relative(root, publishedDir))}/` : false,
                     snippets: settings.snippets
                 };
                 const editorPage = () => readFileSync(join(here, 'editor.html'), 'utf8').replace('</head>', [
@@ -498,6 +511,71 @@ export default function draftsEditor(options = {}) {
                         });
                         writeFileSync(join(draftsDir, slug + ext), source);
                         sendJson(res, 201, { slug });
+                        return;
+                    }
+
+                    const publishMatch = /^drafts\/([^/]+)\/publish$/.exec(path);
+                    if (publishMatch && method === 'POST') {
+                        const slug = publishMatch[1];
+                        if (!publishedDir) {
+                            sendJson(res, 404, { error: 'Publishing is off (the publish option).' });
+                            return;
+                        }
+                        const file = SLUG.test(slug) ? draftFile(slug) : null;
+                        if (!file) {
+                            sendJson(res, 404, { error: `No draft named ${slug}.` });
+                            return;
+                        }
+                        const { keepDate } = JSON.parse((await readBody(req, 1e5)).toString('utf8'));
+                        const ext = extname(file);
+                        const source = readFileSync(file, 'utf8');
+                        const problems = checkDraft(source, ext, settings.required);
+                        if (problems.length > 0) {
+                            sendJson(res, 422, { error: `Fix its ${problems.length === 1 ? 'problem' : `${problems.length} problems`} first.`, problems });
+                            return;
+                        }
+                        const clash = ['.md', '.mdx'].map((e) => join(publishedDir, slug + e)).find((f) => existsSync(f));
+                        if (clash) {
+                            sendJson(res, 409, { error: `${posix(relative(root, clash))} already exists; not overwriting it.` });
+                            return;
+                        }
+                        const notes = [];
+                        // Local calendar date (en-CA formats as YYYY-MM-DD), not UTC
+                        const date = new Date().toLocaleDateString('en-CA');
+                        let text = source;
+                        if (!keepDate) {
+                            const frontMatter = /^---\r?\n[\s\S]*?\r?\n---/.exec(source)?.[0];
+                            if (frontMatter && /^date:/m.test(frontMatter)) {
+                                text = frontMatter.replace(/^date:[^\r\n]*/m, `date: ${date}`) + source.slice(frontMatter.length);
+                            } else {
+                                notes.push('It has no date: line, so none was set.');
+                            }
+                        }
+                        if (typeof settings.publish === 'function') {
+                            const result = settings.publish({ source: text, slug, ext, date });
+                            if (typeof result === 'string') {
+                                text = result;
+                            } else if (result && typeof result.source === 'string') {
+                                text = result.source;
+                                notes.push(...(result.notes ?? []));
+                            }
+                        }
+                        // Imports relative to the drafts folder point elsewhere now
+                        const relativeImports = [...text.matchAll(/^import\s+(?:.*?\s+from\s+)?['"](\.{1,2}\/[^'"]*)['"]/gm)].map((m) => m[1]);
+                        if (relativeImports.length > 0) {
+                            notes.push(`Check its relative imports, which moved with it: ${relativeImports.join(', ')}.`);
+                        }
+                        const to = join(publishedDir, slug + ext);
+                        mkdirSync(publishedDir, { recursive: true });
+                        writeFileSync(to, text);
+                        unlinkSync(file);
+                        const assets = settings.assets ? assetsDir(slug) : null;
+                        sendJson(res, 200, {
+                            file: posix(relative(root, to)),
+                            url: fill(settings.preview, { slug }),
+                            assets: assets && existsSync(assets) ? `${posix(relative(root, assets))}/` : null,
+                            notes
+                        });
                         return;
                     }
 

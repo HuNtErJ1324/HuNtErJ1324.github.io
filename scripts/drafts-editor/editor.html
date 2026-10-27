@@ -46,6 +46,7 @@
 				<input type="checkbox" id="sync-scroll" checked> sync
 			</label>
 			<a id="open-post" class="btn" target="_blank" rel="noopener" title="Open the post in a new tab">open ↗</a>
+			<button type="button" id="publish-draft" class="btn" title="Move this draft into the published posts" hidden>publish</button>
 		</div>
 	</header>
 
@@ -98,6 +99,21 @@
 			<div class="dialog-actions">
 				<button type="button" class="btn" value="cancel" id="new-cancel">cancel</button>
 				<button type="submit" class="btn primary" value="create">create</button>
+			</div>
+		</form>
+	</dialog>
+
+	<dialog id="publish-dialog" class="dialog">
+		<form id="publish-form" method="dialog">
+			<h2>Publish</h2>
+			<p class="dialog-text">Moves <code id="publish-from"></code> to <code id="publish-to"></code>, where the next push publishes it.</p>
+			<label class="check dialog-check" title="Otherwise the front matter date becomes today">
+				<input type="checkbox" id="publish-keep-date"> keep its date
+			</label>
+			<p id="publish-error" class="form-error" hidden></p>
+			<div class="dialog-actions">
+				<button type="button" class="btn" id="publish-cancel">cancel</button>
+				<button type="submit" class="btn primary" value="publish">publish</button>
 			</div>
 		</form>
 	</dialog>
