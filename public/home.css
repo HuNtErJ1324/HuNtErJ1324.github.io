@@ -1059,11 +1059,10 @@ a:hover {
 	margin-bottom: 1.75em;
 }
 
+/* The date leads the chips row, so every title starts at the left edge */
 .post-list .post-date {
-	display: inline-block;
 	font-size: 0.85rem;
 	color: var(--gold);
-	margin-right: 0.75em;
 	white-space: nowrap;
 }
 
@@ -3673,8 +3672,8 @@ pre code {
 }
 
 .related-posts .post-date {
+	display: block;
 	color: var(--muted);
-	margin-right: 0.6em;
 }
 
 .related-posts .post-title {
@@ -4835,11 +4834,6 @@ mark.search-hit.current {
 
 	.cmdline-hint {
 		display: none;
-	}
-
-	.post-list .post-date {
-		display: block;
-		margin-bottom: 0.1em;
 	}
 }
 
