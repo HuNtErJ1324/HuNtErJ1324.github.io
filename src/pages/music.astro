@@ -1,54 +1,59 @@
 ---
 import Base from '../layouts/Base.astro';
 
+// title is the piece; the year and the group go in the blurb. A blurb can
+// mix strings and { text, href } links.
 const performances = [
 	{
 		label: '2025 · meany hall',
-		title: 'UWSO Concert (2025)',
-		blurb: 'I played in 5th chair of the first violins! The concert was in Meany Hall. This is one of my favorite performances!',
+		title: 'Ravel: Daphnis et Chloé, Suite No. 2',
+		blurb: 'I played in 5th chair of the first violins at this 2025 University of Washington Symphony Orchestra concert in Meany Hall. This is one of my favorite performances!',
 		videoId: '-J_jHC2yaro',
 		alt: 'UWSO Concert 2025 performance thumbnail'
 	},
 	{
 		label: '2023 · summer recital',
-		title: 'Senior Recital (2023)',
-		blurb: "I performed a duet for my violin studio's summer recital as my last performance during high school!",
+		title: 'Handel–Halvorsen: Passacaglia for Violin and Viola',
+		blurb: "I performed this duet at my violin studio's 2023 summer recital as my last performance during high school!",
 		videoId: 'D5TcV-GmLHA',
 		alt: 'Senior Recital 2023 performance thumbnail'
 	},
 	{
 		label: '2022 · benaroya hall',
-		title: 'Youth Symphony Orchestra Concert (2022)',
-		blurb: 'I played in 5th chair of the first violins during this Seattle Youth Symphony Orchestras concert at Benaroya Hall.',
+		title: 'Rachmaninoff: Symphonic Dances',
+		blurb: 'I played in 5th chair of the first violins of the Youth Symphony Orchestra during this 2022 Seattle Youth Symphony Orchestras concert at Benaroya Hall.',
 		videoId: 'NRKfTdwxN-8',
 		alt: 'Youth Symphony Orchestra Concert 2022 performance thumbnail'
 	},
 	{
 		label: '2023 · state competition',
-		title: 'Chamber Orchestra Washington State Competition (2023)',
-		blurb: "I was the concertmaster of my high school's chamber orchestra and we got 3rd place at the state competition.",
+		title: 'Mendelssohn: Sinfonia No. 3 in E minor',
+		blurb: 'I was the concertmaster of the Inglemoor High School Chamber Orchestra, and we got 3rd place at the 2023 Washington State competition.',
 		videoId: 'ILLMmiDS8S4',
 		alt: 'Chamber Orchestra Washington State Competition 2023 performance thumbnail'
 	},
 	{
 		label: '2023 · benaroya hall',
-		title: 'Youth Symphony Orchestra Concert (2023)',
-		blurb: 'I played in 8th chair of the first violins during this Seattle Youth Symphony Orchestras concert at Benaroya Hall. Enjoy the accompanying light show!',
+		title: 'Mahler: Symphony No. 1',
+		blurb: 'I played in 8th chair of the first violins of the Youth Symphony Orchestra during this 2023 Seattle Youth Symphony Orchestras concert at Benaroya Hall. Enjoy the accompanying light show!',
 		videoId: 'y2B5To-stB4',
 		alt: 'Youth Symphony Orchestra Concert 2023 performance thumbnail'
 	},
 	{
 		label: '2024 · meany hall',
-		title: 'UWSO Concert (2024)',
-		blurb: 'I played in 7th chair of the first violins during this University of Washington Symphony Orchestra concert at Meany Hall.',
+		title: 'Beethoven: Symphony No. 5 in C minor',
+		blurb: 'I played in 7th chair of the first violins during this 2024 University of Washington Symphony Orchestra concert at Meany Hall.',
 		videoId: 'gfFdNoXpltA',
 		alt: 'UWSO Concert 2024 performance thumbnail'
 	},
 	{
 		label: '2022 · distinguished gold',
-		title: 'Virtuoso Festival (2022)',
-		titleHref: 'https://www.seattlepianocompetition.org/nw-festivals/winners/virtuoso-artists-22/',
-		blurb: 'I received a distinguished gold medal in the Virtuoso Festival in the Concerto: Ages 14 to 18 division.',
+		title: 'Saint-Saëns: Violin Concerto No. 3, I. Allegro non troppo',
+		blurb: [
+			'I received a distinguished gold medal in the ',
+			{ text: '2022 Virtuoso Festival', href: 'https://www.seattlepianocompetition.org/nw-festivals/winners/virtuoso-artists-22/' },
+			' in the Concerto: Ages 14 to 18 division.'
+		],
 		videoId: 'TUti6xJVE50',
 		alt: 'Virtuoso Festival 2022 gold medal performance thumbnail'
 	}
@@ -73,12 +78,12 @@ const performances = [
 	</header>
 	{performances.map((p) => (
 		<section data-label={p.label}>
-			<h2>
-				{p.titleHref
-					? <a href={p.titleHref} target="_blank" rel="noopener noreferrer">{p.title}</a>
-					: p.title}
-			</h2>
-			<p>{p.blurb}</p>
+			<h2>{p.title}</h2>
+			<p>
+				{[p.blurb].flat().map((part) => typeof part === 'string'
+					? part
+					: <a href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a>)}
+			</p>
 			<div class="video-container">
 				<div class="video-placeholder" data-video-id={p.videoId} data-video-title={p.title}>
 					<img src={`https://img.youtube.com/vi/${p.videoId}/hqdefault.jpg`} alt={p.alt} loading="lazy" width="480" height="360">
