@@ -7,7 +7,7 @@
 // A post with at least three h2/h3 headings gets a table of contents in the
 // left gutter on wide screens (script.js §13 marks the section being read).
 // A post with published agent traces (src/lib/traces.ts) links to them at the
-// top, under the date.
+// top, under the date; a `thread:` post gets a button to its thread on X there.
 import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
@@ -91,6 +91,16 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 				</span>
 			</p>
 			{post.id in TRACE_POSTS && <TraceSwitch post={post.id} onPost />}
+			{post.data.thread && (
+				<p class="post-thread">
+					<a class="contact-link" href={post.data.thread} target="_blank" rel="noopener noreferrer">
+						<svg class="contact-icon" aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+						</svg>
+						Read the thread on X
+					</a>
+				</p>
+			)}
 			{draft && (shared ? (
 				<p class="draft-note">
 					Unpublished draft, shared by link. It isn't listed on this site yet.

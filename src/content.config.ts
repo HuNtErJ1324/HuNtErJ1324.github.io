@@ -16,7 +16,9 @@ const postSchema = z.object({
 	comments: z.boolean().default(true),
 	// Link-preview card, a site path such as /assets/blog/<slug>-card.png
 	// (1200×630 or the same ratio); without it, previews use the profile photo
-	image: z.string().regex(/^\/[^\s]+\.(png|jpe?g|webp)$/, { error: 'image must be a site path to a .png, .jpg or .webp' }).optional()
+	image: z.string().regex(/^\/[^\s]+\.(png|jpe?g|webp)$/, { error: 'image must be a site path to a .png, .jpg or .webp' }).optional(),
+	// A thread on X about the post; adds a button to it at the top of the post
+	thread: z.string().regex(/^https:\/\/x\.com\/\w+\/status\/\d+$/, { error: 'thread must be an X post URL, https://x.com/<user>/status/<id>' }).optional()
 });
 
 const blog = defineCollection({

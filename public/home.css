@@ -892,56 +892,6 @@ a:hover {
 	color: var(--muted);
 }
 
-/* A thread: consecutive <Tweet thread> cards share one box, each body in line
-   with the name and a rule running from each avatar down to the next */
-.post-content .tweet-thread:has(+ .tweet-thread) {
-	margin-bottom: 0;
-}
-
-.post-content .tweet-thread + .tweet-thread {
-	margin-top: 0;
-}
-
-.post-content .tweet-thread .tweet-card {
-	position: relative;
-}
-
-.post-content .tweet-thread:has(+ .tweet-thread) .tweet-card {
-	padding-bottom: 0.3em;
-	border-bottom: 0;
-}
-
-.post-content .tweet-thread + .tweet-thread .tweet-card {
-	border-top: 0;
-}
-
-.post-content .tweet-thread .tweet-head {
-	margin-bottom: 0.3em;
-}
-
-.post-content .tweet-thread .tweet-body {
-	padding-left: calc(40px + 0.7em);
-}
-
-.post-content .tweet-thread:has(+ .tweet-thread) .tweet-card::after,
-.post-content .tweet-thread + .tweet-thread .tweet-card::before {
-	content: '';
-	position: absolute;
-	left: calc(1.1em + 19px);
-	width: 2px;
-	background: var(--border-bright);
-}
-
-.post-content .tweet-thread:has(+ .tweet-thread) .tweet-card::after {
-	top: calc(0.9em + 40px + 4px);
-	bottom: 0;
-}
-
-.post-content .tweet-thread + .tweet-thread .tweet-card::before {
-	top: 0;
-	height: calc(0.9em - 4px);
-}
-
 /* Agent-trace excerpt as a chat exchange (src/components/blog/Chat.astro, ChatMessage.astro) */
 .post-content .chat {
 	max-width: 40rem;
@@ -1322,6 +1272,14 @@ a:hover {
 .post-meta .meta-sep {
 	margin: 0 0.5em;
 	color: var(--border-bright);
+}
+
+/* The post's thread on X (`thread:` front matter), a button like the home
+   page's contact links */
+.post-thread {
+	max-width: none;
+	margin: 1em 0 0.2em;
+	font-size: 0.9rem;
 }
 
 .post-content p {

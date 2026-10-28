@@ -6,24 +6,21 @@
 // behind "Show more". The post text goes in the slot as ordinary markdown.
 // `avatar` is a local copy of the profile photo (public/assets/blog/), so
 // the page never loads images from X; `caption` renders like a chart caption.
-// Consecutive `thread` cards join into one box, a line running from each
-// avatar down to the next; give `date` (and any `caption`) to the last one.
 interface Props {
 	name: string;
 	handle: string;
-	date?: string;
+	date: string;
 	url: string;
 	avatar?: string;
 	caption?: string;
-	thread?: boolean;
 }
 
-const { name, handle, date, url, avatar, caption, thread = false } = Astro.props;
+const { name, handle, date, url, avatar, caption } = Astro.props;
 // A slot holding only an MDX comment renders empty; show a placeholder then
 const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : '';
 ---
 
-<figure class:list={['tweet', { 'tweet-thread': thread }]}>
+<figure class="tweet">
 	<div class="tweet-card">
 		<blockquote cite={url}>
 			<div class="tweet-head">
@@ -37,7 +34,7 @@ const body = Astro.slots.has('default') ? (await Astro.slots.render('default')).
 				{body ? <Fragment set:html={body} /> : <p class="tweet-empty">(post text goes here)</p>}
 			</div>
 		</blockquote>
-		{date && <p class="tweet-foot">𝕏 · {date}</p>}
+		<p class="tweet-foot">𝕏 · {date}</p>
 	</div>
 	{caption && <figcaption>{caption}</figcaption>}
 </figure>

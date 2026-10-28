@@ -5,6 +5,7 @@ date: 2026-10-20
 category: research
 tags: ["agents", "pretraining-data", "evals"]
 image: /assets/blog/pretraingym-card.png
+thread: https://x.com/HuNtEr_J1324/status/2112544367650947554
 ---
 
 import Tex from '@/components/blog/Tex.astro';
@@ -410,42 +411,6 @@ Sebastian leads the RL Residency program and I have so much respect for all the 
 
 I would also like to acknowledge [Elie Bakouch](https://x.com/eliebakouch). I had a lot of uncertainties about the validity of the pretraining setup. However, Elie pointed me in the right direction and helped me improve the environment greatly.
 
-## Discussion on X
-
-I announced this post in a thread on X.[^thread] Questions and discussion are in the replies there.
-
-<Tweet name="Justin Yang Chae" handle="HuNtEr_J1324" url="https://x.com/HuNtEr_J1324/status/2112544367650947554" avatar="/assets/blog/x-hunter-j1324.jpg" thread>
-
-Recursive self-improvement is being hyped to the moon and back. I wanted to know how good frontier models actually are at a less-studied piece of it: curating pretraining data.
-
-So I built PretrainGym at the @PrimeIntellect RL Residency 🧵
-
-https://justin-chae.org/blog/pretraingym/
-
-</Tweet>
-
-<Tweet name="Justin Yang Chae" handle="HuNtEr_J1324" url="https://x.com/HuNtEr_J1324/status/2112544367944561034" avatar="/assets/blog/x-hunter-j1324.jpg" thread>
-
-The setup is a fixed speedrun-style trainer and a self_score tool that trains on a draft mixture and reports its loss on a validation split of the hidden eval. The agent never sees which sources the eval comes from.\
-Its final mixture is scored on a held-out test split.
-
-</Tweet>
-
-<Tweet name="Justin Yang Chae" handle="HuNtEr_J1324" url="https://x.com/HuNtEr_J1324/status/2112544368720527604" avatar="/assets/blog/x-hunter-j1324.jpg" thread>
-
-Kimi K3 (Kimi Code) won with a test loss of 3.125. GLM-5.3 (Pi) came second and GPT-6.1 Sol (Codex) third, all at max reasoning effort.\
-Open-weight models are better than you think!
-
-</Tweet>
-
-<Tweet name="Justin Yang Chae" handle="HuNtEr_J1324" date="Oct 20, 2026" url="https://x.com/HuNtEr_J1324/status/2112544369488085478" avatar="/assets/blog/x-hunter-j1324.jpg" thread>
-
-Every run is in a trace viewer and the blog goes into much more detail about the environment:\
-[https://justin-chae.org/blog/pretraingym/](https://justin-chae.org/blog/pretraingym/)\
-Huge thanks to @omouamoua for running the RL Residency, @xeophon for helping shape the eval, and @eliebakouch for guidance on the pretraining setup!
-
-</Tweet>
-
 ## Citation
 
 If this was useful, please cite it as:
@@ -489,4 +454,3 @@ If this was useful, please cite it as:
 [^dclm]: Li et al., [DataComp-LM: In Search of the Next Generation of Training Sets for Language Models](https://arxiv.org/abs/2406.11794), 2024.
 [^fineweb]: Penedo et al., [The FineWeb Datasets: Decanting the Web for the Finest Text Data at Scale](https://arxiv.org/abs/2406.17557), 2024.
 [^refinedweb]: Penedo et al., [The RefinedWeb Dataset for Falcon LLM](https://arxiv.org/abs/2306.01116), 2023.
-[^thread]: Justin Yang Chae (@HuNtEr_J1324), [thread on X](https://x.com/HuNtEr_J1324/status/2112544367650947554), October 20, 2026.
