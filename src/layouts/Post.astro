@@ -13,6 +13,7 @@ import Base from './Base.astro';
 import PostChips from '../components/PostChips.astro';
 import TraceSwitch from '../components/TraceSwitch.astro';
 import { comments } from '../lib/comments';
+import { postJsonLd } from '../lib/schema';
 import { formatDate, isDraft, type Post } from '../lib/posts';
 import { TRACE_POSTS } from '../lib/traces';
 
@@ -39,6 +40,17 @@ const shareToken = post.collection === 'drafts' ? post.data.share : undefined;
 // never starts a second thread for the same post
 const commentsPageId = `/blog/${post.id}/`;
 const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
+// Ties the post to its author (src/lib/schema.ts); shared drafts get none
+const jsonLd = shared
+	? undefined
+	: postJsonLd({
+			url: new URL(`/blog/${post.id}/`, Astro.site).href,
+			title,
+			description,
+			date,
+			image: new URL(post.data.image ?? '/assets/profile_photo.jpg', Astro.site).href,
+			tags: post.data.tags
+		});
 ---
 
 <Base
@@ -56,6 +68,7 @@ const fileName = post.filePath?.split('/').pop() ?? `${post.id}.md`;
 	activeNavLink="blog"
 >
 	<Fragment slot="head">
+		{jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 		{hasMath && (
 			<>
 				{/* Math rendering: self-hosted MathJax 3 (SVG), config first, then the bundle */}
