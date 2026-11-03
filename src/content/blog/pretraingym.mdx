@@ -23,12 +23,10 @@ import AgentReplayCompare from '@/components/blog/AgentReplayCompare.astro';
 import TerminalHook from '@/components/blog/TerminalHook.astro';
 import d from '@/data/pretraingym.json';
 
-{/* TODO(Justin): link the PretrainGym repo here if it'll be public. */}
-
 <TerminalHook />
 
 :::tldr
-I built PretrainGym during the Prime Intellect RL Residency. An agent is given the goal to curate a pretraining corpus. It gets a fixed model implementation, a 400M-token budget and a tool for scoring draft mixtures.  The environment then trains the model on that corpus and scores its loss on a held-out eval. I evaluated three agents: GLM-5.3 in Pi, Kimi K3 in Kimi Code, and GPT-6.1 Sol in Codex. Every run is in the [trace viewer](/traces/pretraingym/), turn by turn.
+I built PretrainGym during the Prime Intellect RL Residency. The [environment is open source](https://github.com/PrimeIntellect-ai/residency-environments/tree/main/environments/pretrain_gym) and built entirely on top of [verifiers](https://github.com/PrimeIntellect-ai/verifiers), Prime Intellect's library for RL environments and evals. An agent is given the goal to curate a pretraining corpus. It gets a fixed model implementation, a 400M-token budget and a tool for scoring draft mixtures.  The environment then trains the model on that corpus and scores its loss on a held-out eval. I evaluated three agents: GLM-5.3 in Pi, Kimi K3 in Kimi Code, and GPT-6.1 Sol in Codex. Every run is in the [trace viewer](/traces/pretraingym/), turn by turn.
 :::
 
 ## Why build this
