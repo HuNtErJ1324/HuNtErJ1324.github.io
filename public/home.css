@@ -391,21 +391,30 @@ nav.site-nav a.active:hover {
 /* Secondary page banners (violin, blog) */
 .page-banner {
 	min-height: auto;
-	padding-bottom: 2rem;
+	padding-top: calc(var(--nav-h) + 1rem);
+	padding-bottom: 1.25rem;
+}
+
+.page-banner .boot-line {
+	margin-bottom: 0.75rem;
 }
 
 .page-banner h1 {
 	font-family: var(--font-display);
-	font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+	font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+	line-height: 1.15;
 	font-weight: normal;
 	color: var(--text);
 	letter-spacing: 0.03em;
-	margin-bottom: 0.4em;
-	padding-top: 0.4em;
+	margin-bottom: 0.35em;
 }
 
 .page-banner p {
 	color: var(--subtle);
+}
+
+.page-banner > p:last-child {
+	margin-bottom: 0;
 }
 
 header p {
@@ -612,6 +621,26 @@ a.chip:focus-visible {
 	align-self: center;
 }
 
+/* [report], [project], [github]: a full 24px tap target */
+.entry-meta a:not(.chip) {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.5rem;
+}
+
+/* A paper's author list under its title, with Justin's name picked out */
+.entry-authors {
+	max-width: none;
+	margin: 0.15em 0 0.1em;
+	font-size: 0.9rem;
+	color: var(--subtle);
+}
+
+.entry-authors strong {
+	font-weight: 700;
+	color: var(--text);
+}
+
 details.abstract {
 	margin-top: 0.5em;
 }
@@ -699,6 +728,46 @@ a:hover {
 	margin: 20px auto;
 	max-width: 500px;
 	text-align: center;
+}
+
+/* Violin page: performances sit two to a row on wide screens, in page order
+   (left to right, then down). The outer 1fr tracks center the pair and the
+   banner spans all four; each row's panels share a height, with the video
+   at the bottom so the pair lines up. */
+@media (min-width: 1100px) {
+	main:has(> .performance) {
+		display: grid;
+		grid-template-columns: 1fr repeat(2, minmax(0, 38rem)) 1fr;
+		column-gap: 1.5rem;
+	}
+
+	main:has(> .performance) > .banner {
+		grid-column: 1 / -1;
+	}
+
+	.performance {
+		display: flex;
+		flex-direction: column;
+		max-width: none;
+		margin: 2.25em 0 0;
+	}
+
+	.performance:nth-of-type(odd) {
+		grid-column: 2;
+	}
+
+	.performance:nth-of-type(even) {
+		grid-column: 3;
+	}
+
+	.performance > p {
+		flex: 1 0 auto;
+	}
+
+	.performance .video-container {
+		width: 100%;
+		margin-bottom: 0;
+	}
 }
 
 /* Same 16:9 box as .youtube-video, so the player swaps in without a resize */
@@ -868,7 +937,7 @@ a:hover {
 
 .tweet-handle {
 	font-size: 0.85rem;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-content .tweet-body p {
@@ -880,7 +949,7 @@ a:hover {
 }
 
 .post-content .tweet-empty {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-content .tweet-foot {
@@ -889,7 +958,7 @@ a:hover {
 	border-top: 1px solid var(--border);
 	font-size: 0.8rem;
 	font-style: normal;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 /* Agent-trace excerpt as a chat exchange (src/components/blog/Chat.astro, ChatMessage.astro) */
@@ -958,7 +1027,7 @@ a:hover {
 
 .chat-meta {
 	font-size: 0.78rem;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 /* Link from an excerpt to its turn in the trace viewer, pushed to the row's end */
@@ -967,9 +1036,12 @@ a:hover {
 	flex-shrink: 0;
 	margin-left: auto;
 	font-size: 0.75rem;
-	color: var(--muted);
+	color: var(--subtle);
 	white-space: nowrap;
 	text-decoration-color: var(--border-bright);
+	/* A taller tap target without moving the row */
+	padding-block: 0.4rem;
+	margin-block: -0.4rem;
 }
 
 .chat-trace:hover,
@@ -1187,19 +1259,23 @@ a:hover {
 	color: var(--muted);
 }
 
-.post-toc ol {
+.post-toc ol,
+.toc-fold ol {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-.post-toc li {
+.post-toc li,
+.toc-fold li {
 	margin: 0;
 	padding: 0;
 }
 
 .post-toc a,
-.post-toc a:visited {
+.post-toc a:visited,
+.toc-fold a,
+.toc-fold a:visited {
 	display: block;
 	padding: 0.25em 0 0.25em 0.8em;
 	font-size: 0.8rem;
@@ -1208,15 +1284,72 @@ a:hover {
 	text-decoration: none;
 }
 
-.post-toc .toc-d3 a {
+.post-toc .toc-d3 a,
+.toc-fold .toc-d3 a {
 	padding-left: 1.8em;
 	font-size: 0.76rem;
 }
 
 .post-toc a:hover,
-.post-toc a:focus-visible {
+.post-toc a:focus-visible,
+.toc-fold a:hover,
+.toc-fold a:focus-visible {
 	background: none;
 	color: var(--text);
+}
+
+/* Where the gutter is too narrow for the outline (below 1280px), the same
+   list folds under the post header, closed until asked for */
+.toc-fold {
+	margin: 0 0 1.5em;
+	padding: 0.5em 0.9em;
+	background: var(--bg-raised);
+	border: 1px solid var(--border);
+}
+
+@media (min-width: 1280px) {
+	.toc-fold {
+		display: none;
+	}
+}
+
+.toc-fold summary {
+	min-height: 1.5rem;
+	cursor: pointer;
+	list-style: none;
+	font-family: var(--font-display);
+	font-size: 0.85rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--gold);
+	user-select: none;
+}
+
+.toc-fold summary::-webkit-details-marker {
+	display: none;
+}
+
+.toc-fold summary::before {
+	content: '[+] ';
+	color: var(--muted);
+}
+
+.toc-fold[open] summary::before {
+	content: '[-] ';
+}
+
+.toc-fold ol {
+	margin-top: 0.5em;
+}
+
+.toc-fold a,
+.toc-fold a:visited {
+	padding-block: 0.4em;
+	font-size: 0.88rem;
+}
+
+.toc-fold .toc-d3 a {
+	font-size: 0.84rem;
 }
 
 .post-toc li:has(> a[aria-current='true']) {
@@ -1247,9 +1380,8 @@ a:hover {
 	margin-bottom: 0.3em;
 }
 
-/* Chips, then date · read time, across the full column under the title (not
-   the centered 72ch of other paragraphs); when the row is too long the date
-   and read time wrap together instead of stranding "· N min read" alone */
+/* Chips, then the date, across the full column under the title (not the
+   centered 72ch of other paragraphs) */
 .post-meta {
 	display: flex;
 	flex-wrap: wrap;
@@ -1261,17 +1393,8 @@ a:hover {
 	color: var(--subtle);
 }
 
-.post-when {
-	white-space: nowrap;
-}
-
 .post-meta .post-date {
 	color: var(--gold);
-}
-
-.post-meta .meta-sep {
-	margin: 0 0.5em;
-	color: var(--border-bright);
 }
 
 /* The post's thread on X (`thread:` front matter), a button like the home
@@ -1515,6 +1638,7 @@ pre code {
 	font-family: var(--font-display);
 	font-size: 0.8rem;
 	letter-spacing: 0.05em;
+	min-height: 1.5rem;
 	padding: 0.12em 0.5em;
 	cursor: pointer;
 	transition: color 0.15s ease, border-color 0.15s ease;
@@ -1575,7 +1699,7 @@ pre code {
 }
 
 .trace-step {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .trace-label {
@@ -1728,7 +1852,7 @@ pre code {
 	font-weight: normal;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-stats dd {
@@ -1738,7 +1862,7 @@ pre code {
 
 .tv-aside {
 	font-size: 0.8rem;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-big {
@@ -1794,8 +1918,9 @@ pre code {
 .ts-label,
 .ts-label:visited {
 	margin-right: 0.2em;
+	padding-block: 0.15em;
 	text-transform: uppercase;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .ts-back,
@@ -1899,7 +2024,7 @@ pre code {
 }
 
 .tv-links span {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-links span[aria-hidden] {
@@ -2021,7 +2146,7 @@ pre code {
 	padding-top: 0.2em;
 	font-family: var(--font-display);
 	font-size: 0.8rem;
-	color: var(--muted);
+	color: var(--subtle);
 	text-align: right;
 	text-decoration: none;
 }
@@ -2132,6 +2257,7 @@ pre code {
 .tv-out summary {
 	cursor: pointer;
 	list-style: none;
+	padding-block: 0.15em;
 	font-family: var(--font-display);
 	font-size: 0.8rem;
 	letter-spacing: 0.05em;
@@ -2233,7 +2359,7 @@ pre code {
 
 .tv-len,
 .tv-noout {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-len {
@@ -2270,7 +2396,7 @@ pre code {
 	font-size: 0.75rem;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-compact::before,
@@ -2329,7 +2455,7 @@ pre code {
 .tv-card-rank {
 	grid-area: rank;
 	font-family: var(--font-display);
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-card .tv-logo {
@@ -2366,7 +2492,7 @@ pre code {
 
 .tv-card-unit {
 	font-size: 0.72rem;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .tv-card-stats {
@@ -2952,6 +3078,7 @@ pre code {
 }
 
 .sp-btn {
+	min-height: 1.5rem;
 	padding: 0;
 	white-space: nowrap;
 	background: none;
@@ -3161,7 +3288,7 @@ pre code {
 .sp-scrub {
 	flex: 1 1 9em;
 	min-width: 9em;
-	height: 18px;
+	height: 24px;
 	margin: 0;
 	background: transparent;
 	cursor: pointer;
@@ -3254,7 +3381,7 @@ pre code {
 	padding: 0.45em 0.8em;
 	background: var(--bg-raised);
 	border-bottom: 1px solid var(--border);
-	color: var(--muted);
+	color: var(--subtle);
 	font-size: 0.75rem;
 }
 
@@ -3312,7 +3439,7 @@ pre code {
 	display: inline-block;
 	width: 4.6em;
 	text-indent: 0;
-	color: var(--muted);
+	color: var(--subtle);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -3466,7 +3593,7 @@ pre code {
 }
 
 .sb-harness {
-	color: var(--muted);
+	color: var(--subtle);
 	font-size: 0.75rem;
 }
 
@@ -3505,7 +3632,7 @@ pre code {
 }
 
 .post-content .sb-stats dt {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-content .sb-stats dd {
@@ -3633,7 +3760,7 @@ pre code {
 	font-family: var(--font-body);
 	font-size: 0.8rem;
 	letter-spacing: 0;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .fold-body {
@@ -3681,7 +3808,7 @@ pre code {
 
 .related-posts .post-date {
 	display: block;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .related-posts .post-title {
@@ -3904,7 +4031,7 @@ pre code {
 .post-comments comentario-comments .comentario-root .comentario-add-comment-placeholder {
 	justify-content: flex-start;
 	padding: 0.7rem 0.9rem;
-	color: var(--muted);
+	color: var(--subtle);
 	text-align: left;
 }
 
@@ -3956,7 +4083,7 @@ pre code {
 	font-size: inherit;
 	line-height: inherit;
 	text-align: left;
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-comments comentario-comments .comentario-root .comentario-comment-editor .comentario-comment-editor-preview {
@@ -3981,7 +4108,7 @@ pre code {
 	content: 'Markdown · math in $$…$$';
 	margin-right: auto;
 	padding-left: 0.3rem;
-	color: var(--muted);
+	color: var(--subtle);
 	font-size: 0.75rem;
 }
 
@@ -4002,7 +4129,7 @@ pre code {
 	margin-top: 1.25rem;
 	padding-bottom: 0.4rem;
 	border-bottom: 1px solid var(--border);
-	color: var(--muted);
+	color: var(--subtle);
 	font-size: 0.8rem;
 }
 
@@ -4090,12 +4217,12 @@ pre code {
 }
 
 .post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle {
-	color: var(--muted);
+	color: var(--subtle);
 	font-size: 0.78rem;
 }
 
 .post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle a {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-comments comentario-comments .comentario-root .comentario-card .comentario-subtitle a:is(:hover, :focus-visible) {
@@ -4202,7 +4329,7 @@ pre code {
 }
 
 .post-comments comentario-comments .comentario-root .comentario-footer a {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-comments comentario-comments .comentario-root .comentario-footer a:is(:hover, :focus-visible) {
@@ -4317,7 +4444,7 @@ pre code {
 }
 
 .post-comments comentario-comments .comentario-root .comentario-input-group .comentario-input::placeholder {
-	color: var(--muted);
+	color: var(--subtle);
 }
 
 .post-comments comentario-comments .comentario-root .comentario-input-group .comentario-btn:not(.comentario-btn-link):not(.comentario-btn-tool) {
@@ -4602,12 +4729,12 @@ kbd {
 }
 
 .cmdline-input::placeholder {
-	color: var(--muted);
+	color: var(--subtle);
 	opacity: 1;
 }
 
 .cmdline-hint {
-	color: var(--muted);
+	color: var(--subtle);
 	white-space: nowrap;
 }
 
@@ -4732,8 +4859,8 @@ mark.search-hit.current {
    -------------------------------------------------------------------------- */
 .reveal-hidden {
 	opacity: 0;
-	transform: translateY(30px);
-	transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+	transform: translateY(12px);
+	transition: opacity 0.35s ease-out, transform 0.35s ease-out;
 }
 
 .reveal-visible {
@@ -4744,14 +4871,14 @@ mark.search-hit.current {
 /* Staggered reveal for list items */
 .reveal-visible li {
 	opacity: 0;
-	animation: fadeInUp 0.4s ease-out forwards;
+	animation: fadeInUp 0.25s ease-out forwards;
 }
 
-.reveal-visible li:nth-child(1) { animation-delay: 0.1s; }
-.reveal-visible li:nth-child(2) { animation-delay: 0.25s; }
-.reveal-visible li:nth-child(3) { animation-delay: 0.4s; }
-.reveal-visible li:nth-child(4) { animation-delay: 0.55s; }
-.reveal-visible li:nth-child(n+5) { animation-delay: 0.7s; }
+.reveal-visible li:nth-child(1) { animation-delay: 0.04s; }
+.reveal-visible li:nth-child(2) { animation-delay: 0.08s; }
+.reveal-visible li:nth-child(3) { animation-delay: 0.12s; }
+.reveal-visible li:nth-child(4) { animation-delay: 0.16s; }
+.reveal-visible li:nth-child(n+5) { animation-delay: 0.2s; }
 
 @keyframes fadeInUp {
 	from {
@@ -4976,6 +5103,7 @@ mark.search-hit.current {
 	.scroll-hint,
 	.skip-link,
 	.key-help,
+	.toc-fold,
 	.post-comments {
 		display: none;
 	}

@@ -2,11 +2,14 @@
 import Base from '../layouts/Base.astro';
 import { assetVersion } from '../lib/site';
 import { homeJsonLd } from '../lib/schema';
+
+// The hero photo's rendered width (.profile-image in home.css), for srcset
+const photoSizes = '(max-width: 768px) 62vw, min(58vh, 38vw)';
 ---
 
 <Base
-	title="Justin Yang Chae - Personal Portfolio"
-	description="Justin Yang Chae - Computer Science & Mathematics student at University of Washington, focused on AI/ML research and violin performance"
+	title="Justin Yang Chae | AI/ML research, University of Washington"
+	description="Justin Yang Chae studies computer science and mathematics at the University of Washington, does AI/ML research, and plays violin."
 	canonical="/"
 	activeNavLink="home"
 	statuslinePath="~/portfolio"
@@ -65,13 +68,16 @@ import { homeJsonLd } from '../lib/schema';
 						</a>
 					</div>
 				</div>
+				{/* Square crops of the photo at 600, 900 and 1200px (AVIF, then WebP, with a
+				     600px JPEG for anything older); sizes mirrors .profile-image in home.css */}
 				<picture>
-					<source srcset="/assets/profile_photo.webp" type="image/webp">
-					<img src="/assets/profile_photo.jpg"
+					<source type="image/avif" srcset="/assets/profile_photo-600.avif 600w, /assets/profile_photo-900.avif 900w, /assets/profile_photo-1200.avif 1200w" sizes={photoSizes}>
+					<source type="image/webp" srcset="/assets/profile_photo-600.webp 600w, /assets/profile_photo-900.webp 900w, /assets/profile_photo-1200.webp 1200w" sizes={photoSizes}>
+					<img src="/assets/profile_photo-600.jpg"
 						class="profile-image"
 						alt="Profile photo of Justin Yang Chae"
-						width="400"
-						height="400"
+						width="1200"
+						height="1200"
 						fetchpriority="high"
 						decoding="async">
 				</picture>
@@ -107,6 +113,7 @@ import { homeJsonLd } from '../lib/schema';
 		<ul>
 			<li>
 				<strong><a href="https://arxiv.org/abs/2510.27072" target="_blank" rel="noopener noreferrer">Towards Understanding Self-play for LLM Reasoning</a></strong>
+				<p class="entry-authors"><strong>Justin Yang Chae</strong>, Md Tanvirul Alam, Nidhi Rastogi</p>
 				<div class="entry-meta">
 					<span class="chip">neurips 2025 · 5th workshop on mathematical reasoning and ai</span>
 				</div>
@@ -129,6 +136,7 @@ import { homeJsonLd } from '../lib/schema';
 			</li>
 			<li>
 				<strong><a href="https://arxiv.org/abs/2511.20814" target="_blank" rel="noopener noreferrer">SPHINX: A Synthetic Environment for Visual Perception and Reasoning</a></strong>
+				<p class="entry-authors">Md Tanvirul Alam, Saksham Aggarwal, <strong>Justin Yang Chae</strong>, Nidhi Rastogi</p>
 				<div class="entry-meta">
 					<span class="chip">cvpr 2026 · findings</span>
 					<span class="chip">neurips 2025 · multimodal algorithmic reasoning workshop (spotlight)</span>

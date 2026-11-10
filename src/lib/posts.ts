@@ -34,19 +34,6 @@ export async function getSharedDrafts() {
 	return drafts.flatMap((post) => (post.data.share ? [{ post, token: post.data.share }] : []));
 }
 
-// Reading time at 200 words a minute. Counts prose only: in .mdx posts,
-// import/export lines, component props (chart data), and code blocks would
-// otherwise inflate the estimate.
-export function readingMinutes(post: Post): number {
-	const prose = (post.body ?? '')
-		.replace(/^(import|export)\s.*$/gm, '')
-		.replace(/```[\s\S]*?```/g, '')
-		.replace(/<[A-Z][\s\S]*?\/>/g, '')
-		.replace(/<\/?[A-Z][^>]*>/g, '');
-	const words = prose.split(/\s+/).filter(Boolean).length;
-	return Math.max(1, Math.round(words / 200));
-}
-
 // Up to `limit` other posts, ranked by shared tags (a shared category counts
 // as one more). `posts` is newest first and the sort is stable, so ties (and
 // posts with nothing in common, which fill any remaining slots) stay newest first.

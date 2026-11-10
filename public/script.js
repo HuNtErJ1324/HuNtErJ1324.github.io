@@ -74,6 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             revealElements.forEach(element => {
+                // Panels on screen when the page loads (or already scrolled
+                // past) are simply there; only those below the fold fade in
+                if (element.getBoundingClientRect().top < window.innerHeight) return;
                 element.classList.add('reveal-hidden');
                 revealObserver.observe(element);
             });
@@ -932,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const details = markNode.closest('details');
             if (details && !details.open) details.open = true;
             const section = markNode.closest('section');
-            if (section) section.classList.add('reveal-visible');
+            if (section && section.classList.contains('reveal-hidden')) section.classList.add('reveal-visible');
             scrollToY(markNode.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2);
             return `${wrapped + 1}/${searchMarks.length}`;
         };
@@ -1683,7 +1686,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 13. Post table of contents (Post.astro, wide screens only): mark the
+        // 13. Post table of contents (Post.astro; the gutter outline on wide
+        // screens, not the fold narrower ones get under the header): mark the
         // section being read — the last heading above a line a quarter of the
         // way down the view, or the last one once the page bottoms out — and
         // keep its entry in view when the outline scrolls on its own

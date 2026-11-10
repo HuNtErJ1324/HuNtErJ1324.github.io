@@ -5,7 +5,8 @@
 // contain math (hasMath, set by remark-mathjax). `shared`
 // renders a draft at its /drafts/<token>/ link: noindex, no canonical URL.
 // A post with at least three h2/h3 headings gets a table of contents in the
-// left gutter on wide screens (script.js §13 marks the section being read).
+// left gutter on wide screens (script.js §13 marks the section being read),
+// and the same list folded under the header on narrower ones.
 // A post with published agent traces (src/lib/traces.ts) links to them at the
 // top, under the date; a `thread:` post gets a button to its thread on X there.
 import type { MarkdownHeading } from 'astro';
@@ -19,7 +20,6 @@ import { TRACE_POSTS } from '../lib/traces';
 
 interface Props {
 	post: Post;
-	minutes: number;
 	hasMath: boolean;
 	previous: Post | null;
 	next: Post | null;
@@ -28,7 +28,7 @@ interface Props {
 	shared?: boolean;
 }
 
-const { post, minutes, hasMath, previous, next, related, headings = [], shared = false } = Astro.props;
+const { post, hasMath, previous, next, related, headings = [], shared = false } = Astro.props;
 // Sections and subsections only; remark-gfm's "Footnotes" heading isn't one
 const toc = headings.filter((h) => (h.depth === 2 || h.depth === 3) && h.slug !== 'footnote-label');
 const { date, title, description } = post.data;
@@ -97,11 +97,7 @@ const jsonLd = shared
 			<h1>{title}</h1>
 			<p class="post-meta">
 				<PostChips post={post} linkTags={!shared} />
-				<span class="post-when">
-					<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
-					<span class="meta-sep" aria-hidden="true">&middot;</span>
-					<span>{minutes} min read</span>
-				</span>
+				<time class="post-date" datetime={dateIso}>{formatDate(date)}</time>
 			</p>
 			{post.id in TRACE_POSTS && <TraceSwitch post={post.id} onPost />}
 			{post.data.thread && (
@@ -126,6 +122,18 @@ const jsonLd = shared
 				</p>
 			))}
 		</header>
+		{toc.length >= 3 && (
+			<details class="toc-fold">
+				<summary>contents</summary>
+				<nav aria-label="Contents">
+					<ol>
+						{toc.map((h) => (
+							<li class={`toc-d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>
+						))}
+					</ol>
+				</nav>
+			</details>
+		)}
 		<div class="post-content">
 			<slot />
 		</div>

@@ -84,7 +84,7 @@ const performances = [
 		</p>
 	</header>
 	{performances.map((p) => (
-		<section data-label={p.label}>
+		<section class="performance" data-label={p.label}>
 			<h2>{p.title}</h2>
 			<p>
 				{[p.blurb].flat().map((part) => typeof part === 'string'
